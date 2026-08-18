@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Debug API AgroMonitor</title>
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; }
+.container { max-width: 600px; margin: 0 auto; }
+button { padding: 10px 20px; background: #228b2c; color: white; border: none; border-radius: 5px; cursor: pointer; }
+.output { background: #f0f0f0; padding: 15px; margin-top: 10px; border-radius: 5px; white-space: pre-wrap; font-family: monospace; font-size: 12px; }
+.error { background: #ffe0e0; color: #990000; }
+.success { background: #e0ffe0; color: #009900; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🧪 Debug API - AgroMonitor</h1>
+
+<h2>1. Testar GET /areas</h2>
+<button onclick="testarGET()">Testar GET</button>
+<div id="output-get" class="output"></div>
+
+<h2>2. Testar POST /areas</h2>
+<button onclick="testarPOST()">Testar POST</button>
+<div id="output-post" class="output"></div>
+
+<h2>3. Ver dados no banco</h2>
+<button onclick="listarAreas()">Listar Áreas</button>
+<div id="output-list" class="output"></div>
+</div>
+
+<script>
+const API = 'http://localhost/agromonitor/api/index.php';
+
+async function testarGET() {
+  const output = document.getElementById('output-get');
+  output.textContent = '⏳ Carregando...';
+  
+  try {
+    const r = await fetch(`${API}/areas`);
+    const d = await r.json();
+    output.className = 'output success';
+    output.textContent = 'Status: ' + r.status + '\n\n' + JSON.stringify(d, null, 2);
+  } catch (e) {
+    output.className = 'output error';
+    output.textContent = 'ERRO: ' + e.message;
+  }
+}
+
+async function testarPOST() {
+  const output = document.getElementById('output-post');
+  output.textContent = '⏳ Tentando salvar...';
+  
+  const data = {
+    nome: 'Debug Teste ' + Date.now(),
+    nomeCliente: 'Cliente Debug',
+    cultura: 'milho',
+    hectares: 10,
+    qtdPontos: 1
+  };
+  
+  console.log('Enviando:', data);
+  output.textContent = 'Enviando:\n' + JSON.stringify(data, null, 2) + '\n\nAguardando resposta...';
+  
+  try {
+    const r = await fetch(`${API}/areas`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    
+    const d = await r.json();
+    output.className = 'output ' + (r.status === 201 || r.status === 200 ? 'success' : 'error');
+    output.textContent = 'Status: ' + r.status + '\n\n' + JSON.stringify(d, null, 2);
+  } catch (e) {
+    output.className = 'output error';
+    output.textContent = 'ERRO: ' + e.message;
+  }
+}
+
+async function listarAreas() {
+  const output = document.getElementById('output-list');
+  output.textContent = '⏳ Carregando...';
+  
+  try {
+    const r = await fetch(`${API}/areas`);
+    const areas = await r.json();
+    output.className = 'output success';
+    output.textContent = 'Total de áreas: ' + (areas.length || 0) + '\n\n' + JSON.stringify(areas, null, 2);
+  } catch (e) {
+    output.className = 'output error';
+    output.textContent = 'ERRO: ' + e.message;
+  }
+}
+</script>
+</body>
+</html>

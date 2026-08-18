@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgroMonitor SafraFort</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet" />
+<style>
+:root {
+  --green-900: #0d2b17;
+  --green-800: #0d4a12;
+  --green-700: #1a6b22;
+  --green-600: #228b2c;
+  --green-500: #2ea83a;
+  --green-400: #4dc057;
+  --green-200: #a8dbb5;
+  --green-100: #d4eedd;
+  --green-50: #eaf6ee;
+  --amber-600: #d97706;
+  --amber-100: #fef3c7;
+  --red-600: #dc2626;
+  --red-100: #fee2e2;
+  --gray-900: #111827;
+  --gray-700: #374151;
+  --gray-500: #6b7280;
+  --gray-300: #d1d5db;
+  --gray-200: #e5e7eb;
+  --gray-100: #f3f4f6;
+  --gray-50: #f9fafb;
+  --white: #ffffff;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--gray-100); color: var(--gray-900); min-height: 100vh; font-size: 14px; }
+
+.app { display: flex; height: 100vh; overflow: hidden; }
+.sidebar { width: 220px; background: var(--green-800); display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar-header { padding: 20px 16px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-icon { width: 36px; height: 36px; background: var(--green-600); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.logo-text { color: white; }
+.logo-name { font-size: 15px; font-weight: 700; }
+.logo-sub { font-size: 10px; color: rgba(255,255,255,0.5); }
+
+nav { flex: 1; padding: 12px 8px; overflow-y: auto; }
+.nav-section { margin-bottom: 16px; }
+.nav-section-title { font-size: 10px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.8px; padding: 0 8px; margin-bottom: 4px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--radius-sm); cursor: pointer; color: rgba(255,255,255,0.65); font-size: 13px; font-weight: 500; }
+.nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+.nav-item.active { background: var(--green-600); color: white; }
+
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.topbar { background: white; border-bottom: 1px solid var(--gray-200); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow); }
+.page-title { font-size: 16px; font-weight: 600; }
+.topbar-actions { display: flex; gap: 10px; }
+.btn { padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn-primary { background: var(--green-600); color: white; }
+.btn-primary:hover { background: var(--green-700); }
+.btn-secondary { background: white; color: var(--gray-700); border: 1px solid var(--gray-300); }
+.btn-secondary:hover { background: var(--gray-50); }
+.btn-danger { background: var(--red-600); color: white; }
+.btn-sm { padding: 5px 11px; font-size: 12px; }
+.btn-icon { width: 34px; height: 34px; padding: 0; justify-content: center; font-size: 16px; }
+
+.content { flex: 1; overflow-y: auto; padding: 24px; }
+.page { display: none; }
+.page.active { display: block; }
+
+.card { background: white; border-radius: var(--radius); border: 1px solid var(--gray-200); box-shadow: var(--shadow); margin-bottom: 20px; }
+.card-header { padding: 16px 20px; border-bottom: 1px solid var(--gray-200); display: flex; justify-content: space-between; align-items: center; }
+.card-title { font-size: 14px; font-weight: 700; }
+.card-body { padding: 20px; }
+.card-footer { padding: 12px 20px; border-top: 1px solid var(--gray-200); background: var(--gray-50); display: flex; gap: 10px; justify-content: flex-end; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+.metric-card { background: white; border-radius: var(--radius); border: 1px solid var(--gray-200); padding: 16px 20px; }
+.metric-val { font-size: 26px; font-weight: 800; }
+.metric-label { font-size: 11px; color: var(--gray-500); text-transform: uppercase; margin-bottom: 8px; }
+
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 12px; font-weight: 500; color: var(--gray-700); margin-bottom: 5px; }
+.form-input, .form-select, .form-textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--green-500); outline: none; box-shadow: 0 0 0 3px rgba(45,122,68,0.1); }
+.form-row { display: grid; gap: 14px; }
+.form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+.form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-hint { font-size: 11px; color: var(--gray-500); margin-top: 4px; }
+
+.badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.badge-green { background: var(--green-100); color: var(--green-800); }
+.badge-amber { background: var(--amber-100); color: #92400e; }
+.badge-red { background: var(--red-100); color: #991b1b; }
+
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 11px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; padding: 10px 16px; border-bottom: 1px solid var(--gray-200); background: var(--gray-50); }
+td { padding: 12px 16px; border-bottom: 1px solid var(--gray-100); }
+tr:hover td { background: var(--gray-50); }
+
+.area-card { background: white; border-radius: var(--radius); border: 1px solid var(--gray-200); overflow: hidden; cursor: pointer; }
+.area-card:hover { box-shadow: var(--shadow-md); }
+.area-card-thumb { height: 90px; background: linear-gradient(135deg, #4caf50 0%, #1a5e20 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; }
+.area-card-body { padding: 12px 16px; }
+.area-card-title { font-size: 14px; font-weight: 600; }
+.area-card-subtitle { font-size: 12px; color: var(--gray-500); margin-top: 4px; }
+
+.toast { position: fixed; bottom: 20px; right: 20px; background: var(--green-600); color: white; padding: 12px 16px; border-radius: var(--radius-sm); z-index: 2000; box-shadow: var(--shadow-md); }
+.toast.error { background: var(--red-600); }
+
+.alert-box { padding: 12px 16px; border-radius: var(--radius-sm); margin-top: 12px; border-left: 4px solid; }
+.alert-ok { background: #d1fae5; color: #065f46; border-left-color: #10b981; }
+.alert-warn { background: #fef3c7; color: #92400e; border-left-color: #f59e0b; }
+.alert-danger { background: #fee2e2; color: #991b1b; border-left-color: #dc2626; }
+
+.calc-result-box { background: var(--green-50); padding: 16px; border-radius: var(--radius-sm); border-left: 4px solid var(--green-600); margin-top: 12px; }
+.calc-result-big { font-size: 32px; font-weight: 700; color: var(--green-600); }
+
+.reference-table { background: var(--green-50); border: 1px solid var(--green-200); border-radius: var(--radius-sm); overflow: hidden; }
+.reference-table table { margin: 0; }
+.reference-table th { background: var(--green-100); color: var(--green-800); }
+.reference-table td { border-bottom-color: var(--green-200); }
+.reference-table tr:hover td { background: var(--green-100); }
+
+#mapArea { width: 100%; height: 400px; border-radius: var(--radius); border: 1px solid var(--gray-200); }
+
+.tab-buttons { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid var(--gray-200); }
+.tab-btn { padding: 12px 16px; background: none; border: none; border-bottom: 3px solid transparent; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--gray-600); }
+.tab-btn.active { border-bottom-color: var(--green-600); color: var(--green-600); }
+
+.counter-group { display: flex; align-items: center; gap: 8px; }
+.counter-btn { width: 32px; height: 32px; padding: 0; border: 1px solid var(--gray-300); background: white; border-radius: var(--radius-sm); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+.counter-btn:hover { background: var(--gray-50); }
+.counter-input { width: 60px; padding: 6px 8px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); text-align: center; font-weight: 600; }
+
+/* Layout específico para Cadastrar Área */
+.cadastro-area-wrapper { display: grid; grid-template-columns: 1fr 350px; gap: 20px; align-items: start; }
+@media (max-width: 1200px) {
+  .cadastro-area-wrapper { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-icon">🌱</div>
+        <div class="logo-text">
+          <div class="logo-name">AgroMonitor</div>
+          <div class="logo-sub">SafraFort</div>
+        </div>
+      </div>
+    </div>
+
+    <nav>
+      <div class="nav-section">
+        <div class="nav-section-title">Menu</div>
+        <div class="nav-item active" onclick="irPara('page-dashboard', this)">📊 Dashboard</div>
+        <div class="nav-item" onclick="irPara('page-areas', this)">🗺️ Áreas</div>
+        <div class="nav-item" onclick="irPara('page-cadastro-area', this)">➕ Cadastrar Área</div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Operações</div>
+        <div class="nav-item" onclick="irPara('page-plantio', this)">🌱 Histórico Plantio</div>
+        <div class="nav-item" onclick="irPara('page-novoPlantio', this)">📝 Novo Plantio</div>
+        <div class="nav-item" onclick="irPara('page-monitoramento', this)">📈 Monitoramento</div>
+        <div class="nav-item" onclick="irPara('page-ocorrencia', this)">⚠️ Ocorrências</div>
+        <div class="nav-item" onclick="irPara('page-mapa', this)">🗺️ Mapa da Área</div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Configuração</div>
+        <div class="nav-item" onclick="irPara('page-culturas', this)">🌾 Culturas</div>
+        <div class="nav-item" onclick="irPara('page-variedades', this)">🔬 Variedades</div>
+        <div class="nav-item" onclick="irPara('page-adubos', this)">🧪 Adubos</div>
+        <div class="nav-item" onclick="irPara('page-pragas', this)">🐛 Pragas</div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Gestão</div>
+        <div class="nav-item" onclick="irPara('page-relatorio', this)">📊 Relatório</div>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h1 class="page-title" id="pageTitle">Dashboard</h1>
+      <div class="topbar-actions" id="topbarActions"></div>
+    </div>
+
+    <div class="content">
+
+      <!-- PÁGINA: Dashboard -->
+      <div class="page active" id="page-dashboard">
+        <div class="grid-3">
+          <div class="metric-card">
+            <div class="metric-label">Total de Áreas</div>
+            <div class="metric-val" id="metricAreas">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Total de Hectares</div>
+            <div class="metric-val" id="metricHa">0</div>
+            <div style="font-size:12px;color:var(--gray-500);margin-top:4px" id="metricAlq"></div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Plantios Registrados</div>
+            <div class="metric-val" id="metricPlantios">0</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:20px">
+          <div class="card-header">
+            <h3 class="card-title">Últimos Plantios</h3>
+          </div>
+          <div class="card-body">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Área</th>
+                  <th>Cultura</th>
+                  <th>Variedade</th>
+                </tr>
+              </thead>
+              <tbody id="dashPlantios"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PÁGINA: Áreas -->
+      <div class="page" id="page-areas">
+        <div class="grid-3" id="areasGrid"></div>
+      </div>
+
+      <!-- PÁGINA: Cadastrar Área -->
+      <div class="page" id="page-cadastro-area">
+        <div class="cadastro-area-wrapper">
+          <!-- LADO ESQUERDO: Formulário -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Dados da Área</h3>
+            </div>
+            <form onsubmit="salvarArea(event)" class="card-body">
+              <div class="form-row cols-2">
+                <div class="form-group">
+                  <label class="form-label">Nome da Área *</label>
+                  <input type="text" class="form-input" id="inputNomeArea" placeholder="Ex: Fazenda Santa Maria" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Nome do Cliente *</label>
+                  <input type="text" class="form-input" id="inputCliente" placeholder="Ex: João Silva" required>
+                </div>
+              </div>
+
+              <div class="form-row cols-3">
+                <div class="form-group">
+                  <label class="form-label">Hectares (ha) *</label>
+                  <input type="number" class="form-input" id="inputHa" placeholder="0,00" step="0.01" oninput="converterHaAlq()" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Alqueires (alq)</label>
+                  <input type="number" class="form-input" id="inputAlq" placeholder="0,00" step="0.01" oninput="converterAlqHa()" style="background:var(--gray-50)" readonly>
+                  <div class="form-hint">Conversão automática</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Pontos de Monitoramento</label>
+                  <input type="number" class="form-input" id="qtdPontos" value="5" min="1" max="50" readonly>
+                  <div class="form-hint" id="pontoRecomendacao">Recomendado: 1 ponto a cada 20-25 ha</div>
+                </div>
+              </div>
+
+              <div class="card-footer">
+                <button type="reset" class="btn btn-secondary">Limpar</button>
+                <button type="submit" class="btn btn-primary">Salvar Área</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- LADO DIREITO: Tabela de Referência -->
+          <div class="reference-table">
+            <table>
+              <thead>
+                <tr>
+                  <th colspan="2" style="text-align:center;font-weight:700">Tabela de Referência</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>1 ha</strong></td>
+                  <td>0,413 alq</td>
+                </tr>
+                <tr>
+                  <td><strong>1 alqueire</strong></td>
+                  <td>2.42 ha</td>
+                </tr>
+                <tr>
+                  <td><strong>100 ha</strong></td>
+                  <td>41,3 alq</td>
+                </tr>
+                <tr>
+                  <td><strong>200 ha</strong></td>
+                  <td>82,6 alq</td>
+                </tr>
+                <tr>
+                  <td><strong>Recomendação</strong></td>
+                  <td>1 ponto/20-25 ha</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PÁGINA: Histórico Plantio -->
+      <div class="page" id="page-plantio">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Histórico de Plantios</h3>
+          </div>
+          <div class="card-body">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Área</th>
+                  <th>Cultura</th>
+                  <th>Variedade</th>
+                </tr>
+              </thead>
+              <tbody id="plantioBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PÁGINA: Novo Plantio -->
+      <div class="page" id="page-novoPlantio">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Registro de Plantio</h3>
+          </div>
+          <form onsubmit="salvarPlantio(event)" class="card-body">
+            <div class="form-row cols-3">
+              <div class="form-group">
+                <label class="form-label">Data do Plantio *</label>
+                <input type="date" class="form-input" id="plantioData" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Área *</label>
+                <select class="form-select" id="plantioArea" required></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Cultura *</label>
+                <select class="form-select" id="plantioCultura" required></select>
+              </div>
+            </div>
+
+            <div class="form-row cols-3">
+              <div class="form-group">
+                <label class="form-label">Variedade / Híbrido</label>
+                <input type="text" class="form-input" id="plantioVariedade">
+              </div>
+              <div class="form-group">
+                <label class="form-label">População (sementes/metro)</label>
+                <input type="number" class="form-input" id="plantioPopulacao" step="0.1">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tipo de Adubo</label>
+                <input type="text" class="form-input" id="plantioAduboTipo" placeholder="NPK 08-28-16">
+              </div>
+            </div>
+
+            <div class="form-row cols-3">
+              <div class="form-group">
+                <label class="form-label">Quantidade (kg/ha)</label>
+                <input type="number" class="form-input" id="plantioAduboQtd" step="1">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Plantio</label>
+                <select class="form-select" id="plantioCondicao">
+                  <option value="apos_chuva">Após chuva</option>
+                  <option value="irrigado">Irrigado</option>
+                  <option value="seco">Seco</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Solo</label>
+                <select class="form-select" id="plantioSolo">
+                  <option value="boa">Boa</option>
+                  <option value="media">Média</option>
+                  <option value="ruim">Ruim</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Observações</label>
+              <textarea class="form-textarea" id="plantioObs" style="min-height:60px"></textarea>
+            </div>
+
+            <div class="card-footer">
+              <button type="reset" class="btn btn-secondary">Limpar</button>
+              <button type="submit" class="btn btn-primary">Salvar Plantio</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- PÁGINA: Monitoramento -->
+      <div class="page" id="page-monitoramento">
+        <div class="tab-buttons">
+          <button class="tab-btn active" onclick="abrirAbaMon('recentes')">Monitoramentos Recentes</button>
+          <button class="tab-btn" onclick="abrirAbaMon('registrar')">Registrar Monitoramento</button>
+        </div>
+
+        <!-- Aba: Recentes -->
+        <div id="tab-recentes-mon" style="display:block">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Monitoramentos Recentes por Área</h3>
+            </div>
+            <div class="card-body">
+              <div id="monitoramentosRecentes" style="display:grid;gap:16px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aba: Registrar -->
+        <div id="tab-registrar-mon" style="display:none">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Registro de Monitoramento</h3>
+            </div>
+            <form onsubmit="salvarMonitoramento(event)" class="card-body">
+              <div class="form-row cols-3">
+                <div class="form-group">
+                  <label class="form-label">Área *</label>
+                  <select class="form-select" id="monArea" required onchange="carregarPontosMon()"></select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Ponto de Monitoramento *</label>
+                  <select class="form-select" id="monPonto" required></select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Data *</label>
+                  <input type="date" class="form-input" id="monData" required>
+                </div>
+              </div>
+
+              <div class="form-row cols-2">
+                <div class="form-group">
+                  <label class="form-label">Cultura *</label>
+                  <select class="form-select" id="monCultura" required onchange="atualizarCamposMonitor()"></select>
+                </div>
+              </div>
+
+              <!-- MILHO -->
+              <div id="camposMilho" style="display:none">
+                <div style="padding:12px;background:var(--green-50);border-radius:var(--radius-sm);margin-bottom:16px;font-size:12px;color:var(--green-700)">
+                  <strong>Metodologia:</strong> 20 plantas avaliadas por ponto
+                </div>
+                <div class="form-row cols-2">
+                  <div class="form-group">
+                    <label class="form-label">Plantas Avaliadas</label>
+                    <input type="number" class="form-input" id="milhoAval" value="20" readonly>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Plantas com Praga</label>
+                    <div class="counter-group">
+                      <button type="button" class="counter-btn" onclick="decrementMilho()">−</button>
+                      <input type="number" class="counter-input" id="milhoPraga" value="0" oninput="calcMilho()" readonly>
+                      <button type="button" class="counter-btn" onclick="incrementMilho()">+</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="calc-result-box">
+                  <div style="font-size:12px;color:var(--gray-600);margin-bottom:4px">RESULTADO CALCULADO</div>
+                  <div class="calc-result-big" id="milhoResultado">0,0%</div>
+                  <div style="font-size:12px;margin-top:4px;color:var(--gray-500)" id="milhoFormula">0 planta(s) com praga ÷ 20 avaliadas × 100 = 0%</div>
+                  <div id="milhoAlerta" class="alert-box alert-ok" style="margin:8px 0 0">Dentro do nível de controle (≤ 10% para lagartas no cartucho)</div>
+                </div>
+              </div>
+
+              <!-- SOJA -->
+              <div id="camposSoja" style="display:none">
+                <div style="padding:12px;background:var(--green-50);border-radius:var(--radius-sm);margin-bottom:16px;font-size:12px;color:var(--green-700)">
+                  <strong>Metodologia:</strong> Batida de pano — 2 metros lineares = 2 m² por ponto
+                </div>
+                <div class="form-row cols-2">
+                  <div class="form-group">
+                    <label class="form-label">Pragas Encontradas</label>
+                    <div class="counter-group">
+                      <button type="button" class="counter-btn" onclick="decrementSoja()">−</button>
+                      <input type="number" class="counter-input" id="sojaPragas" value="0" oninput="calcSoja()" readonly>
+                      <button type="button" class="counter-btn" onclick="incrementSoja()">+</button>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Metros Lineares</label>
+                    <input type="number" class="form-input" id="sojaMetros" value="2" step="0.1" oninput="calcSoja()">
+                  </div>
+                </div>
+                <div class="calc-result-box">
+                  <div style="font-size:12px;color:var(--gray-600);margin-bottom:4px">RESULTADO CALCULADO</div>
+                  <div class="calc-result-big" id="sojaResultado">0,0/m²</div>
+                  <div style="font-size:12px;margin-top:4px;color:var(--gray-500)" id="sojaFormula">0 pragas ÷ (2 ÷ 2) = 0 pragas/m²</div>
+                  <div id="sojaAlerta" class="alert-box alert-ok" style="margin:8px 0 0">Dentro do nível de controle</div>
+                </div>
+              </div>
+
+              <div class="form-row cols-2">
+                <div class="form-group">
+                  <label class="form-label">Tipo de Praga</label>
+                  <select class="form-select" id="monTipoPraga"></select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Observações</label>
+                  <textarea class="form-textarea" id="monObs" style="min-height:60px"></textarea>
+                </div>
+              </div>
+
+              <div class="card-footer">
+                <button type="reset" class="btn btn-secondary">Limpar</button>
+                <button type="submit" class="btn btn-primary">Salvar Monitoramento</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- PÁGINA: Ocorrências -->
+      <div class="page" id="page-ocorrencia">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Registrar Ocorrência</h3>
+          </div>
+          <form onsubmit="salvarOcorrencia(event)" class="card-body">
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label class="form-label">Área *</label>
+                <select class="form-select" id="ocorrArea" required onchange="carregarPontosOcorr()"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Ponto *</label>
+                <select class="form-select" id="ocorrPonto" required></select>
+              </div>
+            </div>
+
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label class="form-label">Data *</label>
+                <input type="date" class="form-input" id="ocorrData" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Quantidade Encontrada *</label>
+                <input type="number" class="form-input" id="ocorrQtd" min="1" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Tipo de Praga / Doença *</label>
+              <select class="form-select" id="ocorrTipoPraga" required></select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Observações</label>
+              <textarea class="form-textarea" id="ocorrObs" style="min-height:80px" placeholder="Descreva a ocorrência..."></textarea>
+            </div>
+
+            <div class="card-footer">
+              <button type="reset" class="btn btn-secondary">Limpar</button>
+              <button type="submit" class="btn btn-primary">Salvar Ocorrência</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- PÁGINA: Mapa -->
+      <div class="page" id="page-mapa">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Mapa da Área</h3>
+            <select id="mapaAreaSelect" class="form-select" style="width:200px" onchange="carregarMapaArea()">
+              <option value="">Selecione uma área...</option>
+            </select>
+          </div>
+          <div class="card-body">
+            <div id="mapArea"></div>
+            <div style="margin-top:20px">
+              <h4 style="font-size:13px;font-weight:600;margin-bottom:12px">Pontos de Monitoramento</h4>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Ponto</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                  </tr>
+                </thead>
+                <tbody id="mapapontosBody"></tbody>
+              </table>
+            </div>
+            <button class="btn btn-primary" style="margin-top:20px" onclick="document.getElementById('uploadAreaFile').click()">📤 Upload de Área (GeoJSON)</button>
+            <input type="file" id="uploadAreaFile" style="display:none" accept=".geojson,.json" onchange="handleFileUpload(event)">
+          </div>
+        </div>
+      </div>
+
+      <!-- PÁGINA: Culturas -->
+      <div class="page" id="page-culturas">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Culturas</h3>
+            <button class="btn btn-primary btn-sm" onclick="abrirModalNovoCultura()">+ Novo</button>
+          </div>
+          <div class="card-body">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Descrição</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+              <tbody id="culturasList"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PÁGINA: Variedades -->
+      <div class="page" id="page-variedades">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Variedades</h3>
+            <button class="btn btn-primary btn-sm" onclick="abrirModalNovoVariedade()">+ Novo</button>
+          </div>
+          <div class="card-body">
+            <div class="form-group" style="margin-bottom:16px">
+              <label class="form-label">Filtrar por Cultura</label>
+              <select id="filtroVar" class="form-select" onchange="carregarVariedades()">
+                <option value="">Todas</option>
+              </select>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Cultura</th>
+                  <th>Nome</th>
+                  <th>Descrição</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+              <tbody id="variedadesList"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PÁGINA: Adubos -->
+      <div class="page" id="page-adubos">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Adubos</h3>
+            <button class="btn btn-primary btn-sm" onclick="abrirModalNovoAdubo()">+ Novo</button>
+          </div>
+          <div class="card-body">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Tipo</th>
+                  <th>NPK</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+              <tbody id="adubosList"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PÁGINA: Pragas -->
+      <div class="page" id="page-pragas">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Pragas</h3>
+            <button class="btn btn-primary btn-sm" onclick="abrirModalNovoPraga()">+ Novo</button>
+          </div>
+          <div class="card-body">
+            <div class="form-group" style="margin-bottom:16px">
+              <label class="form-label">Filtrar por Cultura</label>
+              <select id="filtroPrag" class="form-select" onchange="carregarPragas()">
+                <option value="">Todas</option>
+              </select>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Cultura</th>
+                  <th>Risco</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+              <tbody id="pragasList"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PÁGINA: Relatório -->
+      <div class="page" id="page-relatorio">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Gerar Relatório</h3>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Selecione a Área</label>
+              <select id="relatorioAreaSelect" class="form-select" onchange="previewRelatorio()"></select>
+            </div>
+            <div id="relatorioPreview" style="margin-top:20px;padding:16px;background:var(--gray-50);border-radius:var(--radius-sm);border:1px solid var(--gray-200);"></div>
+            <button class="btn btn-primary" onclick="gerarPDF()" style="width:100%;margin-top:16px">📄 Gerar PDF</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL DE CADASTRO/EDIÇÃO -->
+<div id="modal-config" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;overflow:auto">
+  <div style="background:white;border-radius:var(--radius);max-width:500px;margin:50px auto;padding:24px;box-shadow:var(--shadow-md)">
+    <h2 id="modal-titulo" style="margin-bottom:20px;font-size:16px;font-weight:700">Novo</h2>
+    <form id="form-config" style="display:grid;gap:16px" onsubmit="salvarNovoItemConfig(event)">
+      <!-- Campos dinâmicos inseridos aqui -->
+    </form>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px">
+      <button type="button" onclick="fecharModalConfig()" class="btn btn-secondary">Cancelar</button>
+      <button type="submit" class="btn btn-primary" form="form-config">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const API = 'http://localhost/agromonitor/api/index.php';
+const state = { areas: [], plantios: [], monitoramentos: [], culturas: [], pragas: [], pontos: [], ocorrencias: [] };
+let map;
+
+function irPara(pagina, elemento) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pagina).classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (elemento) elemento.classList.add('active');
+
+  const titulos = {
+    'page-dashboard': 'Dashboard',
+    'page-areas': 'Áreas',
+    'page-cadastro-area': 'Cadastrar Área',
+    'page-plantio': 'Histórico de Plantios',
+    'page-novoPlantio': 'Novo Plantio',
+    'page-monitoramento': 'Monitoramento',
+    'page-ocorrencia': 'Ocorrências',
+    'page-mapa': 'Mapa da Área',
+    'page-culturas': 'Culturas',
+    'page-variedades': 'Variedades',
+    'page-adubos': 'Adubos',
+    'page-pragas': 'Pragas',
+    'page-relatorio': 'Relatório'
+  };
+  document.getElementById('pageTitle').textContent = titulos[pagina] || 'AgroMonitor';
+
+  carregarConteudoPagina(pagina);
+}
+
+function carregarConteudoPagina(pagina) {
+  if (pagina === 'page-dashboard') carregarDashboard();
+  else if (pagina === 'page-areas') carregarAreas();
+  else if (pagina === 'page-cadastro-area') { /* Sem dependências */ }
+  else if (pagina === 'page-plantio') carregarPlantios();
+  else if (pagina === 'page-novoPlantio') { carregarSelectAreas(); carregarSelectCulturas('plantioCultura'); carregarVariedadesNovoPlantio(); carregarAdubosNovoPlantio(); }
+  else if (pagina === 'page-monitoramento') { carregarSelectAreas(); carregarSelectCulturas('monCultura'); carregarPragas(); carregarMonitoramentosRecentes(); }
+  else if (pagina === 'page-ocorrencia') { carregarSelectAreas(); carregarPragas(); }
+  else if (pagina === 'page-culturas') carregarCulturas();
+  else if (pagina === 'page-variedades') { carregarSelectCulturas('filtroVar'); carregarVariedades(); }
+  else if (pagina === 'page-adubos') carregarAdubos();
+  else if (pagina === 'page-pragas') { carregarSelectCulturas('filtroPrag'); carregarPragas(); }
+  else if (pagina === 'page-mapa') carregarSelectAreasMapa();
+  else if (pagina === 'page-relatorio') carregarSelectAreasRelatorio();
+}
+
+async function carregarDashboard() {
+  try {
+    const r = await fetch(`${API}/areas`);
+    const d = await r.json();
+    state.areas = d.dados || [];
+
+    const totalHa = state.areas.reduce((sum, a) => sum + parseFloat(a.hectares || 0), 0);
+    const totalAlq = (totalHa / 2.42).toFixed(2);
+
+    document.getElementById('metricAreas').textContent = state.areas.length;
+    document.getElementById('metricHa').textContent = totalHa.toFixed(2);
+    document.getElementById('metricAlq').textContent = `${totalAlq} alqueires`;
+
+    carregarPlantios();
+  } catch (e) { console.error(e); }
+}
+
+async function carregarAreas() {
+  try {
+    const r = await fetch(`${API}/areas`);
+    const d = await r.json();
+    state.areas = d.dados || [];
+
+    const grid = document.getElementById('areasGrid');
+    grid.innerHTML = state.areas.map(a => `
+      <div class="area-card">
+        <div class="area-card-thumb">🗺️</div>
+        <div class="area-card-body">
+          <div class="area-card-title">${a.nome}</div>
+          <div class="area-card-subtitle">${a.nome_cliente}</div>
+          <div style="font-size:12px;color:var(--gray-500);margin-top:8px">
+            ${a.hectares} ha (${(a.hectares/2.42).toFixed(2)} alq)
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) { console.error(e); }
+}
+
+async function carregarSelectAreas() {
+  try {
+    const r = await fetch(`${API}/areas`);
+    const d = await r.json();
+    state.areas = d.dados || [];
+
+    const selects = ['plantioArea', 'monArea', 'ocorrArea'];
+    selects.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.innerHTML = '<option value="">Selecione...</option>' + state.areas.map(a =>
+          `<option value="${a.id}">${a.nome} - ${a.nome_cliente}</option>`
+        ).join('');
+      }
+    });
+  } catch (e) { console.error(e); }
+}
+
+async function carregarSelectCulturas(selectId) {
+  try {
+    const r = await fetch(`${API}/culturas`);
+    const d = await r.json();
+    state.culturas = d.dados || [];
+
+    const el = document.getElementById(selectId);
+    if (el) {
+      el.innerHTML = '<option value="">Selecione...</option>' + (d.dados || []).map(c =>
+        `<option value="${c.id}">${c.nome}</option>`
+      ).join('');
+    }
+    
+    // Se é o campo de cultura em "Novo Plantio", carregar variedades também
+    if (selectId === 'plantioCultura') {
+      carregarVariedadesNovoPlantio();
+      carregarAdubosNovoPlantio();
+    }
+  } catch (e) { console.error(e); }
+}
+
+async function carregarVariedadesNovoPlantio() {
+  try {
+    const r = await fetch(`${API}/variedades`);
+    const d = await r.json();
+    const variedades = d.dados || [];
+    
+    const el = document.getElementById('plantioVariedade');
+    if (el && variedades.length > 0) {
+      // Remover datalist antigo
+      const existingDatalist = document.getElementById('variedadesList');
+      if (existingDatalist) existingDatalist.remove();
+      
+      // Criar novo datalist com NOMES das variedades
+      let html = '<datalist id="variedadesList">';
+      variedades.forEach(v => {
+        html += `<option value="${v.nome}" data-id="${v.id}"></option>`;
+      });
+      html += '</datalist>';
+      
+      document.body.insertAdjacentHTML('beforeend', html);
+      el.setAttribute('list', 'variedadesList');
+      
+      console.log('Variedades carregadas:', variedades.length);
+    }
+  } catch (e) { 
+    console.error('Erro ao carregar variedades:', e);
+  }
+}
+
+async function carregarAdubosNovoPlantio() {
+  try {
+    const r = await fetch(`${API}/adubos`);
+    const d = await r.json();
+    const adubos = d.dados || [];
+    
+    const el = document.getElementById('plantioAduboTipo');
+    if (el && adubos.length > 0) {
+      // Converter em datalist para autocomplete
+      let html = '<datalist id="adubosList">';
+      adubos.forEach(a => {
+        html += `<option value="${a.nome}"></option>`;
+      });
+      html += '</datalist>';
+      
+      // Limpar e recriar
+      const existingDatalist = document.getElementById('adubosList');
+      if (existingDatalist) existingDatalist.remove();
+      document.body.insertAdjacentHTML('beforeend', html);
+      
+      el.setAttribute('list', 'adubosList');
+    }
+  } catch (e) { console.error(e); }
+}
+
+async function carregarSelectAreasMapa() {
+  try {
+    const r = await fetch(`${API}/areas`);
+    const d = await r.json();
+    state.areas = d.dados || [];
+
+    const el = document.getElementById('mapaAreaSelect');
+    el.innerHTML = '<option value="">Selecione...</option>' + state.areas.map(a =>
+      `<option value="${a.id}">${a.nome}</option>`
+    ).join('');
+  } catch (e) { console.error(e); }
+}
+
+async function carregarSelectAreasRelatorio() {
+  try {
+    const r = await fetch(`${API}/areas`);
+    const d = await r.json();
+    const el = document.getElementById('relatorioAreaSelect');
+    el.innerHTML = '<option value="">Selecione...</option>' + (d.dados || []).map(a =>
+      `<option value="${a.id}">${a.nome}</option>`
+    ).join('');
+  } catch (e) { console.error(e); }
+}
+
+function converterHaAlq() {
+  const ha = parseFloat(document.getElementById('inputHa').value) || 0;
+  const alq = (ha / 2.42).toFixed(2);
+  document.getElementById('inputAlq').value = alq;
+  document.getElementById('qtdPontos').value = Math.max(1, Math.ceil(ha / 22.5));
+  document.getElementById('pontoRecomendacao').textContent = `Recomendado: ${Math.max(1, Math.ceil(ha / 22.5))} ponto(s) (1 a cada 20-25 ha)`;
+}
+
+function converterAlqHa() {
+  const alq = parseFloat(document.getElementById('inputAlq').value) || 0;
+  const ha = (alq * 2.42).toFixed(2);
+  document.getElementById('inputHa').value = ha;
+}
+
+async function salvarArea(e) {
+  e.preventDefault();
+
+  const nome = document.getElementById('inputNomeArea').value;
+  const cliente = document.getElementById('inputCliente').value;
+  const hectares = parseFloat(document.getElementById('inputHa').value);
+  const pontos = parseInt(document.getElementById('qtdPontos').value);
+
+  if (!nome || !cliente || !hectares) {
+    showToast('❌ Preencha todos os campos obrigatórios', true);
+    return;
+  }
+
+  // ✅ CORRIGIDO: Usar snake_case conforme API espera
+  const data = {
+    nome: nome,
+    nome_cliente: cliente,      // ✅ snake_case
+    cultura: 'milho',           // API espera este campo
+    hectares: hectares,
+    qtd_pontos: pontos          // ✅ snake_case
+  };
+
+  console.log('Enviando dados:', data);
+
+  try {
+    const r = await fetch(`${API}/areas`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+
+    if (!r.ok) {
+      throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+    }
+
+    const d = await r.json();
+    console.log('Resposta da API:', d);
+
+    if (d.sucesso) {
+      showToast('✅ Área criada com sucesso!');
+      document.querySelector('#page-cadastro-area form').reset();
+      converterHaAlq();
+      carregarAreas();
+      carregarDashboard();
+    } else {
+      showToast('❌ Erro: ' + (d.erro || 'Desconhecido'), true);
+    }
+  } catch (e) {
+    console.error('Erro ao salvar:', e);
+    showToast('❌ Erro de conexão: ' + e.message, true);
+  }
+}
+
+async function carregarPlantios() {
+  try {
+    const r = await fetch(`${API}/plantios`);
+    const d = await r.json();
+    state.plantios = d.dados || [];
+
+    // Carregar também culturas e variedades para tradução
+    const rCult = await fetch(`${API}/culturas`);
+    const dCult = await rCult.json();
+    const culturas = dCult.dados || [];
+    
+    const rVar = await fetch(`${API}/variedades`);
+    const dVar = await rVar.json();
+    const variedades = dVar.dados || [];
+    
+    const culturasMap = {};
+    culturas.forEach(c => {
+      culturasMap[c.id] = c.nome;
+    });
+    
+    const variedadesMap = {};
+    variedades.forEach(v => {
+      variedadesMap[v.id] = v.nome;
+    });
+
+    const bodies = ['plantioBody', 'dashPlantios'];
+    bodies.forEach(id => {
+      const tbody = document.getElementById(id);
+      if (tbody) {
+        tbody.innerHTML = (state.plantios || []).slice(0, 10).map(p => {
+          const areaNome = state.areas.find(a => a.id == p.area_id)?.nome || '—';
+          // Usar cultura_id se existir, senão cultura
+          const culturaId = p.cultura_id || p.cultura;
+          const culturaNome = culturasMap[culturaId] || p.cultura || '—';
+          
+          // Mostrar nome da variedade (p.variedade_id é o ID)
+          const variedadeNome = variedadesMap[p.variedade_id] || p.variedade_id || '—';
+          
+          return `
+            <tr>
+              <td>${p.data_plantio || '—'}</td>
+              <td>${areaNome}</td>
+              <td><span class="badge badge-green">${culturaNome}</span></td>
+              <td>${variedadeNome}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+    });
+  } catch (e) { console.error(e); }
+}
+
+async function salvarPlantio(e) {
+  e.preventDefault();
+
+  const data = {
+    area_id: document.getElementById('plantioArea').value,
+    data_plantio: document.getElementById('plantioData').value,
+    cultura: document.getElementById('plantioCultura').value,
+    variedade_id: null,
+    populacao_semente: document.getElementById('plantioPopulacao').value || null,
+    adubo_tipo: document.getElementById('plantioAduboTipo').value,
+    adubo_qtd_kg: document.getElementById('plantioAduboQtd').value || null,
+    condicao_plantio: document.getElementById('plantioCondicao').value,
+    condicao_solo: document.getElementById('plantioSolo').value,
+    observacoes: document.getElementById('plantioObs').value
+  };
+
+  try {
+    const r = await fetch(`${API}/plantios`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    const d = await r.json();
+
+    if (d.sucesso) {
+      showToast('✅ Plantio registrado!');
+      document.querySelector('#page-novoPlantio form').reset();
+      carregarPlantios();
+    } else {
+      showToast('❌ Erro: ' + (d.erro || 'Desconhecido'), true);
+    }
+  } catch (e) {
+    showToast('❌ Erro: ' + e.message, true);
+  }
+}
+
+function abrirAbaMon(aba) {
+  document.getElementById('tab-recentes-mon').style.display = aba === 'recentes' ? 'block' : 'none';
+  document.getElementById('tab-registrar-mon').style.display = aba === 'registrar' ? 'block' : 'none';
+
+  document.querySelectorAll('#page-monitoramento .tab-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', (i === 0 && aba === 'recentes') || (i === 1 && aba === 'registrar'));
+  });
+}
+
+async function carregarPontosMon() {
+  const areaId = document.getElementById('monArea').value;
+  if (!areaId) {
+    document.getElementById('monPonto').innerHTML = '<option value="">Selecione uma área primeiro</option>';
+    return;
+  }
+  
+  try {
+    // Pegar a área selecionada para ver qtd_pontos
+    const area = state.areas.find(a => a.id == areaId);
+    if (!area) {
+      document.getElementById('monPonto').innerHTML = '<option value="">Área não encontrada</option>';
+      return;
+    }
+    
+    const qtdPontos = area.qtd_pontos || 5;
+    let html = '<option value="">Selecione...</option>';
+    
+    // Criar opções de 1 até qtdPontos
+    for (let i = 1; i <= qtdPontos; i++) {
+      html += `<option value="${areaId}-${i}">Ponto ${i}</option>`;
+    }
+    
+    document.getElementById('monPonto').innerHTML = html;
+    console.log(`Área: ${area.nome}, Pontos: ${qtdPontos}`);
+  } catch (e) {
+    console.error('Erro ao carregar pontos:', e);
+    document.getElementById('monPonto').innerHTML = '<option value="">Erro ao carregar</option>';
+  }
+}
+
+function atualizarCamposMonitor() {
+  const cultura = document.getElementById('monCultura').value;
+  document.getElementById('camposMilho').style.display = cultura === '1' ? 'block' : 'none';
+  document.getElementById('camposSoja').style.display = cultura === '2' ? 'block' : 'none';
+  calcMilho();
+  calcSoja();
+}
+
+function incrementMilho() {
+  const el = document.getElementById('milhoPraga');
+  el.value = Math.min(parseInt(el.value || 0) + 1, 100);
+  calcMilho();
+}
+
+function decrementMilho() {
+  const el = document.getElementById('milhoPraga');
+  el.value = Math.max(parseInt(el.value || 0) - 1, 0);
+  calcMilho();
+}
+
+function incrementSoja() {
+  const el = document.getElementById('sojaPragas');
+  el.value = Math.min(parseInt(el.value || 0) + 1, 100);
+  calcSoja();
+}
+
+function decrementSoja() {
+  const el = document.getElementById('sojaPragas');
+  el.value = Math.max(parseInt(el.value || 0) - 1, 0);
+  calcSoja();
+}
+
+function calcMilho() {
+  const aval = 20;
+  const praga = parseInt(document.getElementById('milhoPraga').value) || 0;
+  const resultado = (praga / aval * 100).toFixed(1);
+  document.getElementById('milhoResultado').textContent = resultado + '%';
+  document.getElementById('milhoFormula').textContent = `${praga} planta(s) com praga ÷ ${aval} avaliadas × 100 = ${resultado}%`;
+  
+  const alertEl = document.getElementById('milhoAlerta');
+  if (resultado <= 10) {
+    alertEl.className = 'alert-box alert-ok';
+    alertEl.textContent = '✅ Dentro do nível de controle (≤ 10% para lagartas no cartucho)';
+  } else {
+    alertEl.className = 'alert-box alert-warn';
+    alertEl.textContent = '⚠️ Atenção: acima do nível de controle! Avalie aplicação de inseticida.';
+  }
+}
+
+function calcSoja() {
+  const pragas = parseInt(document.getElementById('sojaPragas').value) || 0;
+  const metros = parseFloat(document.getElementById('sojaMetros').value) || 2;
+  const resultado = (pragas / (metros / 2)).toFixed(1);
+  document.getElementById('sojaResultado').textContent = resultado + '/m²';
+  document.getElementById('sojaFormula').textContent = `${pragas} pragas ÷ (${metros} ÷ 2) = ${resultado} pragas/m²`;
+  
+  const alertEl = document.getElementById('sojaAlerta');
+  if (resultado < 3.0) {
+    alertEl.className = 'alert-box alert-ok';
+    alertEl.textContent = '✅ Dentro do nível de controle para percevejos (< 3,0 pragas/m²)';
+  } else {
+    alertEl.className = 'alert-box alert-warn';
+    alertEl.textContent = '⚠️ Atenção: acima do nível de controle para percevejos (3,0 pragas/m²)! Avalie aplicação.';
+  }
+}
+
+async function salvarMonitoramento(e) {
+  e.preventDefault();
+
+  const cultura = document.getElementById('monCultura').value;
+  const data = {
+    ponto_id: document.getElementById('monPonto').value,
+    data_monitoramento: document.getElementById('monData').value,
+    cultura: cultura === '1' ? 'milho' : 'soja',
+    milho_plantas_avaliadas: cultura === '1' ? 20 : null,
+    milho_plantas_praga: cultura === '1' ? parseInt(document.getElementById('milhoPraga').value) || 0 : null,
+    soja_pragas_encontradas: cultura === '2' ? parseInt(document.getElementById('sojaPragas').value) || 0 : null,
+    soja_metros_lineares: cultura === '2' ? parseFloat(document.getElementById('sojaMetros').value) || 2 : null,
+    tipo_praga: document.getElementById('monTipoPraga').value,
+    observacoes: document.getElementById('monObs').value
+  };
+
+  try {
+    const r = await fetch(`${API}/monitoramentos`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    const d = await r.json();
+
+    if (d.sucesso) {
+      showToast('✅ Monitoramento registrado!');
+      document.querySelector('#tab-registrar-mon form').reset();
+      carregarMonitoramentosRecentes();
+    } else {
+      showToast('❌ Erro: ' + (d.erro || 'Desconhecido'), true);
+    }
+  } catch (e) {
+    showToast('❌ Erro: ' + e.message, true);
+  }
+}
+
+async function carregarMonitoramentosRecentes() {
+  try {
+    const r = await fetch(`${API}/monitoramentos`);
+    const d = await r.json();
+    state.monitoramentos = d.dados || [];
+
+    const div = document.getElementById('monitoramentosRecentes');
+    if (!div) return;
+
+    if (state.monitoramentos.length === 0) {
+      div.innerHTML = '<p style="text-align:center;color:var(--gray-400);padding:20px">Nenhum monitoramento registrado</p>';
+      return;
+    }
+
+    const porArea = {};
+    state.monitoramentos.forEach(m => {
+      const areaNome = state.areas.find(a => a.id == m.ponto_id)?.nome || 'Desconhecida';
+      if (!porArea[areaNome]) porArea[areaNome] = [];
+      porArea[areaNome].push(m);
+    });
+
+    div.innerHTML = Object.entries(porArea).map(([area, monits]) => {
+      const ultimoMon = monits[0];
+      const resultado = ultimoMon.resultado_final ? parseFloat(ultimoMon.resultado_final).toFixed(1) : '—';
+      const unidade = ultimoMon.unidade_resultado || (ultimoMon.cultura === 'soja' ? '/m²' : '%');
+      return `
+        <div style="border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:16px">
+          <div style="font-weight:600;margin-bottom:8px">${area}</div>
+          <div style="font-size:12px;color:var(--gray-600)">
+            <div>Último: ${ultimoMon.data_monitoramento || '—'}</div>
+            <div>Cultura: ${ultimoMon.cultura || '—'}</div>
+            <div>Resultado: ${resultado}${unidade}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (e) { console.error(e); }
+}
+
+async function carregarPontosOcorr() {
+  const areaId = document.getElementById('ocorrArea').value;
+  if (!areaId) {
+    document.getElementById('ocorrPonto').innerHTML = '<option value="">Selecione uma área primeiro</option>';
+    return;
+  }
+  
+  try {
+    // Pegar a área selecionada para ver qtd_pontos
+    const area = state.areas.find(a => a.id == areaId);
+    if (!area) {
+      document.getElementById('ocorrPonto').innerHTML = '<option value="">Área não encontrada</option>';
+      return;
+    }
+    
+    const qtdPontos = area.qtd_pontos || 5;
+    let html = '<option value="">Selecione...</option>';
+    
+    // Criar opções de 1 até qtdPontos
+    for (let i = 1; i <= qtdPontos; i++) {
+      html += `<option value="${areaId}-${i}">Ponto ${i}</option>`;
+    }
+    
+    document.getElementById('ocorrPonto').innerHTML = html;
+    console.log(`Área: ${area.nome}, Pontos: ${qtdPontos}`);
+  } catch (e) {
+    console.error('Erro ao carregar pontos:', e);
+    document.getElementById('ocorrPonto').innerHTML = '<option value="">Erro ao carregar</option>';
+  }
+}
+
+async function salvarOcorrencia(e) {
+  e.preventDefault();
+
+  const data = {
+    ponto_id: document.getElementById('ocorrPonto').value,
+    data_ocorrencia: document.getElementById('ocorrData').value,
+    tipo_praga: document.getElementById('ocorrTipoPraga').value,
+    quantidade: parseInt(document.getElementById('ocorrQtd').value),
+    observacoes: document.getElementById('ocorrObs').value
+  };
+
+  try {
+    const r = await fetch(`${API}/ocorrencias`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    const d = await r.json();
+
+    if (d.sucesso) {
+      showToast('✅ Ocorrência registrada!');
+      document.querySelector('#page-ocorrencia form').reset();
+    } else {
+      showToast('❌ Erro: ' + (d.erro || 'Desconhecido'), true);
+    }
+  } catch (e) {
+    showToast('❌ Erro: ' + e.message, true);
+  }
+}
+
+async function carregarCulturas() {
+  try {
+    const r = await fetch(`${API}/culturas`);
+    const d = await r.json();
+    state.culturas = d.dados || [];
+
+    const tbody = document.getElementById('culturasList');
+    tbody.innerHTML = state.culturas.map(c => `
+      <tr>
+        <td>${c.nome}</td>
+        <td>${c.descricao || '—'}</td>
+        <td><button class="btn btn-secondary btn-sm" onclick="alert('Editar - em desenvolvimento')">Editar</button></td>
+      </tr>
+    `).join('');
+  } catch (e) { console.error(e); }
+}
+
+async function carregarVariedades() {
+  try {
+    console.log('Carregando variedades...');
+    const cultura = document.getElementById('filtroVar').value;
+    const url = cultura ? `${API}/variedades?cultura_id=${cultura}` : `${API}/variedades`;
+    const r = await fetch(url);
+    const d = await r.json();
+    state.variedades = d.dados || d || [];
+
+    console.log('Variedades carregadas:', state.variedades);
+
+    // Carregar culturas para tradução
+    const rCult = await fetch(`${API}/culturas`);
+    const dCult = await rCult.json();
+    const culturas = dCult.dados || dCult || [];
+    
+    const culturasMap = {};
+    culturas.forEach(c => {
+      culturasMap[c.id] = c.nome;
+    });
+
+    const tbody = document.getElementById('variedadesList');
+    if (!tbody) {
+      console.error('Elemento variedadesList não encontrado');
+      return;
+    }
+    
+    if (state.variedades.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">Nenhuma variedade cadastrada</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = state.variedades.map(v => `
+      <tr>
+        <td>${culturasMap[v.cultura_id] || '—'}</td>
+        <td>${v.nome}</td>
+        <td>${v.descricao || '—'}</td>
+        <td><button class="btn btn-secondary btn-sm" onclick="alert('Editar - em desenvolvimento')">Editar</button></td>
+      </tr>
+    `).join('');
+  } catch (e) { 
+    console.error('Erro ao carregar variedades:', e);
+    const tbody = document.getElementById('variedadesList');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red">Erro ao carregar variedades</td></tr>';
+    }
+  }
+}
+
+async function carregarAdubos() {
+  try {
+    console.log('Carregando adubos...');
+    const r = await fetch(`${API}/adubos`);
+    const d = await r.json();
+    state.adubos = d.dados || d || [];
+    
+    console.log('Adubos carregados:', state.adubos);
+
+    const tbody = document.getElementById('adubosList');
+    if (!tbody) {
+      console.error('Elemento adubosList não encontrado');
+      return;
+    }
+    
+    if (state.adubos.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">Nenhum adubo cadastrado</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = state.adubos.map(a => `
+      <tr>
+        <td>${a.nome}</td>
+        <td>${a.tipo || '—'}</td>
+        <td>${a.npk || '—'}</td>
+        <td><button class="btn btn-secondary btn-sm" onclick="alert('Editar - em desenvolvimento')">Editar</button></td>
+      </tr>
+    `).join('');
+  } catch (e) { 
+    console.error('Erro ao carregar adubos:', e);
+    const tbody = document.getElementById('adubosList');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red">Erro ao carregar adubos</td></tr>';
+    }
+  }
+}
+
+async function carregarPragas() {
+  try {
+    const cultura = document.getElementById('filtroPrag').value;
+    const url = cultura ? `${API}/pragas?cultura=${cultura}` : `${API}/pragas`;
+    const r = await fetch(url);
+    const d = await r.json();
+    state.pragas = d.dados || [];
+
+    const select = document.getElementById('monTipoPraga');
+    if (select) {
+      select.innerHTML = '<option value="">Selecione...</option>' + state.pragas.map(p =>
+        `<option value="${p.id}">${p.nome}</option>`
+      ).join('');
+    }
+
+    const select2 = document.getElementById('ocorrTipoPraga');
+    if (select2) {
+      select2.innerHTML = '<option value="">Selecione...</option>' + state.pragas.map(p =>
+        `<option value="${p.id}">${p.nome}</option>`
+      ).join('');
+    }
+
+    const tbody = document.getElementById('pragasList');
+    if (tbody) {
+      tbody.innerHTML = state.pragas.map(p => {
+        const badge = p.nivel_risco === 'alto' 
+          ? '<span class="badge badge-red">Alto</span>'
+          : p.nivel_risco === 'medio'
+          ? '<span class="badge badge-amber">Médio</span>'
+          : '<span class="badge badge-green">Baixo</span>';
+        
+        return `
+          <tr>
+            <td>${p.nome}</td>
+            <td>${p.cultura || '—'}</td>
+            <td>${badge}</td>
+            <td><button class="btn btn-secondary btn-sm" onclick="alert('Editar - em desenvolvimento')">Editar</button></td>
+          </tr>
+        `;
+      }).join('');
+    }
+  } catch (e) { console.error(e); }
+}
+
+function carregarMapaArea() {
+  const areaId = document.getElementById('mapaAreaSelect').value;
+  if (!areaId) {
+    document.getElementById('mapArea').innerHTML = '<p style="padding:20px;text-align:center;color:var(--gray-400)">Selecione uma área</p>';
+    return;
+  }
+
+  if (!map) {
+    map = L.map('mapArea').setView([-23.5, -48.5], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  } else {
+    map.setView([-23.5, -48.5], 10);
+  }
+
+  document.getElementById('mapapontosBody').innerHTML = `
+    <tr><td colspan="3" style="text-align:center;color:var(--gray-400)">Nenhum ponto registrado</td></tr>
+  `;
+}
+
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const geojson = JSON.parse(e.target.result);
+      showToast('✅ Arquivo carregado! ' + (geojson.features?.length || 0) + ' features detectadas');
+    } catch (err) {
+      showToast('❌ Erro ao ler arquivo GeoJSON', true);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function previewRelatorio() {
+  const areaId = document.getElementById('relatorioAreaSelect').value;
+  const preview = document.getElementById('relatorioPreview');
+
+  if (!areaId) {
+    preview.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray-400)">Selecione uma área</div>';
+    return;
+  }
+
+  const area = state.areas.find(a => a.id == areaId);
+  if (!area) return;
+
+  preview.innerHTML = `
+    <div style="display:grid;gap:16px">
+      <div>
+        <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;font-weight:600;margin-bottom:8px">Identificação</div>
+        <div style="display:grid;gap:6px;font-size:13px">
+          <div><strong>Área:</strong> ${area.nome}</div>
+          <div><strong>Cliente:</strong> ${area.nome_cliente}</div>
+          <div><strong>Hectares:</strong> ${area.hectares} ha</div>
+          <div><strong>Alqueires:</strong> ${(area.hectares/2.42).toFixed(2)} alq</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function gerarPDF() {
+  const areaId = document.getElementById('relatorioAreaSelect').value;
+  if (!areaId) {
+    showToast('Selecione uma área', true);
+    return;
+  }
+
+  const area = state.areas.find(a => a.id == areaId);
+  if (!area) return;
+
+  const janela = window.open('', '_blank');
+  janela.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório ${area.nome}</title>
+  <style>body{font-family:Arial;margin:40px;color:#333}h1{color:#1a5e20}</style></head><body>
+  <h1>AgroMonitor SafraFort - Relatório</h1>
+  <p><strong>Área:</strong> ${area.nome}</p>
+  <p><strong>Cliente:</strong> ${area.nome_cliente}</p>
+  <p><strong>Hectares:</strong> ${area.hectares} ha (${(area.hectares/2.42).toFixed(2)} alq)</p>
+  <p style="margin-top:40px;font-size:11px;color:#999">Gerado em ${new Date().toLocaleDateString('pt-BR')}</p>
+  </body></html>`);
+  janela.document.close();
+  setTimeout(() => janela.print(), 500);
+}
+
+function showToast(msg, isError = false) {
+  const toast = document.createElement('div');
+  toast.className = 'toast' + (isError ? ' error' : '');
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', () => {
+  const hoje = new Date().toISOString().split('T')[0];
+  ['plantioData', 'monData', 'ocorrData'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = hoje;
+  });
+  carregarDashboard();
+  carregarAreas();
+});
+
+// ============= MODAL CONFIGURAÇÕES =============
+function abrirModalNovoCultura() {
+  document.getElementById('modal-titulo').textContent = 'Nova Cultura';
+  document.getElementById('form-config').innerHTML = `
+    <div class="form-group">
+      <label class="form-label">Nome *</label>
+      <input type="text" class="form-input" id="config-nome" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descrição</label>
+      <textarea class="form-textarea" id="config-descricao" style="min-height:80px"></textarea>
+    </div>
+  `;
+  document.getElementById('form-config').dataset.tipo = 'cultura';
+  document.getElementById('modal-config').style.display = 'block';
+}
+
+function abrirModalNovoVariedade() {
+  document.getElementById('modal-titulo').textContent = 'Nova Variedade';
+  const culturas = state.culturas || [];
+  document.getElementById('form-config').innerHTML = `
+    <div class="form-group">
+      <label class="form-label">Cultura *</label>
+      <select class="form-select" id="config-cultura" required>
+        <option value="">Selecione...</option>
+        ${culturas.map(c => `<option value="${c.id}">${c.nome}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nome *</label>
+      <input type="text" class="form-input" id="config-nome" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descrição</label>
+      <textarea class="form-textarea" id="config-descricao" style="min-height:80px"></textarea>
+    </div>
+  `;
+  document.getElementById('form-config').dataset.tipo = 'variedade';
+  document.getElementById('modal-config').style.display = 'block';
+}
+
+function abrirModalNovoAdubo() {
+  document.getElementById('modal-titulo').textContent = 'Novo Adubo';
+  document.getElementById('form-config').innerHTML = `
+    <div class="form-group">
+      <label class="form-label">Nome *</label>
+      <input type="text" class="form-input" id="config-nome" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tipo</label>
+      <input type="text" class="form-input" id="config-tipo" placeholder="Ex: Fertilizante Misto">
+    </div>
+    <div class="form-group">
+      <label class="form-label">NPK</label>
+      <input type="text" class="form-input" id="config-npk" placeholder="Ex: 20-20-20">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descrição</label>
+      <textarea class="form-textarea" id="config-descricao" style="min-height:80px"></textarea>
+    </div>
+  `;
+  document.getElementById('form-config').dataset.tipo = 'adubo';
+  document.getElementById('modal-config').style.display = 'block';
+}
+
+function abrirModalNovoPraga() {
+  document.getElementById('modal-titulo').textContent = 'Nova Praga';
+  const culturas = state.culturas || [];
+  document.getElementById('form-config').innerHTML = `
+    <div class="form-group">
+      <label class="form-label">Nome *</label>
+      <input type="text" class="form-input" id="config-nome" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Cultura</label>
+      <select class="form-select" id="config-cultura">
+        <option value="">Todas</option>
+        ${culturas.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nível de Risco</label>
+      <select class="form-select" id="config-risco">
+        <option value="baixo">Baixo</option>
+        <option value="medio" selected>Médio</option>
+        <option value="alto">Alto</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descrição</label>
+      <textarea class="form-textarea" id="config-descricao" style="min-height:80px"></textarea>
+    </div>
+  `;
+  document.getElementById('form-config').dataset.tipo = 'praga';
+  document.getElementById('modal-config').style.display = 'block';
+}
+
+function fecharModalConfig() {
+  document.getElementById('modal-config').style.display = 'none';
+  document.getElementById('form-config').innerHTML = '';
+}
+
+async function salvarNovoItemConfig(e) {
+  e.preventDefault();
+  
+  const tipo = document.getElementById('form-config').dataset.tipo;
+  let data = {};
+  
+  if (tipo === 'cultura') {
+    data = {
+      nome: document.getElementById('config-nome').value,
+      descricao: document.getElementById('config-descricao').value,
+      ativa: 1
+    };
+  } else if (tipo === 'variedade') {
+    data = {
+      cultura_id: document.getElementById('config-cultura').value,
+      nome: document.getElementById('config-nome').value,
+      descricao: document.getElementById('config-descricao').value,
+      ativa: 1
+    };
+  } else if (tipo === 'adubo') {
+    data = {
+      nome: document.getElementById('config-nome').value,
+      tipo: document.getElementById('config-tipo').value,
+      npk: document.getElementById('config-npk').value,
+      descricao: document.getElementById('config-descricao').value,
+      ativa: 1
+    };
+  } else if (tipo === 'praga') {
+    data = {
+      nome: document.getElementById('config-nome').value,
+      cultura: document.getElementById('config-cultura').value,
+      nivel_risco: document.getElementById('config-risco').value,
+      descricao: document.getElementById('config-descricao').value,
+      ativa: 1
+    };
+  }
+  
+  try {
+    const r = await fetch(`${API}/${tipo}s`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    const d = await r.json();
+    
+    if (d.id || d.sucesso) {
+      showToast(`✅ ${tipo.charAt(0).toUpperCase() + tipo.slice(1)} criado(a) com sucesso!`);
+      fecharModalConfig();
+      
+      // Recarregar dados conforme tipo
+      if (tipo === 'cultura') carregarCulturas();
+      else if (tipo === 'variedade') carregarVariedades();
+      else if (tipo === 'adubo') carregarAdubos();
+      else if (tipo === 'praga') carregarPragas();
+    } else {
+      showToast('❌ Erro: ' + (d.erro || 'Desconhecido'), true);
+    }
+  } catch (error) {
+    console.error('Erro:', error);
+    showToast('❌ Erro de conexão', true);
+  }
+}
+</script>
+
+</body>
+</html>

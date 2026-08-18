@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste API AgroMonitor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #228b2c; margin-bottom: 30px; }
+        .test-section { margin-bottom: 30px; padding: 20px; border-left: 4px solid #228b2c; background: #f9f9f9; }
+        .test-title { font-weight: bold; color: #228b2c; margin-bottom: 10px; }
+        button { background: #228b2c; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px; }
+        button:hover { background: #1a6b22; }
+        .result { margin-top: 15px; padding: 15px; background: #f0f0f0; border-radius: 5px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto; }
+        .success { background: #d4eedd; color: #0d2b17; border-left: 4px solid #2ea83a; }
+        .error { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+        input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        label { display: block; margin-bottom: 5px; color: #374151; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste de API - AgroMonitor</h1>
+
+        <!-- Teste 1: Setup -->
+        <div class="test-section">
+            <div class="test-title">1️⃣ Teste Setup (Criar Banco)</div>
+            <button onclick="testeSetup()">Executar Setup</button>
+            <div id="resultSetup" class="result"></div>
+        </div>
+
+        <!-- Teste 2: GET Areas -->
+        <div class="test-section">
+            <div class="test-title">2️⃣ Teste GET Areas</div>
+            <button onclick="testeGetAreas()">Listar Áreas</button>
+            <div id="resultGetAreas" class="result"></div>
+        </div>
+
+        <!-- Teste 3: POST Area -->
+        <div class="test-section">
+            <div class="test-title">3️⃣ Teste POST Area (Criar Nova)</div>
+            <label>Nome da Área:</label>
+            <input type="text" id="areaNome" placeholder="Ex: Talhão Leste" value="Talhão Leste">
+            <label>Nome do Cliente:</label>
+            <input type="text" id="areaCliente" placeholder="Ex: João da Silva" value="João da Silva">
+            <label>Hectares:</label>
+            <input type="number" id="areaHectares" placeholder="Ex: 100" value="100" step="0.01">
+            <button onclick="testePostArea()">Criar Área</button>
+            <div id="resultPostArea" class="result"></div>
+        </div>
+
+        <!-- Teste 4: GET Culturas -->
+        <div class="test-section">
+            <div class="test-title">4️⃣ Teste GET Culturas</div>
+            <button onclick="testeGetCulturas()">Listar Culturas</button>
+            <div id="resultGetCulturas" class="result"></div>
+        </div>
+
+        <!-- Teste 5: Console -->
+        <div class="test-section">
+            <div class="test-title">5️⃣ Informações do Sistema</div>
+            <button onclick="testeInfo()">Ver Info</button>
+            <div id="resultInfo" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API = 'http://localhost/agromonitor/api/index.php';
+
+        function mostrarResultado(elementId, sucesso, mensagem) {
+            const el = document.getElementById(elementId);
+            el.textContent = JSON.stringify(mensagem, null, 2);
+            el.className = 'result ' + (sucesso ? 'success' : 'error');
+        }
+
+        async function testeSetup() {
+            try {
+                const response = await fetch('http://localhost/agromonitor/api/setup.php');
+                const data = await response.json();
+                mostrarResultado('resultSetup', data.sucesso !== false, data);
+            } catch (e) {
+                mostrarResultado('resultSetup', false, { erro: e.message });
+            }
+        }
+
+        async function testeGetAreas() {
+            try {
+                const response = await fetch(API + '/areas');
+                const data = await response.json();
+                mostrarResultado('resultGetAreas', data.sucesso, data);
+            } catch (e) {
+                mostrarResultado('resultGetAreas', false, { erro: e.message });
+            }
+        }
+
+        async function testePostArea() {
+            const nome = document.getElementById('areaNome').value;
+            const cliente = document.getElementById('areaCliente').value;
+            const hectares = parseFloat(document.getElementById('areaHectares').value);
+
+            try {
+                const response = await fetch(API + '/areas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nome,
+                        nome_cliente: cliente,
+                        cultura: 'milho',
+                        hectares,
+                        qtd_pontos: 5
+                        // Note: safra_id NÃO está sendo enviado (opcional)
+                    })
+                });
+                const data = await response.json();
+                mostrarResultado('resultPostArea', data.sucesso, data);
+                if (data.sucesso) testeGetAreas();
+            } catch (e) {
+                mostrarResultado('resultPostArea', false, { erro: e.message });
+            }
+        }
+
+        async function testeGetCulturas() {
+            try {
+                const response = await fetch(API + '/culturas');
+                const data = await response.json();
+                mostrarResultado('resultGetCulturas', data.sucesso, data);
+            } catch (e) {
+                mostrarResultado('resultGetCulturas', false, { erro: e.message });
+            }
+        }
+
+        function testeInfo() {
+            const info = {
+                'URL da API': API,
+                'API Reachable': 'Testando...',
+                'Navegador': navigator.userAgent.substring(0, 50),
+                'Timestamp': new Date().toISOString(),
+                'LocalStorage': typeof(Storage) !== 'undefined' ? 'Disponível' : 'Não disponível'
+            };
+
+            // Testar se API é alcançável
+            fetch(API)
+                .then(() => {
+                    info['API Reachable'] = 'SIM ✅';
+                    mostrarResultado('resultInfo', true, info);
+                })
+                .catch(() => {
+                    info['API Reachable'] = 'NÃO ❌ - Verifique se os arquivos da API estão corretos';
+                    mostrarResultado('resultInfo', false, info);
+                });
+        }
+
+        // Teste automático ao carregar
+        window.addEventListener('load', () => {
+            console.log('🧪 Sistema de Testes Carregado');
+            console.log('API Base:', API);
+            testeInfo();
+        });
+    </script>
+</body>
+</html>
