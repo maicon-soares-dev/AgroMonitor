@@ -1,238 +1,94 @@
 <?php
-header('Content-Type: application/json; charset=utf-8');
+// ============================================================
+//  AgroMonitor SafraFort — Setup do Banco de Dados COMPLETO
+//  Acesse: http://localhost/agromonitor/api/setup.php
+//  Cria todas as tabelas e dados iniciais no MySQL
+// ============================================================
+// v2: em vez de manter as definições de tabela duplicadas aqui dentro,
+// este script lê e executa database/agromonitor.sql diretamente — assim
+// só existe UM lugar (o .sql) definindo a estrutura do banco, e setup.php
+// nunca fica desatualizado em relação a ele.
+// ============================================================
 
-$host = 'localhost';
-$db = 'agromonitor';
-$user = 'root';
-$pass = '';
-$charset = 'utf8mb4';
+require_once 'database.php';
 
-try {
-    // Conectar ao MySQL
-    $pdo = new PDO("mysql:host=$host;charset=$charset", $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+header('Content-Type: text/html; charset=utf-8');
 
-    // Criar banco de dados
-    $pdo->exec("CREATE DATABASE IF NOT EXISTS `$db` CHARACTER SET $charset COLLATE utf8mb4_unicode_ci");
-    $pdo->exec("USE `$db`");
+$db = getDB();
+$log = [];
 
-    echo json_encode(['status' => 'progress', 'message' => 'Banco de dados criado/verificado']);
+// ── LÊ E EXECUTA O SCHEMA SQL, INSTRUÇÃO POR INSTRUÇÃO ────
+$schemaPath = __DIR__ . '/../database/agromonitor.sql';
 
-    // TABELA: SAFRAS
-    $pdo->exec("CREATE TABLE IF NOT EXISTS safras (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        nome VARCHAR(50) NOT NULL UNIQUE,
-        ano_inicio INT NOT NULL,
-        ano_fim INT NOT NULL,
-        ativa TINYINT(1) NOT NULL DEFAULT 1,
-        criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_ativa (ativa)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-    // TABELA: CULTURAS
-    $pdo->exec("CREATE TABLE IF NOT EXISTS culturas (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        nome VARCHAR(50) NOT NULL UNIQUE,
-        descricao TEXT,
-        ativa TINYINT(1) NOT NULL DEFAULT 1,
-        criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_ativa (ativa)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-    // TABELA: VARIEDADES
-    $pdo->exec("CREATE TABLE IF NOT EXISTS variedades (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        cultura_id INT NOT NULL,
-        nome VARCHAR(100) NOT NULL,
-        descricao TEXT,
-        ativa TINYINT(1) NOT NULL DEFAULT 1,
-        criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (cultura_id) REFERENCES culturas(id) ON DELETE CASCADE,
-        UNIQUE KEY uk_cultura_variedade (cultura_id, nome),
-        INDEX idx_ativa (ativa)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-    // TABELA: ADUBOS
-    $pdo->exec("CREATE TABLE IF NOT EXISTS adubos (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        nome VARCHAR(100) NOT NULL UNIQUE,
-        tipo VARCHAR(50),
-        npk VARCHAR(20),
-        descricao TEXT,
-        ativa TINYINT(1) NOT NULL DEFAULT 1,
-        criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_ativa (ativa)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-    // TABELA: PRAGAS
-    $pdo->exec("CREATE TABLE IF NOT EXISTS pragas (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        nome VARCHAR(100) NOT NULL UNIQUE,
-        cultura VARCHAR(50),
-        nivel_risco VARCHAR(20) DEFAULT 'medio',
-        descricao TEXT,
-        ativa TINYINT(1) NOT NULL DEFAULT 1,
-        criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_ativa (ativa),
-        INDEX idx_cultura (cultura)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-    // TABELA: AREAS - ✅ safra_id AGORA É OPCIONAL
-    $pdo->exec("CREATE TABLE IF NOT EXISTS areas (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        safra_id INT,
-        nome VARCHAR(150) NOT NULL,
-        nome_cliente VARCHAR(150) NOT NULL,
-        cultura VARCHAR(20) NOT NULL,
-        hectares DECIMAL(10,2) NOT NULL,
-        alqueires DECIMAL(10,2) GENERATED ALWAYS AS (hectares / 2.42) STORED,
-        qtd_pontos INT NOT NULL DEFAULT 5,
-        observacoes TEXT,
-        criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (safra_id) REFERENCES safras(id) ON DELETE SET NULL,
-        INDEX idx_safra (safra_id),
-        INDEX idx_cultura (cultura),
-        INDEX idx_cliente (nome_cliente)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-    // TABELA: TALHÕES
-    $pdo->exec("CREATE TABLE IF NOT EXISTS talhoes (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        area_id INT NOT NULL,
-        nome VARCHAR(100) NOT NULL,
-        variedade VARCHAR(100),
-        tipo VARCHAR(20) DEFAULT 'producao',
-        hectares DECIMAL(8,2),
-        cor_hex VARCHAR(7) DEFAULT '#4caf50',
-        criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (area_id) REFERENCES areas(id) ON DELETE CASCADE,
-        INDEX idx_area (area_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-    // TABELA: PLANTIOS
-    $pdo->exec("CREATE TABLE IF NOT EXISTS plantios (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        area_id INT NOT NULL,
-        talhao_id INT,
-        data_plantio DATE NOT NULL,
-        cultura VARCHAR(30) NOT NULL,
-        variedade_id INT,
-        populacao_semente DECIMAL(8,2),
-        adubo_tipo VARCHAR(100),
-        adubo_id INT,
-        adubo_qtd_kg DECIMAL(8,2),
-        condicao_plantio VARCHAR(20) DEFAULT 'apos_chuva',
-        condicao_solo VARCHAR(20) DEFAULT 'boa',
-        observacoes TEXT,
-        criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (area_id) REFERENCES areas(id) ON DELETE CASCADE,
-        FOREIGN KEY (talhao_id) REFERENCES talhoes(id) ON DELETE SET NULL,
-        FOREIGN KEY (variedade_id) REFERENCES variedades(id) ON DELETE SET NULL,
-        FOREIGN KEY (adubo_id) REFERENCES adubos(id) ON DELETE SET NULL,
-        INDEX idx_area (area_id),
-        INDEX idx_data (data_plantio)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-    // TABELA: PONTOS_MONITORAMENTO
-    $pdo->exec("CREATE TABLE IF NOT EXISTS pontos_monitoramento (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        area_id INT NOT NULL,
-        talhao_id INT,
-        numero_ponto INT NOT NULL,
-        latitude DECIMAL(10,8),
-        longitude DECIMAL(11,8),
-        data_registro DATE NOT NULL,
-        observacoes TEXT,
-        criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (area_id) REFERENCES areas(id) ON DELETE CASCADE,
-        FOREIGN KEY (talhao_id) REFERENCES talhoes(id) ON DELETE SET NULL,
-        UNIQUE KEY uk_area_ponto (area_id, numero_ponto),
-        INDEX idx_area (area_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-    // TABELA: MONITORAMENTOS
-    $pdo->exec("CREATE TABLE IF NOT EXISTS monitoramentos (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        ponto_id INT NOT NULL,
-        data_monitoramento DATE NOT NULL,
-        cultura VARCHAR(20) NOT NULL,
-        milho_plantas_avaliadas INT DEFAULT 20,
-        milho_plantas_praga INT DEFAULT 0,
-        milho_percentual DECIMAL(5,2),
-        soja_pragas_encontradas INT DEFAULT 0,
-        soja_metros_lineares DECIMAL(4,1) DEFAULT 2.0,
-        soja_pragas_por_m2 DECIMAL(6,2),
-        tipo_praga VARCHAR(100),
-        resultado_final DECIMAL(8,2),
-        unidade_resultado VARCHAR(20),
-        nivel_controle VARCHAR(20),
-        observacoes TEXT,
-        criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (ponto_id) REFERENCES pontos_monitoramento(id) ON DELETE CASCADE,
-        INDEX idx_ponto (ponto_id),
-        INDEX idx_data (data_monitoramento),
-        INDEX idx_nivel (nivel_controle)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-    // TABELA: OCORRÊNCIAS
-    $pdo->exec("CREATE TABLE IF NOT EXISTS ocorrencias (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        ponto_id INT NOT NULL,
-        monitoramento_id INT,
-        data_ocorrencia DATE NOT NULL,
-        tipo_praga VARCHAR(150) NOT NULL,
-        quantidade INT NOT NULL DEFAULT 0,
-        latitude DECIMAL(10,8),
-        longitude DECIMAL(11,8),
-        observacoes TEXT,
-        criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (ponto_id) REFERENCES pontos_monitoramento(id) ON DELETE CASCADE,
-        FOREIGN KEY (monitoramento_id) REFERENCES monitoramentos(id) ON DELETE SET NULL,
-        INDEX idx_ponto (ponto_id),
-        INDEX idx_data (data_ocorrencia),
-        INDEX idx_praga (tipo_praga)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-    // ✅ INSERIR DADOS INICIAIS
-    $pdo->exec("INSERT IGNORE INTO culturas (nome, descricao, ativa) VALUES 
-        ('Milho', 'Milho para grãos', 1),
-        ('Soja', 'Soja para grãos', 1)");
-
-    $pdo->exec("INSERT IGNORE INTO variedades (cultura_id, nome, descricao, ativa) VALUES 
-        (1, 'AG1051', 'Ciclo precoce', 1),
-        (1, 'AG7010', 'Ciclo normal', 1),
-        (1, 'P30F35', 'Ciclo normal', 1),
-        (1, '30F35', 'Ciclo super precoce', 1),
-        (1, 'DKB230', 'Ciclo semi-tardio', 1),
-        (2, 'M6211', 'Grupo 6.1', 1),
-        (2, 'M7371', 'Grupo 7.3', 1),
-        (2, 'BM3975', 'Grupo 3.9', 1),
-        (2, 'NK7059', 'Grupo 7.0', 1),
-        (2, 'NIDERA5909', 'Grupo 5.9', 1)");
-
-    $pdo->exec("INSERT IGNORE INTO adubos (nome, tipo, npk, descricao, ativa) VALUES 
-        ('NPK 20-20-20', 'Fertilizante Misto', '20-20-20', 'Adubo formulado balanceado', 1),
-        ('Uréia', 'Nitrogenado', '46-0-0', 'Fonte de nitrogênio', 1),
-        ('MAP', 'Fosfatado', '0-46-0', 'Monoamônio fosfato', 1),
-        ('KCl', 'Potássio', '0-0-60', 'Cloreto de potássio', 1),
-        ('Ureia + Polímero', 'Nitrogenado', '46-0-0', 'Ureia revestida', 1),
-        ('Superfosfato Simples', 'Fosfatado', '0-18-0', 'Fertilizante tradicional', 1),
-        ('Cloreto de Potássio Granulado', 'Potássio', '0-0-60', 'Formulação granular', 1)");
-
-    $pdo->exec("INSERT IGNORE INTO pragas (nome, cultura, nivel_risco, descricao, ativa) VALUES 
-        ('Lagarta-do-cartucho', 'Milho', 'alto', 'Praga importante', 1),
-        ('Broca-do-colmo', 'Milho', 'medio', 'Perfura o colmo', 1),
-        ('Largata-militar', 'Milho', 'medio', 'Alimenta-se das folhas', 1),
-        ('Mosca-branca', 'Milho', 'baixo', 'Vetor de viroses', 1),
-        ('Ácaro-rajado', 'Milho', 'baixo', 'Dano às folhas', 1),
-        ('Percevejo-marrom', 'Soja', 'alto', 'Principal praga', 1),
-        ('Mosca-branca', 'Soja', 'medio', 'Vetor de viroses', 1),
-        ('Ácaro-rajado', 'Soja', 'medio', 'Reduz folhas', 1),
-        ('Lagarta-falsa-medideira', 'Soja', 'alto', 'Desfolhadora', 1),
-        ('Vaquinha', 'Soja', 'medio', 'Praga polífaga', 1)");
-
-    echo json_encode(['sucesso' => true, 'mensagem' => '✅ Banco criado com sucesso! 11 tabelas criadas.']);
-
-} catch (PDOException $e) {
-    echo json_encode(['sucesso' => false, 'erro' => $e->getMessage()]);
+if (!file_exists($schemaPath)) {
+    http_response_code(500);
+    die("<p style='color:red'>Arquivo não encontrado: $schemaPath</p>");
 }
+
+$sql = file_get_contents($schemaPath);
+
+// Remove CREATE DATABASE / USE — a conexão já foi aberta no banco certo
+// (definido em config.php), não precisa (nem pode, com o usuário mysql
+// às vezes sem privilégio de CREATE DATABASE) recriar o banco aqui.
+$sql = preg_replace('/CREATE DATABASE.*?;/is', '', $sql);
+$sql = preg_replace('/USE\s+\w+\s*;/is', '', $sql);
+
+// Remove comentários de linha (-- ...) antes de dividir em instruções,
+// pra um ';' dentro de um comentário não quebrar a divisão
+$linhas = explode("\n", $sql);
+$linhas = array_filter($linhas, fn($l) => !preg_match('/^\s*--/', $l));
+$sql = implode("\n", $linhas);
+
+// Divide em instruções individuais pelo ';' de fim de linha (cuidando
+// pra não cortar no meio de um ';' que esteja dentro de uma string, o
+// que não acontece neste schema — não há ';' dentro de valores)
+$statements = array_filter(array_map('trim', preg_split('/;\s*(?=\n|$)/', $sql)));
+
+foreach ($statements as $stmt) {
+    if ($stmt === '' || $stmt === ';') continue;
+
+    // Descrição amigável pro log, baseada no tipo de comando
+    if (preg_match('/CREATE TABLE(?:\s+IF NOT EXISTS)?\s+`?(\w+)`?/i', $stmt, $m)) {
+        $desc = "Tabela `{$m[1]}` criada (ou já existia)";
+    } elseif (preg_match('/INSERT (?:IGNORE )?INTO\s+`?(\w+)`?/i', $stmt, $m)) {
+        $desc = "Dados iniciais inseridos em `{$m[1]}`";
+    } else {
+        $desc = 'Instrução executada';
+    }
+
+    try {
+        $db->exec($stmt);
+        $log[] = "✅ $desc";
+    } catch (PDOException $e) {
+        $log[] = "⚠️ $desc — " . $e->getMessage();
+    }
+}
+
+// ── INTERFACE HTML ───────────────────────────────────────
+
+echo "<!DOCTYPE html><html><head><meta charset='utf-8'>
+<title>AgroMonitor — Setup</title>
+<style>
+body{font-family:'Plus Jakarta Sans', sans-serif;background:#0d1f10;color:#a8dbb5;padding:40px;max-width:700px;margin:0 auto}
+h1{color:#4db368;margin-bottom:24px;font-size:28px}
+h2{color:#4db368;margin-top:30px;margin-bottom:15px;font-size:18px;border-top:1px solid rgba(77,179,104,0.3);padding-top:15px}
+.log{background:#0a1510;border-left:3px solid #4db368;padding:8px 12px;margin:5px 0;font-size:13px;border-radius:3px}
+.ok{color:#4db368;border-left-color:#4db368}
+.warn{color:#f59e0b;border-left-color:#f59e0b}
+.success{background:#0d2b17;border:1px solid #4db368;padding:15px;margin:20px 0;border-radius:6px;color:#4db368;text-align:center;font-weight:500}
+a{color:#4db368;margin-top:24px;display:inline-block;font-size:14px;padding:10px 20px;background:#0a1510;border-radius:4px;text-decoration:none;transition:all 0.2s}
+a:hover{background:#0d2b17;transform:translateX(4px)}
+</style></head><body>
+<h1>🌱 AgroMonitor SafraFort — Setup Completo</h1>
+<p>Criando banco de dados e tabelas a partir de database/agromonitor.sql...</p>
+
+<h2>Tabelas e dados</h2>";
+
+foreach ($log as $l) {
+    $class = str_starts_with($l, '✅') ? 'ok' : 'warn';
+    echo "<div class='log $class'>$l</div>";
+}
+
+echo "<div class='success'>✅ Setup concluído! Banco de dados pronto para usar.</div>
+<a href='../index.html'>→ Acessar o Sistema</a>
+</body></html>";

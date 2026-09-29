@@ -37,11 +37,12 @@ function validarPraga($data) {
 }
 
 // ── VALIDAR ÁREA ────────────────────────────────────────
+// v2: área não tem mais safra/cultura própria (isso agora vive em
+// Plantio) — em compensação, cliente_id passou a ser obrigatório.
 function validarArea($data) {
     $erros = [];
     if (empty($data['nome'])) $erros[] = 'Nome da área é obrigatório';
-    if (empty($data['nome_cliente'])) $erros[] = 'Nome do cliente é obrigatório';
-    if (empty($data['cultura'])) $erros[] = 'Cultura é obrigatória';
+    if (empty($data['cliente_id'])) $erros[] = 'Cliente é obrigatório';
     if (!isset($data['hectares']) || $data['hectares'] <= 0) $erros[] = 'Hectares deve ser maior que zero';
     return $erros;
 }
@@ -55,11 +56,15 @@ function validarTalhao($data) {
 }
 
 // ── VALIDAR PLANTIO ─────────────────────────────────────
+// v2: cada plantio pertence a uma safra específica (safra_id
+// obrigatório) — é o plantio que "carrega" safra e cultura agora,
+// não a área.
 function validarPlantio($data) {
     $erros = [];
     if (empty($data['area_id'])) $erros[] = 'Área é obrigatória';
+    if (empty($data['safra_id'])) $erros[] = 'Safra é obrigatória';
     if (empty($data['data_plantio'])) $erros[] = 'Data do plantio é obrigatória';
-    if (empty($data['cultura'])) $erros[] = 'Cultura é obrigatória';
+    if (empty($data['cultura_id'])) $erros[] = 'Cultura é obrigatória';
     return $erros;
 }
 
@@ -72,27 +77,24 @@ function validarPonto($data) {
 }
 
 // ── VALIDAR MONITORAMENTO ───────────────────────────────
+// v2: cultura não é mais escolhida no monitoramento — vem do plantio
+// selecionado (plantio_id obrigatório). Por isso não dá mais pra
+// exigir campos específicos de milho/soja aqui feito antes (era
+// exatamente essa amarração por string que causava bug quando surgia
+// uma 3ª cultura); o frontend decide quais campos mostrar/enviar
+// conforme a cultura do plantio escolhido.
 function validarMonitoramento($data) {
     $erros = [];
     if (empty($data['ponto_id'])) $erros[] = 'Ponto de monitoramento é obrigatório';
-    if (empty($data['cultura'])) $erros[] = 'Cultura é obrigatória';
-    
-    if ($data['cultura'] === 'milho') {
-        if (!isset($data['milho_plantas_avaliadas'])) $erros[] = 'Plantas avaliadas é obrigatório para milho';
-        if (!isset($data['milho_plantas_praga'])) $erros[] = 'Plantas com praga é obrigatório para milho';
-    } else if ($data['cultura'] === 'soja') {
-        if (!isset($data['soja_pragas_encontradas'])) $erros[] = 'Pragas encontradas é obrigatório para soja';
-        if (!isset($data['soja_metros_lineares'])) $erros[] = 'Metros lineares é obrigatório para soja';
-    }
-    
+    if (empty($data['plantio_id'])) $erros[] = 'Plantio é obrigatório';
+    if (empty($data['data_monitoramento'])) $erros[] = 'Data do monitoramento é obrigatória';
     return $erros;
 }
 
-// ── VALIDAR OCORRÊNCIA ──────────────────────────────────
-function validarOcorrencia($data) {
+// ── VALIDAR CLIENTE ──────────────────────────────────────
+function validarCliente($data) {
     $erros = [];
-    if (empty($data['ponto_id'])) $erros[] = 'Ponto de monitoramento é obrigatório';
-    if (empty($data['tipo_praga'])) $erros[] = 'Tipo de praga é obrigatório';
-    if (!isset($data['quantidade']) || $data['quantidade'] < 0) $erros[] = 'Quantidade deve ser um número positivo';
+    if (empty($data['nome'])) $erros[] = 'Nome do cliente é obrigatório';
+    if (strlen($data['nome'] ?? '') > 150) $erros[] = 'Nome muito longo (máx 150 caracteres)';
     return $erros;
 }

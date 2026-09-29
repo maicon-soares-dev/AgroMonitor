@@ -1,0 +1,3 @@
+uploads/monitoramento_fotos/*
+!uploads/monitoramento_fotos/htaccess
+*.zip
