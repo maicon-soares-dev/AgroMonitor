@@ -3,6 +3,7 @@
 use App\Http\Middleware\VerificaPerfil;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -63,6 +64,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (ModelNotFoundException|NotFoundHttpException $e, Request $request) use ($naApi) {
             if ($naApi($request)) {
                 return response()->json(['sucesso' => false, 'erro' => 'Registro ou rota não encontrado.'], 404);
+            }
+        });
+
+        // Exclusão bloqueada por FK RESTRICT (ex.: safra que já tem plantio)
+        $exceptions->render(function (QueryException $e, Request $request) use ($naApi) {
+            if ($naApi($request) && ($e->errorInfo[1] ?? null) === 1451) {
+                return response()->json([
+                    'sucesso' => false,
+                    'erro' => 'Não é possível excluir: este registro está sendo usado em outros cadastros.',
+                ], 409);
             }
         });
 

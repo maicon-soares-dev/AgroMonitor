@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Praga extends Modelo
 {
+    const TIPOS = ['praga', 'doenca', 'planta_daninha', 'clima'];
+    const NIVEIS_RISCO = ['baixo', 'medio', 'alto'];
+
     protected $table = 'pragas';
 
     protected $fillable = ['nome', 'tipo', 'cultura_id', 'nivel_risco', 'descricao', 'ativa'];
