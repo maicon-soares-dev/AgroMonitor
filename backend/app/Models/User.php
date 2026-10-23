@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use Database\Factories\UserFactory;
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 /**
  * Usuário do sistema. Login por `login` + senha; `perfil` define o acesso
@@ -15,7 +17,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     const CREATED_AT = 'criado_em';
     const UPDATED_AT = 'atualizado_em';
@@ -32,6 +34,11 @@ class User extends Authenticatable
             'password' => 'hashed',
             'ativo' => 'boolean',
         ];
+    }
+
+    protected function serializeDate(DateTimeInterface $date): string
+    {
+        return $date->format('Y-m-d H:i:s');
     }
 
     public function clientes(): HasMany
