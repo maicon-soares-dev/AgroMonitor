@@ -187,9 +187,38 @@ tr:hover td { background: var(--gray-50); }
 @media (max-width: 1200px) {
   .cadastro-area-wrapper { grid-template-columns: 1fr; }
 }
+
+/* Login e usuário logado */
+.login-tela { position: fixed; inset: 0; background: var(--green-800); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 3000; }
+.login-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow-md); width: 100%; max-width: 380px; padding: 32px 28px; }
+.login-card img { width: 100%; max-width: 240px; display: block; margin: 0 auto 24px; }
+.login-card .btn { width: 100%; justify-content: center; padding: 11px 16px; margin-top: 4px; }
+.topbar-usuario { display: flex; align-items: center; gap: 12px; }
+.topbar-usuario-nome { font-size: 13px; font-weight: 600; text-align: right; line-height: 1.2; }
+.topbar-usuario-perfil { font-size: 11px; color: var(--gray-500); font-weight: 500; }
+
+/* Mensagens de validação ao lado de cada campo (vêm do "erros" da API) */
+.form-input.invalido, .form-select.invalido, .form-textarea.invalido { border-color: var(--red-600); }
+.form-erro { font-size: 11px; color: var(--red-600); margin-top: 4px; }
 </style>
 </head>
 <body>
+
+<!-- TELA DE LOGIN (escondida quando há token válido) -->
+<div class="login-tela" id="loginTela" style="display:none">
+  <form class="login-card" id="formLogin" onsubmit="fazerLogin(event)" novalidate>
+    <img src="assets/logo-full-light.png" alt="AgroMonitor">
+    <div class="form-group">
+      <label class="form-label" for="loginUsuario">Login</label>
+      <input type="text" class="form-input" id="loginUsuario" data-campo="login" autocomplete="username" autofocus>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="loginSenha">Senha</label>
+      <input type="password" class="form-input" id="loginSenha" data-campo="senha" autocomplete="current-password">
+    </div>
+    <button type="submit" class="btn btn-primary" id="btnEntrar">Entrar</button>
+  </form>
+</div>
 
 <div class="app">
   <aside class="sidebar">
@@ -217,27 +246,28 @@ tr:hover td { background: var(--gray-50); }
       <div class="nav-section">
         <div class="nav-section-title">Operações</div>
         <div class="nav-item" onclick="irPara('page-plantio', this)">🌱 Histórico Plantio</div>
-        <div class="nav-item" onclick="cancelarEdicaoPlantio(); irPara('page-novoPlantio', this)">📝 Novo Plantio</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="cancelarEdicaoPlantio(); irPara('page-novoPlantio', this)">📝 Novo Plantio</div>
         <div class="nav-item" onclick="irPara('page-monitoramento', this)">📈 Monitoramento</div>
         <div class="nav-item" onclick="cancelarEdicaoMonitoramento(); irPara('page-registrarMonitoramento', this)">🧪 Registrar Monitoramento</div>
-        <div class="nav-item" onclick="cancelarEdicaoColheita(); irPara('page-colheita', this)">🚜 Colheita</div>
-        <div class="nav-item" onclick="cancelarEdicaoAplicacao(); irPara('page-aplicacoes', this)">💧 Aplicações</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="cancelarEdicaoColheita(); irPara('page-colheita', this)">🚜 Colheita</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="cancelarEdicaoAplicacao(); irPara('page-aplicacoes', this)">💧 Aplicações</div>
       </div>
 
       <div class="nav-section">
         <div class="nav-section-title">Configuração</div>
-        <div class="nav-item" onclick="irPara('page-culturas', this)">🌾 Culturas</div>
-        <div class="nav-item" onclick="irPara('page-variedades', this)">🔬 Variedades</div>
-        <div class="nav-item" onclick="irPara('page-adubos', this)">🧪 Adubos</div>
-        <div class="nav-item" onclick="irPara('page-pragas', this)">🐛 Pragas e Doenças</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="irPara('page-culturas', this)">🌾 Culturas</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="irPara('page-variedades', this)">🔬 Variedades</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="irPara('page-adubos', this)">🧪 Adubos</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="irPara('page-pragas', this)">🐛 Pragas e Doenças</div>
       </div>
 
       <div class="nav-section">
         <div class="nav-section-title">Gestão</div>
-        <div class="nav-item" onclick="irPara('page-clientes', this)">🧑‍🌾 Clientes</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="irPara('page-clientes', this)">🧑‍🌾 Clientes</div>
         <div class="nav-item" onclick="irPara('page-relatorio', this)">📊 Relatório</div>
-        <div class="nav-item" onclick="irPara('page-safras', this)">📅 Safras</div>
-        <div class="nav-item" onclick="irPara('page-configuracoes', this)">🎨 Configurações</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="irPara('page-safras', this)">📅 Safras</div>
+        <div class="nav-item" data-perfis="gestor" onclick="cancelarEdicaoUsuario(); irPara('page-usuarios', this)">👤 Usuários</div>
+        <div class="nav-item" data-perfis="gestor" onclick="irPara('page-configuracoes', this)">🎨 Configurações</div>
       </div>
     </nav>
 
@@ -253,7 +283,15 @@ tr:hover td { background: var(--gray-50); }
   <main class="main">
     <div class="topbar">
       <h1 class="page-title" id="pageTitle">Dashboard</h1>
-      <div class="topbar-actions" id="topbarActions"></div>
+      <div class="topbar-actions" id="topbarActions">
+        <div class="topbar-usuario">
+          <div>
+            <div class="topbar-usuario-nome" id="usuarioNome"></div>
+            <div class="topbar-usuario-perfil" id="usuarioPerfil"></div>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="sair()">Sair</button>
+        </div>
+      </div>
     </div>
 
     <div class="content">
@@ -1117,6 +1155,106 @@ tr:hover td { background: var(--gray-50); }
         </div>
       </div>
 
+      <!-- PÁGINA: Usuários (só gestor) -->
+      <div class="page" id="page-usuarios">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title" id="usuarioFormTitulo">👤 Novo Usuário</h3>
+          </div>
+          <div class="card-body">
+            <form id="formUsuario" onsubmit="salvarUsuario(event)" novalidate>
+              <div class="form-row cols-3">
+                <div class="form-group">
+                  <label class="form-label">Nome *</label>
+                  <input type="text" class="form-input" id="usuarioNomeInput" data-campo="nome">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Login *</label>
+                  <input type="text" class="form-input" id="usuarioLogin" data-campo="login" placeholder="Sem espaços, ex: joao.silva" autocomplete="off">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">E-mail</label>
+                  <input type="email" class="form-input" id="usuarioEmail" data-campo="email" placeholder="Opcional">
+                </div>
+              </div>
+              <div class="form-row cols-3">
+                <div class="form-group">
+                  <label class="form-label" id="usuarioSenhaLabel">Senha *</label>
+                  <input type="password" class="form-input" id="usuarioSenha" data-campo="senha" autocomplete="new-password">
+                  <div class="form-hint" id="usuarioSenhaHint" style="display:none">Deixe em branco para manter a senha atual</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Perfil *</label>
+                  <select class="form-select" id="usuarioPerfilInput" data-campo="perfil">
+                    <option value="tecnico">Técnico</option>
+                    <option value="agronomo">Agrônomo</option>
+                    <option value="gestor">Gestor</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Situação</label>
+                  <select class="form-select" id="usuarioAtivo" data-campo="ativo">
+                    <option value="1">Ativo</option>
+                    <option value="0">Inativo</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;justify-content:flex-end">
+                <button type="button" class="btn btn-secondary" id="btnCancelarUsuario" style="display:none" onclick="cancelarEdicaoUsuario()">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="btnSalvarUsuario">Adicionar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Usuários cadastrados</h3>
+          </div>
+          <div class="card-body">
+            <form id="formFiltroUsuarios" onsubmit="event.preventDefault(); carregarUsuarios()" style="display:grid;grid-template-columns:1.6fr 1fr 1fr auto auto;gap:10px;align-items:end;margin-bottom:20px">
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroUsuarioBusca" placeholder="Nome, login ou e-mail">
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Perfil</label>
+                <select class="form-select" id="filtroUsuarioPerfil">
+                  <option value="">Todos</option>
+                  <option value="gestor">Gestor</option>
+                  <option value="agronomo">Agrônomo</option>
+                  <option value="tecnico">Técnico</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Situação</label>
+                <select class="form-select" id="filtroUsuarioAtivo">
+                  <option value="">Todos</option>
+                  <option value="1">Ativos</option>
+                  <option value="0">Inativos</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="document.getElementById('formFiltroUsuarios').reset(); carregarUsuarios()">Limpar</button>
+            </form>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Login</th>
+                  <th>E-mail</th>
+                  <th>Perfil</th>
+                  <th>Situação</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="usuariosBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- PÁGINA: Safras -->
       <div class="page" id="page-safras">
         <div class="card">
@@ -1360,9 +1498,138 @@ tr:hover td { background: var(--gray-50); }
 <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
-const API = 'api/index.php';
+// Endereço da API Laravel — único lugar a mudar ao trocar de servidor
+const API = 'http://localhost:8000/api';
 const state = { areas: [], plantios: [], monitoramentos: [], culturas: [], pragas: [], pontos: [], clientes: [] };
 let map;
+
+// ============= AUTENTICAÇÃO =============
+const CHAVE_TOKEN = 'agromonitor_token';
+let usuarioLogado = null;
+const NOMES_PERFIL = { gestor: 'Gestor', agronomo: 'Agrônomo', tecnico: 'Técnico' };
+
+function lerToken() {
+  try { return localStorage.getItem(CHAVE_TOKEN); } catch (e) { return null; }
+}
+
+function gravarToken(token) {
+  try {
+    if (token) localStorage.setItem(CHAVE_TOKEN, token);
+    else localStorage.removeItem(CHAVE_TOKEN);
+  } catch (e) { /* navegador sem localStorage: a sessão dura só até recarregar */ }
+}
+
+// fetch() da API com o token Bearer. Se a API responder 401 (token ausente,
+// expirado ou revogado), limpa a sessão e volta para a tela de login.
+async function apiFetch(url, opcoes = {}) {
+  const headers = new Headers(opcoes.headers || {});
+  headers.set('Accept', 'application/json');
+  const token = lerToken();
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+
+  const r = await fetch(url, { ...opcoes, headers });
+  if (r.status === 401) {
+    encerrarSessao();
+    throw new Error('Sessão expirada. Faça login novamente.');
+  }
+  return r;
+}
+
+// Mostra as mensagens do "erros" da API ao lado de cada campo do formulário.
+// Os campos são achados pelo atributo data-campo (= nome do campo na API).
+function mostrarErrosCampos(form, erros) {
+  limparErrosCampos(form);
+  Object.entries(erros || {}).forEach(([campo, mensagens]) => {
+    const el = form.querySelector(`[data-campo="${campo}"]`);
+    if (!el) return;
+    el.classList.add('invalido');
+    const msg = document.createElement('div');
+    msg.className = 'form-erro';
+    msg.textContent = mensagens[0];
+    el.insertAdjacentElement('afterend', msg);
+  });
+}
+
+function limparErrosCampos(form) {
+  form.querySelectorAll('.form-erro').forEach(m => m.remove());
+  form.querySelectorAll('.invalido').forEach(el => el.classList.remove('invalido'));
+}
+
+function mostrarLogin() {
+  document.getElementById('loginTela').style.display = 'flex';
+  document.getElementById('loginSenha').value = '';
+  setTimeout(() => document.getElementById('loginUsuario').focus(), 0);
+}
+
+function encerrarSessao() {
+  gravarToken(null);
+  usuarioLogado = null;
+  mostrarLogin();
+}
+
+async function fazerLogin(e) {
+  e.preventDefault();
+  const form = document.getElementById('formLogin');
+  const btn = document.getElementById('btnEntrar');
+  limparErrosCampos(form);
+  btn.disabled = true;
+  btn.textContent = 'Entrando...';
+
+  try {
+    const r = await fetch(`${API}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        login: document.getElementById('loginUsuario').value.trim(),
+        senha: document.getElementById('loginSenha').value
+      })
+    });
+    const d = await r.json().catch(() => null);
+
+    if (d && d.sucesso) {
+      gravarToken(d.dados.token);
+      document.getElementById('loginTela').style.display = 'none';
+      form.reset();
+      iniciarSistema(d.dados.usuario);
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
+    } else {
+      showToast('❌ ' + (d?.erro || 'Não foi possível entrar'), true);
+    }
+  } catch (err) {
+    showToast('❌ Não foi possível conectar à API em ' + API, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  }
+}
+
+async function sair() {
+  try { await apiFetch(`${API}/logout`, { method: 'POST' }); } catch (e) { /* já sem sessão */ }
+  encerrarSessao();
+}
+
+// Esconde os itens do menu que o perfil não pode usar (atributo data-perfis;
+// sem o atributo, o item aparece para todos) e as seções que ficarem vazias.
+function aplicarMenuPorPerfil(perfil) {
+  document.querySelectorAll('.nav-item[data-perfis]').forEach(item => {
+    item.style.display = item.dataset.perfis.split(',').includes(perfil) ? '' : 'none';
+  });
+  document.querySelectorAll('.nav-section').forEach(secao => {
+    const visiveis = [...secao.querySelectorAll('.nav-item')].some(i => i.style.display !== 'none');
+    secao.style.display = visiveis ? '' : 'none';
+  });
+}
+
+// Chamado depois do login (ou ao abrir a página já com token válido)
+function iniciarSistema(usuario) {
+  usuarioLogado = usuario;
+  document.getElementById('usuarioNome').textContent = usuario.nome;
+  document.getElementById('usuarioPerfil').textContent = NOMES_PERFIL[usuario.perfil] || usuario.perfil;
+  aplicarMenuPorPerfil(usuario.perfil);
+  irPara('page-dashboard', document.querySelector('.nav-item[onclick*="page-dashboard"]'));
+  carregarAreas();
+}
 
 function irPara(pagina, elemento) {
   if (pagina !== 'page-mapa' && typeof desligarEdicaoTalhoes === 'function') desligarEdicaoTalhoes();
@@ -1394,6 +1661,7 @@ function irPara(pagina, elemento) {
     'page-colheita': 'Colheita',
     'page-aplicacoes': 'Aplicações',
     'page-clientes': 'Clientes',
+    'page-usuarios': 'Usuários',
     'page-configuracoes': 'Configurações'
   };
   document.getElementById('pageTitle').textContent = titulos[pagina] || 'AgroMonitor';
@@ -1420,6 +1688,7 @@ function carregarConteudoPagina(pagina) {
   else if (pagina === 'page-relatorio') { carregarSelectAreasRelatorio(); carregarSelectClientesRelatorio(); }
   else if (pagina === 'page-safras') { carregarSafras(); }
   else if (pagina === 'page-clientes') { carregarClientes(); }
+  else if (pagina === 'page-usuarios') { carregarUsuarios(); }
   else if (pagina === 'page-configuracoes') { inicializarConfigRelatorio(); }
 }
 
@@ -1448,7 +1717,7 @@ function animarNumero(elId, valorFinal, casasDecimais = 0, sufixo = '') {
 async function carregarDashboard() {
   try {
     const periodo = document.getElementById('dashPeriodo')?.value || '6';
-    const r = await fetch(`${API}/dashboard?periodo=${encodeURIComponent(periodo)}`);
+    const r = await apiFetch(`${API}/dashboard?periodo=${encodeURIComponent(periodo)}`);
     const d = await r.json();
     if (!d.sucesso) throw new Error(d.erro || 'Erro ao carregar dashboard');
     const dados = d.dados;
@@ -1629,7 +1898,7 @@ async function excluirArea(id) {
   if (!confirmado) return;
 
   try {
-    const r = await fetch(`${API}/areas/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/areas/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
 
     if (!d) {
@@ -1652,7 +1921,7 @@ async function excluirArea(id) {
 
 async function carregarAreas() {
   try {
-    const r = await fetch(`${API}/areas`);
+    const r = await apiFetch(`${API}/areas`);
     const d = await r.json();
     state.areas = d.dados || [];
     renderAreasGrid(state.areas);
@@ -1701,7 +1970,7 @@ function filtrarAreas() {
 
 async function carregarSelectAreas() {
   try {
-    const r = await fetch(`${API}/areas`);
+    const r = await apiFetch(`${API}/areas`);
     const d = await r.json();
     state.areas = d.dados || [];
 
@@ -1719,7 +1988,7 @@ async function carregarSelectAreas() {
 
 async function carregarSelectCulturas(selectId) {
   try {
-    const r = await fetch(`${API}/culturas`);
+    const r = await apiFetch(`${API}/culturas`);
     const d = await r.json();
     state.culturas = d.dados || [];
 
@@ -1742,7 +2011,7 @@ async function carregarSelectCulturas(selectId) {
 // nenhum cliente ainda, o próprio select avisa e sugere ir cadastrar um.
 async function carregarSelectClientes(selectId, valorAtual) {
   try {
-    const r = await fetch(`${API}/clientes`);
+    const r = await apiFetch(`${API}/clientes`);
     const d = await r.json();
     state.clientes = d.dados || [];
 
@@ -1773,7 +2042,7 @@ async function carregarVariedadesNovoPlantio() {
   }
 
   try {
-    const r = await fetch(`${API}/variedades?cultura_id=${culturaId}`);
+    const r = await apiFetch(`${API}/variedades?cultura_id=${culturaId}`);
     const d = await r.json();
     const variedades = d.dados || [];
 
@@ -1789,7 +2058,7 @@ async function carregarVariedadesNovoPlantio() {
 
 async function carregarAdubosNovoPlantio(valorAtual) {
   try {
-    const r = await fetch(`${API}/adubos`);
+    const r = await apiFetch(`${API}/adubos`);
     const d = await r.json();
     const adubos = d.dados || [];
 
@@ -1805,7 +2074,7 @@ async function carregarAdubosNovoPlantio(valorAtual) {
 
 async function carregarSelectAreasMapa() {
   try {
-    const r = await fetch(`${API}/areas`);
+    const r = await apiFetch(`${API}/areas`);
     const d = await r.json();
     state.areas = d.dados || [];
 
@@ -1820,7 +2089,7 @@ async function carregarSelectAreasMapa() {
 
 async function carregarSelectAreasRelatorio() {
   try {
-    const r = await fetch(`${API}/areas`);
+    const r = await apiFetch(`${API}/areas`);
     const d = await r.json();
     const el = document.getElementById('relatorioAreaSelect');
     el.innerHTML = '<option value="">Selecione...</option>' + (d.dados || []).map(a =>
@@ -1831,7 +2100,7 @@ async function carregarSelectAreasRelatorio() {
 
 async function carregarSelectClientesRelatorio() {
   try {
-    const r = await fetch(`${API}/clientes`);
+    const r = await apiFetch(`${API}/clientes`);
     const d = await r.json();
     document.getElementById('relatorioClienteSelect').innerHTML = '<option value="">Selecione...</option>' +
       (d.dados || []).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
@@ -1931,7 +2200,7 @@ async function salvarArea(e) {
   const method = editando ? 'PUT' : 'POST';
 
   try {
-    const r = await fetch(url, {
+    const r = await apiFetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -1959,7 +2228,7 @@ async function salvarArea(e) {
 
 async function carregarPlantios() {
   try {
-    const r = await fetch(`${API}/plantios`);
+    const r = await apiFetch(`${API}/plantios`);
     const d = await r.json();
     state.plantios = d.dados || [];
 
@@ -2082,7 +2351,7 @@ async function salvarPlantio(e) {
   const url = editando ? `${API}/plantios/${editingPlantioId}` : `${API}/plantios`;
 
   try {
-    const r = await fetch(url, {
+    const r = await apiFetch(url, {
       method: editando ? 'PUT' : 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(data)
@@ -2118,7 +2387,7 @@ async function carregarPontosMon() {
   select.innerHTML = '<option value="">Carregando pontos...</option>';
 
   try {
-    const r = await fetch(`${API}/pontos?area_id=${areaId}`);
+    const r = await apiFetch(`${API}/pontos?area_id=${areaId}`);
     const d = await r.json();
     const pontos = (d.dados || []).slice().sort((a, b) => a.numero_ponto - b.numero_ponto);
 
@@ -2151,7 +2420,7 @@ async function carregarPlantiosMon() {
   select.innerHTML = '<option value="">Carregando plantios...</option>';
 
   try {
-    const r = await fetch(`${API}/plantios?area_id=${areaId}`);
+    const r = await apiFetch(`${API}/plantios?area_id=${areaId}`);
     const d = await r.json();
     const plantios = d.dados || [];
 
@@ -2420,7 +2689,7 @@ function coletarItensPraga() {
 
 async function carregarAdubosParaMonitoramento() {
   try {
-    const r = await fetch(`${API}/adubos`);
+    const r = await apiFetch(`${API}/adubos`);
     const d = await r.json();
     const select = document.getElementById('monAdubo');
     if (!select) return;
@@ -2471,7 +2740,7 @@ function removerFotoStaged(index) {
 async function excluirFotoMonitoramento(fotoId, aoConcluir) {
   if (!confirm('Excluir esta foto? Essa ação não pode ser desfeita.')) return;
   try {
-    const r = await fetch(`${API}/monitoramento-fotos/${fotoId}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/monitoramento-fotos/${fotoId}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
     if (d && d.sucesso) {
       showToast('🗑️ Foto excluída');
@@ -2494,7 +2763,7 @@ function excluirFotoDoForm(fotoId) {
 // Favoritar = escolher a foto pro relatório do dia
 async function alternarFavoritaFoto(fotoId, favorita, aoConcluir) {
   try {
-    const r = await fetch(`${API}/monitoramento-fotos/${fotoId}`, {
+    const r = await apiFetch(`${API}/monitoramento-fotos/${fotoId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ favorita })
@@ -2514,7 +2783,7 @@ async function alternarFavoritaFoto(fotoId, favorita, aoConcluir) {
 // Legenda opcional da foto (aparece embaixo dela no relatório do dia)
 async function salvarLegendaFoto(fotoId, texto) {
   try {
-    const r = await fetch(`${API}/monitoramento-fotos/${fotoId}`, {
+    const r = await apiFetch(`${API}/monitoramento-fotos/${fotoId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ descricao: texto.trim() })
@@ -2589,7 +2858,7 @@ async function enviarFotosStaged(monitoramentoId) {
     fd.append('foto', file);
     if (file.descricao) fd.append('descricao', file.descricao);
     try {
-      const r = await fetch(`${API}/monitoramento-fotos`, { method: 'POST', body: fd });
+      const r = await apiFetch(`${API}/monitoramento-fotos`, { method: 'POST', body: fd });
       const d = await r.json().catch(() => null);
       if (!d || !d.sucesso) falhas++;
     } catch (e) {
@@ -2733,7 +3002,7 @@ async function salvarMonitoramento(e) {
   const url = editando ? `${API}/monitoramentos/${editingMonitoramentoId}` : `${API}/monitoramentos`;
 
   try {
-    const r = await fetch(url, {
+    const r = await apiFetch(url, {
       method: editando ? 'PUT' : 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(data)
@@ -2760,7 +3029,7 @@ async function salvarMonitoramento(e) {
 // por plantio. Clicar num plantio abre a lista de monitoramentos dele.
 async function carregarResumoMonitoramento() {
   try {
-    const r = await fetch(`${API}/resumo-monitoramento`);
+    const r = await apiFetch(`${API}/resumo-monitoramento`);
     const d = await r.json();
     const linhas = d.dados || [];
     const div = document.getElementById('resumoMonitoramento');
@@ -2825,7 +3094,7 @@ async function verMonitoramentosDoPlantio(plantioId, culturaNome, dataPlantioFmt
 
 async function carregarMonitoramentosDoPlantio(plantioId) {
   try {
-    const r = await fetch(`${API}/monitoramentos?plantio_id=${plantioId}`);
+    const r = await apiFetch(`${API}/monitoramentos?plantio_id=${plantioId}`);
     const d = await r.json();
     const monitoramentos = d.dados || [];
     state.monitoramentos = monitoramentos;
@@ -2927,7 +3196,7 @@ async function carregarDetalheMonitoramento(id) {
   const conteudo = document.getElementById('detMonConteudo');
   conteudo.innerHTML = 'Carregando...';
   try {
-    const r = await fetch(`${API}/monitoramentos/${id}`);
+    const r = await apiFetch(`${API}/monitoramentos/${id}`);
     const d = await r.json();
     const m = (d.dados || [])[0];
     if (!m) {
@@ -2941,7 +3210,7 @@ async function carregarDetalheMonitoramento(id) {
     document.getElementById('btnEditarDetMon').onclick = () => editarMonitoramento(m.id);
     document.getElementById('btnExcluirDetMon').onclick = async () => {
       if (!confirm('Excluir este monitoramento? Essa ação não pode ser desfeita.')) return;
-      const rr = await fetch(`${API}/monitoramentos/${m.id}`, { method: 'DELETE' });
+      const rr = await apiFetch(`${API}/monitoramentos/${m.id}`, { method: 'DELETE' });
       const dd = await rr.json().catch(() => null);
       if (dd && dd.sucesso) {
         showToast('🗑️ Monitoramento excluído');
@@ -3075,7 +3344,7 @@ function voltarDoDetalheMonitoramento() {
 async function excluirMonitoramento(id) {
   if (!confirm('Excluir este monitoramento? Essa ação não pode ser desfeita.')) return;
   try {
-    const r = await fetch(`${API}/monitoramentos/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/monitoramentos/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
     if (d && d.sucesso) {
       showToast('🗑️ Monitoramento excluído');
@@ -3093,7 +3362,7 @@ async function excluirMonitoramento(id) {
 async function excluirPlantio(id, doDetalhe = false) {
   if (!confirm('Excluir este registro de plantio? Essa ação não pode ser desfeita.')) return;
   try {
-    const r = await fetch(`${API}/plantios/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/plantios/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
     if (d && d.sucesso) {
       showToast('🗑️ Plantio excluído');
@@ -3110,7 +3379,7 @@ async function excluirPlantio(id, doDetalhe = false) {
 
 async function carregarCulturas() {
   try {
-    const r = await fetch(`${API}/culturas`);
+    const r = await apiFetch(`${API}/culturas`);
     const d = await r.json();
     state.culturas = d.dados || [];
 
@@ -3133,14 +3402,14 @@ async function carregarVariedades() {
     console.log('Carregando variedades...');
     const cultura = document.getElementById('filtroVar').value;
     const url = cultura ? `${API}/variedades?cultura_id=${cultura}` : `${API}/variedades`;
-    const r = await fetch(url);
+    const r = await apiFetch(url);
     const d = await r.json();
     state.variedades = d.dados || d || [];
 
     console.log('Variedades carregadas:', state.variedades);
 
     // Carregar culturas para tradução
-    const rCult = await fetch(`${API}/culturas`);
+    const rCult = await apiFetch(`${API}/culturas`);
     const dCult = await rCult.json();
     const culturas = dCult.dados || dCult || [];
     
@@ -3183,7 +3452,7 @@ async function carregarVariedades() {
 async function carregarAdubos() {
   try {
     console.log('Carregando adubos...');
-    const r = await fetch(`${API}/adubos`);
+    const r = await apiFetch(`${API}/adubos`);
     const d = await r.json();
     state.adubos = d.dados || d || [];
     
@@ -3227,7 +3496,7 @@ async function carregarPragas() {
     const filtroEl = document.getElementById('filtroPrag');
     const culturaId = filtroEl ? filtroEl.value : '';
     const url = culturaId ? `${API}/pragas?cultura_id=${encodeURIComponent(culturaId)}` : `${API}/pragas`;
-    const r = await fetch(url);
+    const r = await apiFetch(url);
     const d = await r.json();
     state.pragas = d.dados || [];
 
@@ -3348,7 +3617,7 @@ async function carregarMapaArea() {
   if (modoTodas) {
     pontosBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">Carregando...</td></tr>';
     try {
-      const r = await fetch(`${API}/areas`);
+      const r = await apiFetch(`${API}/areas`);
       const d = await r.json();
       const areas = d.dados || [];
       const bounds = [];
@@ -3392,8 +3661,8 @@ async function carregarMapaArea() {
 
   try {
     const [areaR, pontosR] = await Promise.all([
-      fetch(`${API}/areas/${areaId}`).then(r => r.json()),
-      fetch(`${API}/pontos?area_id=${areaId}`).then(r => r.json())
+      apiFetch(`${API}/areas/${areaId}`).then(r => r.json()),
+      apiFetch(`${API}/pontos?area_id=${areaId}`).then(r => r.json())
     ]);
 
     const area = areaR.dados;
@@ -3482,7 +3751,7 @@ async function salvarPontoInline(id) {
   }
 
   try {
-    const r = await fetch(`${API}/pontos/${id}`, {
+    const r = await apiFetch(`${API}/pontos/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ latitude: lat, longitude: lng })
@@ -3511,7 +3780,7 @@ function criarMarcadorPonto(p) {
   marker.on('dragend', async () => {
     const { lat, lng } = marker.getLatLng();
     try {
-      const r = await fetch(`${API}/pontos/${p.id}`, {
+      const r = await apiFetch(`${API}/pontos/${p.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ latitude: lat, longitude: lng })
@@ -3540,7 +3809,7 @@ async function handleCliqueMapaArea(e) {
   const novoNumero = maxNumero + 1;
 
   try {
-    const r = await fetch(`${API}/pontos`, {
+    const r = await apiFetch(`${API}/pontos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -3568,7 +3837,7 @@ async function excluirPontoIndividual(id) {
   if (!confirm('Remover este ponto? Monitoramentos e ocorrências registrados nele também serão excluídos. Essa ação não pode ser desfeita.')) return;
 
   try {
-    const r = await fetch(`${API}/pontos/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/pontos/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
 
     if (d && d.sucesso) {
@@ -3621,7 +3890,7 @@ async function carregarDetalhePlantio(id) {
   conteudo.innerHTML = 'Carregando...';
   try {
     // Reaproveita os dados do Resumo da Safra (plantio + colheita + talhões + aplicações)
-    const r = await fetch(`${API}/relatorios/safra?plantio_id=${id}`);
+    const r = await apiFetch(`${API}/relatorios/safra?plantio_id=${id}`);
     const resp = await r.json();
     if (!resp.sucesso) {
       conteudo.innerHTML = `<p style="text-align:center;color:var(--gray-400);padding:20px">${escHTML(resp.erro || 'Plantio não encontrado')}</p>`;
@@ -3714,7 +3983,7 @@ async function carregarTalhoesPlantio(selecao = null, variedadeUnica = null) {
   talhoesPlantioForm = [];
   if (areaId) {
     try {
-      const d = await (await fetch(`${API}/talhoes?area_id=${areaId}`)).json();
+      const d = await (await apiFetch(`${API}/talhoes?area_id=${areaId}`)).json();
       talhoesPlantioForm = d.dados || [];
     } catch (e) { console.error(e); }
   }
@@ -4028,7 +4297,7 @@ const editoresTalhoes = {};
 
 // ----- Opção 2: talhões no Mapa da Área (salva direto na API) -----
 async function apiTalhao(metodo, caminho, corpo) {
-  const r = await fetch(`${API}/talhoes${caminho}`, {
+  const r = await apiFetch(`${API}/talhoes${caminho}`, {
     method: metodo,
     headers: { 'Content-Type': 'application/json' },
     body: corpo ? JSON.stringify(corpo) : undefined
@@ -4077,7 +4346,7 @@ async function carregarTalhoesMapa(area) {
   const sel = document.getElementById('mapaColorirPor');
   const valorAnterior = sel.dataset.areaId == areaId ? sel.value : null;
   try {
-    const d = await (await fetch(`${API}/plantios?area_id=${areaId}`)).json();
+    const d = await (await apiFetch(`${API}/plantios?area_id=${areaId}`)).json();
     plantiosMapaArea = d.dados || [];
   } catch (e) { plantiosMapaArea = []; }
   sel.innerHTML = '<option value="">Cores dos talhões</option>' + plantiosMapaArea.map(p =>
@@ -4093,7 +4362,7 @@ async function recarregarTalhoesMapa() {
   if (!editorTalhoesMapa || !areaSelecionadaMapa) return;
   const plantioId = document.getElementById('mapaColorirPor').value;
   try {
-    const d = await (await fetch(`${API}/talhoes?area_id=${areaSelecionadaMapa}${plantioId ? '&plantio_id=' + plantioId : ''}`)).json();
+    const d = await (await apiFetch(`${API}/talhoes?area_id=${areaSelecionadaMapa}${plantioId ? '&plantio_id=' + plantioId : ''}`)).json();
     const lista = (d.dados || []).map(t => plantioId ? t : (({ plantio_variedade_nome, ...resto }) => resto)(t));
     editorTalhoesMapa.carregar(lista);
   } catch (e) {
@@ -4545,7 +4814,7 @@ async function confirmarImportacaoKML() {
   };
 
   try {
-    const r = await fetch(`${API}/areas`, {
+    const r = await apiFetch(`${API}/areas`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -4579,7 +4848,7 @@ let editingClienteId = null;
 
 async function carregarClientes() {
   try {
-    const r = await fetch(`${API}/clientes`);
+    const r = await apiFetch(`${API}/clientes`);
     const d = await r.json();
     state.clientes = d.dados || [];
     const body = document.getElementById('clientesBody');
@@ -4623,7 +4892,7 @@ async function salvarCliente(e) {
   const url = editando ? `${API}/clientes/${editingClienteId}` : `${API}/clientes`;
 
   try {
-    const r = await fetch(url, {
+    const r = await apiFetch(url, {
       method: editando ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -4664,7 +4933,7 @@ function cancelarEdicaoCliente() {
 async function excluirCliente(id) {
   if (!confirm('Excluir este cliente? Áreas que já pertencem a ele não são afetadas.')) return;
   try {
-    const r = await fetch(`${API}/clientes/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/clientes/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
     if (d && d.sucesso) {
       showToast('🗑️ Cliente excluído');
@@ -4674,6 +4943,135 @@ async function excluirCliente(id) {
     }
   } catch (e) {
     showToast('❌ Erro de conexão: ' + e.message, true);
+  }
+}
+
+// ============= USUÁRIOS (só gestor) =============
+let editingUsuarioId = null;
+
+async function carregarUsuarios() {
+  const body = document.getElementById('usuariosBody');
+  if (!body) return;
+  const filtros = new URLSearchParams();
+  const busca = document.getElementById('filtroUsuarioBusca').value.trim();
+  const perfil = document.getElementById('filtroUsuarioPerfil').value;
+  const ativo = document.getElementById('filtroUsuarioAtivo').value;
+  if (busca) filtros.set('busca', busca);
+  if (perfil) filtros.set('perfil', perfil);
+  if (ativo) filtros.set('ativo', ativo);
+
+  try {
+    const r = await apiFetch(`${API}/usuarios?${filtros}`);
+    const d = await r.json();
+    if (!d.sucesso) { showToast('❌ ' + (d.erro || 'Erro ao carregar usuários'), true); return; }
+    state.usuarios = d.dados || [];
+
+    if (!state.usuarios.length) {
+      body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-400)">Nenhum usuário encontrado</td></tr>';
+      return;
+    }
+
+    body.innerHTML = state.usuarios.map(u => `
+      <tr>
+        <td>${escHTML(u.nome)}</td>
+        <td>${escHTML(u.login)}</td>
+        <td>${escHTML(u.email || '—')}</td>
+        <td>${NOMES_PERFIL[u.perfil] || escHTML(u.perfil)}</td>
+        <td><span class="badge ${u.ativo ? 'badge-green' : 'badge-red'}">${u.ativo ? 'Ativo' : 'Inativo'}</span></td>
+        <td style="text-align:right;white-space:nowrap">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="editarUsuario(${u.id})">✏️</button>
+          ${usuarioLogado && u.id === usuarioLogado.id ? '' : `<button type="button" class="btn btn-secondary btn-sm" style="color:#dc2626" onclick="excluirUsuario(${u.id})">🗑️</button>`}
+        </td>
+      </tr>`).join('');
+  } catch (e) { console.error(e); }
+}
+
+async function salvarUsuario(e) {
+  e.preventDefault();
+  const form = document.getElementById('formUsuario');
+  limparErrosCampos(form);
+
+  const data = {
+    nome: document.getElementById('usuarioNomeInput').value.trim(),
+    login: document.getElementById('usuarioLogin').value.trim(),
+    email: document.getElementById('usuarioEmail').value.trim() || null,
+    perfil: document.getElementById('usuarioPerfilInput').value,
+    ativo: document.getElementById('usuarioAtivo').value === '1'
+  };
+  const senha = document.getElementById('usuarioSenha').value;
+  if (senha) data.senha = senha;
+
+  const editando = !!editingUsuarioId;
+  const url = editando ? `${API}/usuarios/${editingUsuarioId}` : `${API}/usuarios`;
+
+  try {
+    const r = await apiFetch(url, {
+      method: editando ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const d = await r.json().catch(() => null);
+
+    if (d && d.sucesso) {
+      showToast(editando ? '✅ Usuário atualizado!' : '✅ Usuário criado!');
+      cancelarEdicaoUsuario();
+      carregarUsuarios();
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
+      showToast('❌ Corrija os campos destacados', true);
+    } else {
+      showToast('❌ Erro: ' + (d?.erro || 'Desconhecido'), true);
+    }
+  } catch (e) {
+    showToast('❌ ' + e.message, true);
+  }
+}
+
+function editarUsuario(id) {
+  const u = (state.usuarios || []).find(x => x.id == id);
+  if (!u) return;
+
+  editingUsuarioId = id;
+  limparErrosCampos(document.getElementById('formUsuario'));
+  document.getElementById('usuarioNomeInput').value = u.nome;
+  document.getElementById('usuarioLogin').value = u.login;
+  document.getElementById('usuarioEmail').value = u.email || '';
+  document.getElementById('usuarioSenha').value = '';
+  document.getElementById('usuarioPerfilInput').value = u.perfil;
+  document.getElementById('usuarioAtivo').value = u.ativo ? '1' : '0';
+  document.getElementById('usuarioFormTitulo').textContent = '✏️ Editar Usuário';
+  document.getElementById('usuarioSenhaLabel').textContent = 'Nova senha';
+  document.getElementById('usuarioSenhaHint').style.display = '';
+  document.getElementById('btnSalvarUsuario').textContent = 'Salvar Alterações';
+  document.getElementById('btnCancelarUsuario').style.display = '';
+}
+
+function cancelarEdicaoUsuario() {
+  editingUsuarioId = null;
+  const form = document.getElementById('formUsuario');
+  if (!form) return;
+  form.reset();
+  limparErrosCampos(form);
+  document.getElementById('usuarioFormTitulo').textContent = '👤 Novo Usuário';
+  document.getElementById('usuarioSenhaLabel').textContent = 'Senha *';
+  document.getElementById('usuarioSenhaHint').style.display = 'none';
+  document.getElementById('btnSalvarUsuario').textContent = 'Adicionar';
+  document.getElementById('btnCancelarUsuario').style.display = 'none';
+}
+
+async function excluirUsuario(id) {
+  if (!confirm('Excluir este usuário? Para só bloquear o acesso, edite e marque como Inativo.')) return;
+  try {
+    const r = await apiFetch(`${API}/usuarios/${id}`, { method: 'DELETE' });
+    const d = await r.json().catch(() => null);
+    if (d && d.sucesso) {
+      showToast('🗑️ Usuário excluído');
+      carregarUsuarios();
+    } else {
+      showToast('❌ Erro ao excluir: ' + (d?.erro || 'Desconhecido'), true);
+    }
+  } catch (e) {
+    showToast('❌ ' + e.message, true);
   }
 }
 
@@ -4703,7 +5101,7 @@ async function preencherSelectSafra(selectId, valorAtual = null) {
   const select = document.getElementById(selectId);
   if (!select) return;
   try {
-    const r = await fetch(`${API}/safras`);
+    const r = await apiFetch(`${API}/safras`);
     const d = await r.json();
     const safras = d.dados || [];
 
@@ -4729,7 +5127,7 @@ async function preencherSelectSafra(selectId, valorAtual = null) {
 
 async function carregarSafras() {
   try {
-    const r = await fetch(`${API}/safras`);
+    const r = await apiFetch(`${API}/safras`);
     const d = await r.json();
     const safras = d.dados || [];
     const body = document.getElementById('safrasBody');
@@ -4786,7 +5184,7 @@ async function salvarSafra(e) {
   const url = editando ? `${API}/safras/${editingSafraId}` : `${API}/safras`;
 
   try {
-    const r = await fetch(url, {
+    const r = await apiFetch(url, {
       method: editando ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -4807,7 +5205,7 @@ async function salvarSafra(e) {
 
 async function editarSafra(id) {
   try {
-    const r = await fetch(`${API}/safras`);
+    const r = await apiFetch(`${API}/safras`);
     const d = await r.json();
     const safra = (d.dados || []).find(s => s.id == id);
     if (!safra) return;
@@ -4829,7 +5227,7 @@ function cancelarEdicaoSafra() {
 async function excluirSafra(id) {
   if (!confirm('Excluir esta safra? As áreas que usam ela ficam sem safra vinculada (não são apagadas).')) return;
   try {
-    const r = await fetch(`${API}/safras/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/safras/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
     if (d && d.sucesso) {
       showToast('🗑️ Safra excluída');
@@ -4848,7 +5246,7 @@ let aplicacoesCache = [];
 
 async function carregarPaginaAplicacoes() {
   try {
-    const r = await fetch(`${API}/areas`);
+    const r = await apiFetch(`${API}/areas`);
     const d = await r.json();
     document.getElementById('aplicArea').innerHTML = '<option value="">Selecione...</option>' +
       (d.dados || []).map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
@@ -4862,7 +5260,7 @@ async function carregarPlantiosAplicacao(plantioSelecionado = null) {
   const sel = document.getElementById('aplicPlantio');
   if (!areaId) { sel.innerHTML = '<option value="">Selecione a área primeiro</option>'; return; }
   try {
-    const r = await fetch(`${API}/plantios?area_id=${areaId}`);
+    const r = await apiFetch(`${API}/plantios?area_id=${areaId}`);
     const d = await r.json();
     const plantios = d.dados || [];
     sel.innerHTML = plantios.length
@@ -4880,7 +5278,7 @@ async function carregarAplicacoes() {
   const body = document.getElementById('aplicacoesBody');
   const nomeTipo = { defensivo: 'Defensivo', adubo: 'Adubo / foliar', corretivo: 'Corretivo' };
   try {
-    const r = await fetch(`${API}/aplicacoes`);
+    const r = await apiFetch(`${API}/aplicacoes`);
     const d = await r.json();
     aplicacoesCache = d.dados || [];
     if (!aplicacoesCache.length) {
@@ -4923,7 +5321,7 @@ async function salvarAplicacao(e) {
   const editando = !!editingAplicacaoId;
   const url = editando ? `${API}/aplicacoes/${editingAplicacaoId}` : `${API}/aplicacoes`;
   try {
-    const r = await fetch(url, {
+    const r = await apiFetch(url, {
       method: editando ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -4972,7 +5370,7 @@ function cancelarEdicaoAplicacao() {
 async function excluirAplicacao(id) {
   if (!confirm('Excluir esta aplicação?')) return;
   try {
-    const r = await fetch(`${API}/aplicacoes/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/aplicacoes/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
     if (d && d.sucesso) {
       showToast('🗑️ Aplicação excluída');
@@ -4992,7 +5390,7 @@ let colheitasCache = [];
 
 async function carregarPaginaColheita() {
   try {
-    const r = await fetch(`${API}/areas`);
+    const r = await apiFetch(`${API}/areas`);
     const d = await r.json();
     document.getElementById('colheitaArea').innerHTML = '<option value="">Selecione...</option>' +
       (d.dados || []).map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
@@ -5006,7 +5404,7 @@ async function carregarPlantiosColheita(plantioSelecionado = null) {
   const sel = document.getElementById('colheitaPlantio');
   if (!areaId) { sel.innerHTML = '<option value="">Selecione a área primeiro</option>'; return; }
   try {
-    const r = await fetch(`${API}/plantios?area_id=${areaId}`);
+    const r = await apiFetch(`${API}/plantios?area_id=${areaId}`);
     const d = await r.json();
     const plantios = d.dados || [];
     const editando = colheitasCache.find(c => c.id == editingColheitaId);
@@ -5026,7 +5424,7 @@ async function carregarPlantiosColheita(plantioSelecionado = null) {
 async function carregarColheitas() {
   const body = document.getElementById('colheitasBody');
   try {
-    const r = await fetch(`${API}/colheitas`);
+    const r = await apiFetch(`${API}/colheitas`);
     const d = await r.json();
     colheitasCache = d.dados || [];
     if (!colheitasCache.length) {
@@ -5072,7 +5470,7 @@ async function salvarColheita(e) {
   const editando = !!editingColheitaId;
   const url = editando ? `${API}/colheitas/${editingColheitaId}` : `${API}/colheitas`;
   try {
-    const r = await fetch(url, {
+    const r = await apiFetch(url, {
       method: editando ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -5116,7 +5514,7 @@ function cancelarEdicaoColheita() {
 async function excluirColheita(id) {
   if (!confirm('Excluir esta colheita?')) return;
   try {
-    const r = await fetch(`${API}/colheitas/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/colheitas/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
     if (d && d.sucesso) {
       showToast('🗑️ Colheita excluída');
@@ -5301,7 +5699,7 @@ async function carregarDiasRelatorio() {
   // Relatório 2: a escolha é o plantio (safra + cultura) da área
   if (document.getElementById('relatorioTipo').value === 'safra') {
     try {
-      const r = await fetch(`${API}/plantios?area_id=${areaId}`);
+      const r = await apiFetch(`${API}/plantios?area_id=${areaId}`);
       const d = await r.json();
       const plantios = d.dados || [];
       sel.innerHTML = plantios.length
@@ -5315,7 +5713,7 @@ async function carregarDiasRelatorio() {
     return;
   }
   try {
-    const r = await fetch(`${API}/relatorios/dias?area_id=${areaId}`);
+    const r = await apiFetch(`${API}/relatorios/dias?area_id=${areaId}`);
     const d = await r.json();
     const dias = d.dados || [];
     sel.innerHTML = dias.length
@@ -5370,10 +5768,10 @@ function extrairOcorrenciasDeMonitoramentos(monitoramentos) {
 
 async function buscarDadosAreaRelatorio(areaId) {
   const [areaR, plantiosR, pontosR, monitoramentosR] = await Promise.all([
-    fetch(`${API}/areas/${areaId}`).then(r => r.json()),
-    fetch(`${API}/plantios?area_id=${areaId}`).then(r => r.json()),
-    fetch(`${API}/pontos?area_id=${areaId}`).then(r => r.json()),
-    fetch(`${API}/monitoramentos?area_id=${areaId}`).then(r => r.json())
+    apiFetch(`${API}/areas/${areaId}`).then(r => r.json()),
+    apiFetch(`${API}/plantios?area_id=${areaId}`).then(r => r.json()),
+    apiFetch(`${API}/pontos?area_id=${areaId}`).then(r => r.json()),
+    apiFetch(`${API}/monitoramentos?area_id=${areaId}`).then(r => r.json())
   ]);
   const monitoramentos = monitoramentosR.dados || [];
   return {
@@ -5387,13 +5785,13 @@ async function buscarDadosAreaRelatorio(areaId) {
 
 async function buscarTodosDadosRelatorio() {
   const [areasR, culturasR, variedadesR, adubosR, pragasR, plantiosR, monitoramentosR] = await Promise.all([
-    fetch(`${API}/areas`).then(r => r.json()),
-    fetch(`${API}/culturas`).then(r => r.json()),
-    fetch(`${API}/variedades`).then(r => r.json()),
-    fetch(`${API}/adubos`).then(r => r.json()),
-    fetch(`${API}/pragas`).then(r => r.json()),
-    fetch(`${API}/plantios`).then(r => r.json()),
-    fetch(`${API}/monitoramentos`).then(r => r.json())
+    apiFetch(`${API}/areas`).then(r => r.json()),
+    apiFetch(`${API}/culturas`).then(r => r.json()),
+    apiFetch(`${API}/variedades`).then(r => r.json()),
+    apiFetch(`${API}/adubos`).then(r => r.json()),
+    apiFetch(`${API}/pragas`).then(r => r.json()),
+    apiFetch(`${API}/plantios`).then(r => r.json()),
+    apiFetch(`${API}/monitoramentos`).then(r => r.json())
   ]);
   const monitoramentos = monitoramentosR.dados || [];
   return {
@@ -5654,7 +6052,7 @@ function descricaoEstadios(cultura, estadios) {
 }
 
 async function montarRelatorioDiarioHTML(plantioId, data) {
-  const r = await fetch(`${API}/relatorios/diario?plantio_id=${plantioId}&data=${data}`);
+  const r = await apiFetch(`${API}/relatorios/diario?plantio_id=${plantioId}&data=${data}`);
   const resp = await r.json();
   if (!resp.sucesso) return `<p style="padding:20px;text-align:center;color:#999">${escHTML(resp.erro || 'Relatório não encontrado')}</p>`;
   const d = resp.dados;
@@ -5928,7 +6326,7 @@ function graficoPragasSVG(dias, ocorrencias, cultura) {
 }
 
 async function montarRelatorioSafraHTML(plantioId) {
-  const r = await fetch(`${API}/relatorios/safra?plantio_id=${plantioId}`);
+  const r = await apiFetch(`${API}/relatorios/safra?plantio_id=${plantioId}`);
   const resp = await r.json();
   if (!resp.sucesso) return `<p style="padding:20px;text-align:center;color:#999">${escHTML(resp.erro || 'Relatório não encontrado')}</p>`;
   const { cabecalho: c, dias, ocorrencias, aplicacoes, totais } = resp.dados;
@@ -6111,7 +6509,7 @@ function graficoOcorrenciasSVG(plantios) {
 }
 
 async function montarRelatorioComparativoHTML(areaId) {
-  const r = await fetch(`${API}/relatorios/comparativo?area_id=${areaId}`);
+  const r = await apiFetch(`${API}/relatorios/comparativo?area_id=${areaId}`);
   const resp = await r.json();
   if (!resp.sucesso) return `<p style="padding:20px;text-align:center;color:#999">${escHTML(resp.erro || 'Relatório não encontrado')}</p>`;
   const { area, plantios } = resp.dados;
@@ -6257,7 +6655,7 @@ function graficoAreasPorSafraSVG(ciclos, areasNomes) {
 }
 
 async function montarRelatorioClienteHTML(clienteId) {
-  const r = await fetch(`${API}/relatorios/cliente?cliente_id=${clienteId}`);
+  const r = await apiFetch(`${API}/relatorios/cliente?cliente_id=${clienteId}`);
   const resp = await r.json();
   if (!resp.sucesso) return `<p style="padding:20px;text-align:center;color:#999">${escHTML(resp.erro || 'Relatório não encontrado')}</p>`;
   const { cliente, areas, plantios } = resp.dados;
@@ -6640,8 +7038,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el) el.value = hoje;
   });
   aplicarConfigSalvaNoCarregamento();
-  carregarDashboard();
-  carregarAreas();
+
+  // Só abre o sistema com token válido; sem token (ou expirado), mostra o login
+  if (!lerToken()) { mostrarLogin(); return; }
+  apiFetch(`${API}/me`)
+    .then(r => r.json())
+    .then(d => { if (d.sucesso) iniciarSistema(d.dados); else encerrarSessao(); })
+    .catch(() => { if (lerToken()) { showToast('❌ Não foi possível conectar à API em ' + API, true); mostrarLogin(); } });
 });
 
 // ============= MODAL CONFIGURAÇÕES =============
@@ -6824,7 +7227,7 @@ async function salvarNovoItemConfig(e) {
 
   try {
     const url = editando ? `${API}/${tipo}s/${id}` : `${API}/${tipo}s`;
-    const r = await fetch(url, {
+    const r = await apiFetch(url, {
       method: editando ? 'PUT' : 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(data)
@@ -6858,7 +7261,7 @@ async function excluirItemConfig(tipo, id, recarregar) {
   if (!confirm(avisos[tipo] || 'Excluir este item? Essa ação não pode ser desfeita.')) return;
 
   try {
-    const r = await fetch(`${API}/${tipo}s/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/${tipo}s/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
     if (d && d.sucesso) {
       showToast('🗑️ Excluído(a) com sucesso');
