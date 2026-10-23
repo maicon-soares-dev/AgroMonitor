@@ -185,8 +185,8 @@ Funções a portar para `Services/`: `indicePraga`, `sqlVariedadeNome`, `inserir
 
 | Etapa | Situação | Observações |
 |---|---|---|
-| 0. Preparação | Pendente | |
-| 1. Base do Laravel | Pendente | |
+| 0. Preparação | Concluída | Branch `migracao-laravel`. `api/`, `database/` e `uploads/` (fotos antigas, fora do Git) movidos para `legacy-php/`; `index.html`, `assets/` e HTML de teste em `frontend/`. O front ainda aponta para `api/index.php` e fica sem API até a etapa 2 |
+| 1. Base do Laravel | Concluída | Laravel 12.70 (PHP 8.2.12 do XAMPP; o 13 exige 8.3). Banco **`agromonitor_laravel`** (o `agromonitor` antigo tem dados de teste e foi preservado como referência). IDs auto-incremento são `BIGINT UNSIGNED`. `users` com `nome`, `login`, `email` (opcional), `password`, `perfil`, `ativo`; FKs que apontavam para `usuarios` agora apontam para `users`. `plantio_talhoes` ganhou `criado_em`/`atualizado_em`; `relatorios` usa `gerado_em` como `CREATED_AT`. Models herdam de `App\Models\Modelo` (timestamps em português), sem casts de data/decimal para não mudar o JSON do contrato. Gestor do seeder: `GESTOR_LOGIN`/`GESTOR_SENHA` no `.env` (sem senha, o seeder gera uma e mostra no console). MySQL do XAMPP precisa estar ligado |
 | 2. Autenticação | Pendente | |
 | 3. Cadastros simples | Pendente | |
 | 4. Áreas, talhões e pontos | Pendente | |
