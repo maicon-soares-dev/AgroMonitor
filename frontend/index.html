@@ -200,6 +200,10 @@ tr:hover td { background: var(--gray-50); }
 /* Mensagens de validação ao lado de cada campo (vêm do "erros" da API) */
 .form-input.invalido, .form-select.invalido, .form-textarea.invalido { border-color: var(--red-600); }
 .form-erro { font-size: 11px; color: var(--red-600); margin-top: 4px; }
+
+/* Formulário de filtro das telas de cadastro */
+.filtro-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--gray-100); }
+.filtro-form .form-group { margin: 0; flex: 1 1 170px; }
 </style>
 </head>
 <body>
@@ -971,6 +975,14 @@ tr:hover td { background: var(--gray-50); }
             <button class="btn btn-primary btn-sm" onclick="abrirModalNovoCultura()">+ Novo</button>
           </div>
           <div class="card-body">
+            <form class="filtro-form" id="filtroCulturas" onsubmit="event.preventDefault(); carregarCulturas()">
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroCulturaBusca" placeholder="Nome ou descrição">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarCulturas()">Limpar</button>
+            </form>
             <table>
               <thead>
                 <tr>
@@ -993,12 +1005,20 @@ tr:hover td { background: var(--gray-50); }
             <button class="btn btn-primary btn-sm" onclick="abrirModalNovoVariedade()">+ Novo</button>
           </div>
           <div class="card-body">
-            <div class="form-group" style="margin-bottom:16px">
-              <label class="form-label">Filtrar por Cultura</label>
-              <select id="filtroVar" class="form-select" onchange="carregarVariedades()">
-                <option value="">Todas</option>
-              </select>
-            </div>
+            <form class="filtro-form" id="filtroVariedades" onsubmit="event.preventDefault(); carregarVariedades()">
+              <div class="form-group">
+                <label class="form-label">Cultura</label>
+                <select id="filtroVar" class="form-select" onchange="carregarVariedades()">
+                  <option value="">Todas</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroVarBusca" placeholder="Nome ou descrição">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarVariedades()">Limpar</button>
+            </form>
             <table>
               <thead>
                 <tr>
@@ -1022,6 +1042,14 @@ tr:hover td { background: var(--gray-50); }
             <button class="btn btn-primary btn-sm" onclick="abrirModalNovoAdubo()">+ Novo</button>
           </div>
           <div class="card-body">
+            <form class="filtro-form" id="filtroAdubos" onsubmit="event.preventDefault(); carregarAdubos()">
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroAduboBusca" placeholder="Nome, tipo ou NPK">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarAdubos()">Limpar</button>
+            </form>
             <table>
               <thead>
                 <tr>
@@ -1045,12 +1073,39 @@ tr:hover td { background: var(--gray-50); }
             <button class="btn btn-primary btn-sm" onclick="abrirModalNovoPraga()">+ Novo</button>
           </div>
           <div class="card-body">
-            <div class="form-group" style="margin-bottom:16px">
-              <label class="form-label">Filtrar por Cultura</label>
-              <select id="filtroPrag" class="form-select" onchange="carregarPragas()">
-                <option value="">Todas</option>
-              </select>
-            </div>
+            <form class="filtro-form" id="filtroPragas" onsubmit="event.preventDefault(); carregarPragas()">
+              <div class="form-group">
+                <label class="form-label">Cultura</label>
+                <select id="filtroPrag" class="form-select" onchange="carregarPragas()">
+                  <option value="">Todas</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tipo</label>
+                <select id="filtroPragTipo" class="form-select" onchange="carregarPragas()">
+                  <option value="">Todos</option>
+                  <option value="praga">🐛 Praga</option>
+                  <option value="doenca">🦠 Doença</option>
+                  <option value="planta_daninha">🌿 Planta Daninha</option>
+                  <option value="clima">🌦️ Condição Climática</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Risco</label>
+                <select id="filtroPragRisco" class="form-select" onchange="carregarPragas()">
+                  <option value="">Todos</option>
+                  <option value="baixo">Baixo</option>
+                  <option value="medio">Médio</option>
+                  <option value="alto">Alto</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroPragBusca" placeholder="Nome ou descrição">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarPragas()">Limpar</button>
+            </form>
             <table>
               <thead>
                 <tr>
@@ -1119,24 +1174,33 @@ tr:hover td { background: var(--gray-50); }
             <h3 class="card-title">🧑‍🌾 Clientes</h3>
           </div>
           <div class="card-body">
-            <form onsubmit="salvarCliente(event)" style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:20px">
+            <form id="formCliente" onsubmit="salvarCliente(event)" novalidate style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:10px;align-items:start;margin-bottom:20px">
               <div class="form-group" style="margin:0">
                 <label class="form-label">Nome *</label>
-                <input type="text" class="form-input" id="clienteNome" placeholder="Ex: Exemplo Agropecuária" required>
+                <input type="text" class="form-input" id="clienteNome" data-campo="nome" placeholder="Ex: Exemplo Agropecuária">
               </div>
               <div class="form-group" style="margin:0">
                 <label class="form-label">Documento (CPF/CNPJ)</label>
-                <input type="text" class="form-input" id="clienteDocumento" placeholder="Opcional">
+                <input type="text" class="form-input" id="clienteDocumento" data-campo="documento" placeholder="Opcional">
               </div>
               <div class="form-group" style="margin:0">
                 <label class="form-label">Telefone</label>
-                <input type="text" class="form-input" id="clienteTelefone" placeholder="Opcional">
+                <input type="text" class="form-input" id="clienteTelefone" data-campo="telefone" placeholder="Opcional">
               </div>
               <div class="form-group" style="margin:0">
                 <label class="form-label">Email</label>
-                <input type="email" class="form-input" id="clienteEmail" placeholder="Opcional">
+                <input type="email" class="form-input" id="clienteEmail" data-campo="email" placeholder="Opcional">
               </div>
-              <button type="submit" class="btn btn-primary" id="btnSalvarCliente">Adicionar</button>
+              <button type="submit" class="btn btn-primary" id="btnSalvarCliente" style="margin-top:20px">Adicionar</button>
+            </form>
+
+            <form class="filtro-form" id="filtroClientes" onsubmit="event.preventDefault(); carregarClientes()">
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroClienteBusca" placeholder="Nome, documento, telefone ou e-mail">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarClientes()">Limpar</button>
             </form>
 
             <table>
@@ -1266,20 +1330,33 @@ tr:hover td { background: var(--gray-50); }
               Com mês e ano, o sistema calcula sozinho qual safra está valendo hoje — e usa isso pra
               pré-preencher a safra certa ao cadastrar uma área, sem você precisar lembrar de marcar "ativa" na mão.
             </div>
-            <form onsubmit="salvarSafra(event)" style="display:grid;grid-template-columns:1.6fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:20px">
+            <form id="formSafra" onsubmit="salvarSafra(event)" novalidate style="display:grid;grid-template-columns:1.6fr 1fr 1fr auto;gap:10px;align-items:start;margin-bottom:20px">
               <div class="form-group" style="margin:0">
                 <label class="form-label">Nome da Safra *</label>
-                <input type="text" class="form-input" id="safraNome" placeholder="Ex: Safra 2026/2027" required>
+                <input type="text" class="form-input" id="safraNome" data-campo="nome" placeholder="Ex: Safra 2026/2027">
               </div>
               <div class="form-group" style="margin:0">
                 <label class="form-label">Início (mês/ano) *</label>
-                <input type="month" class="form-input" id="safraInicio" required>
+                <input type="month" class="form-input" id="safraInicio" data-campo="mes_inicio ano_inicio">
               </div>
               <div class="form-group" style="margin:0">
                 <label class="form-label">Fim (mês/ano) *</label>
-                <input type="month" class="form-input" id="safraFim" required>
+                <input type="month" class="form-input" id="safraFim" data-campo="mes_fim ano_fim">
               </div>
-              <button type="submit" class="btn btn-primary" id="btnSalvarSafra">Adicionar</button>
+              <button type="submit" class="btn btn-primary" id="btnSalvarSafra" style="margin-top:20px">Adicionar</button>
+            </form>
+
+            <form class="filtro-form" id="filtroSafras" onsubmit="event.preventDefault(); carregarSafras()">
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroSafraBusca" placeholder="Nome da safra">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Ano</label>
+                <input type="number" class="form-input" id="filtroSafraAno" placeholder="Ex: 2026" min="2000" max="2100">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarSafras()">Limpar</button>
             </form>
 
             <table>
@@ -1482,7 +1559,7 @@ tr:hover td { background: var(--gray-50); }
 <div id="modal-config" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;overflow:auto">
   <div style="background:white;border-radius:var(--radius);max-width:500px;margin:50px auto;padding:24px;box-shadow:var(--shadow-md)">
     <h2 id="modal-titulo" style="margin-bottom:20px;font-size:16px;font-weight:700">Novo</h2>
-    <form id="form-config" style="display:grid;gap:16px" onsubmit="salvarNovoItemConfig(event)">
+    <form id="form-config" style="display:grid;gap:16px" onsubmit="salvarNovoItemConfig(event)" novalidate>
       <!-- Campos dinâmicos inseridos aqui -->
     </form>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px">
@@ -1536,12 +1613,13 @@ async function apiFetch(url, opcoes = {}) {
 }
 
 // Mostra as mensagens do "erros" da API ao lado de cada campo do formulário.
-// Os campos são achados pelo atributo data-campo (= nome do campo na API).
+// Os campos são achados pelo atributo data-campo (= nome do campo na API; um
+// campo da tela pode responder por vários da API: data-campo="mes_inicio ano_inicio").
 function mostrarErrosCampos(form, erros) {
   limparErrosCampos(form);
   Object.entries(erros || {}).forEach(([campo, mensagens]) => {
-    const el = form.querySelector(`[data-campo="${campo}"]`);
-    if (!el) return;
+    const el = form.querySelector(`[data-campo~="${campo}"]`);
+    if (!el || el.classList.contains('invalido')) return;
     el.classList.add('invalido');
     const msg = document.createElement('div');
     msg.className = 'form-erro';
@@ -1553,6 +1631,18 @@ function mostrarErrosCampos(form, erros) {
 function limparErrosCampos(form) {
   form.querySelectorAll('.form-erro').forEach(m => m.remove());
   form.querySelectorAll('.invalido').forEach(el => el.classList.remove('invalido'));
+}
+
+// Monta a query string dos formulários de filtro: { parametroDaApi: 'idDoCampo' }.
+// Só entram os campos preenchidos. Ex.: '?busca=milho&tipo=praga' ou ''.
+function queryFiltros(campos) {
+  const params = new URLSearchParams();
+  Object.entries(campos).forEach(([param, id]) => {
+    const valor = (document.getElementById(id)?.value || '').trim();
+    if (valor) params.set(param, valor);
+  });
+  const texto = params.toString();
+  return texto ? `?${texto}` : '';
 }
 
 function mostrarLogin() {
@@ -1994,7 +2084,9 @@ async function carregarSelectCulturas(selectId) {
 
     const el = document.getElementById(selectId);
     if (el) {
-      el.innerHTML = '<option value="">Selecione...</option>' + (d.dados || []).map(c =>
+      // Nos formulários de filtro (filtroVar, filtroPrag) a opção vazia significa "todas"
+      const opcaoVazia = selectId.startsWith('filtro') ? 'Todas' : 'Selecione...';
+      el.innerHTML = `<option value="">${opcaoVazia}</option>` + (d.dados || []).map(c =>
         `<option value="${c.id}">${c.nome}</option>`
       ).join('');
     }
@@ -3379,11 +3471,15 @@ async function excluirPlantio(id, doDetalhe = false) {
 
 async function carregarCulturas() {
   try {
-    const r = await apiFetch(`${API}/culturas`);
+    const r = await apiFetch(`${API}/culturas${queryFiltros({ busca: 'filtroCulturaBusca' })}`);
     const d = await r.json();
     state.culturas = d.dados || [];
 
     const tbody = document.getElementById('culturasList');
+    if (!state.culturas.length) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--gray-400)">Nenhuma cultura encontrada</td></tr>';
+      return;
+    }
     tbody.innerHTML = state.culturas.map(c => `
       <tr>
         <td>${c.nome}</td>
@@ -3400,8 +3496,7 @@ async function carregarCulturas() {
 async function carregarVariedades() {
   try {
     console.log('Carregando variedades...');
-    const cultura = document.getElementById('filtroVar').value;
-    const url = cultura ? `${API}/variedades?cultura_id=${cultura}` : `${API}/variedades`;
+    const url = `${API}/variedades${queryFiltros({ cultura_id: 'filtroVar', busca: 'filtroVarBusca' })}`;
     const r = await apiFetch(url);
     const d = await r.json();
     state.variedades = d.dados || d || [];
@@ -3425,7 +3520,7 @@ async function carregarVariedades() {
     }
     
     if (state.variedades.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">Nenhuma variedade cadastrada</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">Nenhuma variedade encontrada</td></tr>';
       return;
     }
     
@@ -3452,10 +3547,10 @@ async function carregarVariedades() {
 async function carregarAdubos() {
   try {
     console.log('Carregando adubos...');
-    const r = await apiFetch(`${API}/adubos`);
+    const r = await apiFetch(`${API}/adubos${queryFiltros({ busca: 'filtroAduboBusca' })}`);
     const d = await r.json();
     state.adubos = d.dados || d || [];
-    
+
     console.log('Adubos carregados:', state.adubos);
 
     const tbody = document.getElementById('adubosList');
@@ -3465,7 +3560,7 @@ async function carregarAdubos() {
     }
     
     if (state.adubos.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">Nenhum adubo cadastrado</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">Nenhum adubo encontrado</td></tr>';
       return;
     }
     
@@ -3491,17 +3586,20 @@ async function carregarAdubos() {
 
 async function carregarPragas() {
   try {
-    // v2: pragas.cultura_id é FK de verdade agora (era texto solto antes) —
-    // manda o ID direto, igual já é feito em Variedades
-    const filtroEl = document.getElementById('filtroPrag');
-    const culturaId = filtroEl ? filtroEl.value : '';
-    const url = culturaId ? `${API}/pragas?cultura_id=${encodeURIComponent(culturaId)}` : `${API}/pragas`;
-    const r = await apiFetch(url);
+    // Os filtros só valem na própria tela de Pragas: o Registrar Monitoramento
+    // também chama esta função e precisa do catálogo inteiro em state.pragas.
+    const naTelaPragas = document.getElementById('page-pragas').classList.contains('active');
+    const filtros = naTelaPragas
+      ? queryFiltros({ cultura_id: 'filtroPrag', tipo: 'filtroPragTipo', nivel_risco: 'filtroPragRisco', busca: 'filtroPragBusca' })
+      : '';
+    const r = await apiFetch(`${API}/pragas${filtros}`);
     const d = await r.json();
     state.pragas = d.dados || [];
 
     const tbody = document.getElementById('pragasList');
-    if (tbody) {
+    if (tbody && !state.pragas.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-400)">Nenhum item encontrado</td></tr>';
+    } else if (tbody) {
       tbody.innerHTML = state.pragas.map(p => {
         const badgeRisco = p.nivel_risco === 'alto' 
           ? '<span class="badge badge-red">Alto</span>'
@@ -4848,14 +4946,14 @@ let editingClienteId = null;
 
 async function carregarClientes() {
   try {
-    const r = await apiFetch(`${API}/clientes`);
+    const r = await apiFetch(`${API}/clientes${queryFiltros({ busca: 'filtroClienteBusca' })}`);
     const d = await r.json();
     state.clientes = d.dados || [];
     const body = document.getElementById('clientesBody');
     if (!body) return;
 
     if (!state.clientes.length) {
-      body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-400)">Nenhum cliente cadastrado</td></tr>';
+      body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-400)">Nenhum cliente encontrado</td></tr>';
       return;
     }
 
@@ -4882,11 +4980,8 @@ async function salvarCliente(e) {
     telefone: document.getElementById('clienteTelefone').value.trim() || null,
     email: document.getElementById('clienteEmail').value.trim() || null
   };
-
-  if (!data.nome) {
-    showToast('❌ Preencha o nome do cliente', true);
-    return;
-  }
+  const form = document.getElementById('formCliente');
+  limparErrosCampos(form);
 
   const editando = !!editingClienteId;
   const url = editando ? `${API}/clientes/${editingClienteId}` : `${API}/clientes`;
@@ -4903,6 +4998,8 @@ async function salvarCliente(e) {
       showToast(editando ? '✅ Cliente atualizado!' : '✅ Cliente criado!');
       cancelarEdicaoCliente();
       carregarClientes();
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
     } else {
       showToast('❌ Erro: ' + (d?.erro || 'Desconhecido'), true);
     }
@@ -4926,8 +5023,8 @@ function editarCliente(id) {
 function cancelarEdicaoCliente() {
   editingClienteId = null;
   document.getElementById('btnSalvarCliente').textContent = 'Adicionar';
-  const form = document.querySelector('#page-clientes form');
-  if (form) form.reset();
+  const form = document.getElementById('formCliente');
+  if (form) { form.reset(); limparErrosCampos(form); }
 }
 
 async function excluirCliente(id) {
@@ -5127,13 +5224,13 @@ async function preencherSelectSafra(selectId, valorAtual = null) {
 
 async function carregarSafras() {
   try {
-    const r = await apiFetch(`${API}/safras`);
+    const r = await apiFetch(`${API}/safras${queryFiltros({ busca: 'filtroSafraBusca', ano: 'filtroSafraAno' })}`);
     const d = await r.json();
     const safras = d.dados || [];
     const body = document.getElementById('safrasBody');
 
     if (!safras.length) {
-      body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">Nenhuma safra cadastrada</td></tr>';
+      body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">Nenhuma safra encontrada</td></tr>';
       return;
     }
 
@@ -5155,16 +5252,11 @@ async function carregarSafras() {
 async function salvarSafra(e) {
   e.preventDefault();
 
-  const inicio = document.getElementById('safraInicio').value; // formato "AAAA-MM"
+  const inicio = document.getElementById('safraInicio').value; // formato "AAAA-MM" (vazio = a API avisa)
   const fim = document.getElementById('safraFim').value;
 
-  if (!inicio || !fim) {
-    showToast('❌ Preencha o início e o fim da safra', true);
-    return;
-  }
-
-  const [anoInicio, mesInicio] = inicio.split('-').map(Number);
-  const [anoFim, mesFim] = fim.split('-').map(Number);
+  const [anoInicio, mesInicio] = inicio ? inicio.split('-').map(Number) : [null, null];
+  const [anoFim, mesFim] = fim ? fim.split('-').map(Number) : [null, null];
 
   const data = {
     nome: document.getElementById('safraNome').value.trim(),
@@ -5174,11 +5266,8 @@ async function salvarSafra(e) {
     ano_fim: anoFim,
     ativa: 1
   };
-
-  if (!data.nome) {
-    showToast('❌ Preencha o nome da safra', true);
-    return;
-  }
+  const form = document.getElementById('formSafra');
+  limparErrosCampos(form);
 
   const editando = !!editingSafraId;
   const url = editando ? `${API}/safras/${editingSafraId}` : `${API}/safras`;
@@ -5195,6 +5284,8 @@ async function salvarSafra(e) {
       showToast(editando ? '✅ Safra atualizada!' : '✅ Safra criada!');
       cancelarEdicaoSafra();
       carregarSafras();
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
     } else {
       showToast('❌ Erro: ' + (d?.erro || 'Desconhecido'), true);
     }
@@ -5221,7 +5312,9 @@ async function editarSafra(id) {
 function cancelarEdicaoSafra() {
   editingSafraId = null;
   document.getElementById('btnSalvarSafra').textContent = 'Adicionar';
-  document.querySelector('#page-safras form').reset();
+  const form = document.getElementById('formSafra');
+  form.reset();
+  limparErrosCampos(form);
 }
 
 async function excluirSafra(id) {
@@ -7073,11 +7166,11 @@ function abrirModalNovoCultura(item = null) {
   document.getElementById('form-config').innerHTML = `
     <div class="form-group">
       <label class="form-label">Nome *</label>
-      <input type="text" class="form-input" id="config-nome" value="${item ? item.nome.replace(/"/g, '&quot;') : ''}" required>
+      <input type="text" class="form-input" id="config-nome" data-campo="nome" value="${item ? item.nome.replace(/"/g, '&quot;') : ''}" required>
     </div>
     <div class="form-group">
       <label class="form-label">Descrição</label>
-      <textarea class="form-textarea" id="config-descricao" style="min-height:80px">${item ? (item.descricao || '') : ''}</textarea>
+      <textarea class="form-textarea" id="config-descricao" data-campo="descricao" style="min-height:80px">${item ? (item.descricao || '') : ''}</textarea>
     </div>
   `;
   document.getElementById('form-config').dataset.tipo = 'cultura';
@@ -7091,18 +7184,18 @@ function abrirModalNovoVariedade(item = null) {
   document.getElementById('form-config').innerHTML = `
     <div class="form-group">
       <label class="form-label">Cultura *</label>
-      <select class="form-select" id="config-cultura" required>
+      <select class="form-select" id="config-cultura" data-campo="cultura_id">
         <option value="">Selecione...</option>
         ${culturas.map(c => `<option value="${c.id}" ${item && item.cultura_id == c.id ? 'selected' : ''}>${c.nome}</option>`).join('')}
       </select>
     </div>
     <div class="form-group">
       <label class="form-label">Nome *</label>
-      <input type="text" class="form-input" id="config-nome" value="${item ? item.nome.replace(/"/g, '&quot;') : ''}" required>
+      <input type="text" class="form-input" id="config-nome" data-campo="nome" value="${item ? item.nome.replace(/"/g, '&quot;') : ''}" required>
     </div>
     <div class="form-group">
       <label class="form-label">Descrição</label>
-      <textarea class="form-textarea" id="config-descricao" style="min-height:80px">${item ? (item.descricao || '') : ''}</textarea>
+      <textarea class="form-textarea" id="config-descricao" data-campo="descricao" style="min-height:80px">${item ? (item.descricao || '') : ''}</textarea>
     </div>
   `;
   document.getElementById('form-config').dataset.tipo = 'variedade';
@@ -7115,19 +7208,19 @@ function abrirModalNovoAdubo(item = null) {
   document.getElementById('form-config').innerHTML = `
     <div class="form-group">
       <label class="form-label">Nome *</label>
-      <input type="text" class="form-input" id="config-nome" value="${item ? item.nome.replace(/"/g, '&quot;') : ''}" required>
+      <input type="text" class="form-input" id="config-nome" data-campo="nome" value="${item ? item.nome.replace(/"/g, '&quot;') : ''}" required>
     </div>
     <div class="form-group">
       <label class="form-label">Tipo</label>
-      <input type="text" class="form-input" id="config-tipo" placeholder="Ex: Fertilizante Misto" value="${item ? (item.tipo || '').replace(/"/g, '&quot;') : ''}">
+      <input type="text" class="form-input" id="config-tipo" data-campo="tipo" placeholder="Ex: Fertilizante Misto" value="${item ? (item.tipo || '').replace(/"/g, '&quot;') : ''}">
     </div>
     <div class="form-group">
       <label class="form-label">NPK</label>
-      <input type="text" class="form-input" id="config-npk" placeholder="Ex: 20-20-20" value="${item ? (item.npk || '').replace(/"/g, '&quot;') : ''}">
+      <input type="text" class="form-input" id="config-npk" data-campo="npk" placeholder="Ex: 20-20-20" value="${item ? (item.npk || '').replace(/"/g, '&quot;') : ''}">
     </div>
     <div class="form-group">
       <label class="form-label">Descrição</label>
-      <textarea class="form-textarea" id="config-descricao" style="min-height:80px">${item ? (item.descricao || '') : ''}</textarea>
+      <textarea class="form-textarea" id="config-descricao" data-campo="descricao" style="min-height:80px">${item ? (item.descricao || '') : ''}</textarea>
     </div>
   `;
   document.getElementById('form-config').dataset.tipo = 'adubo';
@@ -7141,7 +7234,7 @@ function abrirModalNovoPraga(item = null) {
   document.getElementById('form-config').innerHTML = `
     <div class="form-group">
       <label class="form-label">Tipo *</label>
-      <select class="form-select" id="config-tipo-praga" required>
+      <select class="form-select" id="config-tipo-praga" data-campo="tipo">
         <option value="praga" ${!item || item.tipo === 'praga' ? 'selected' : ''}>🐛 Praga</option>
         <option value="doenca" ${item && item.tipo === 'doenca' ? 'selected' : ''}>🦠 Doença</option>
         <option value="planta_daninha" ${item && item.tipo === 'planta_daninha' ? 'selected' : ''}>🌿 Planta Daninha</option>
@@ -7150,11 +7243,11 @@ function abrirModalNovoPraga(item = null) {
     </div>
     <div class="form-group">
       <label class="form-label">Nome *</label>
-      <input type="text" class="form-input" id="config-nome" value="${item ? item.nome.replace(/"/g, '&quot;') : ''}" required>
+      <input type="text" class="form-input" id="config-nome" data-campo="nome" value="${item ? item.nome.replace(/"/g, '&quot;') : ''}" required>
     </div>
     <div class="form-group">
       <label class="form-label">Cultura</label>
-      <select class="form-select" id="config-cultura">
+      <select class="form-select" id="config-cultura" data-campo="cultura_id">
         <option value="">Qualquer cultura</option>
         ${culturas.map(c => `<option value="${c.id}" ${item && String(item.cultura_id) === String(c.id) ? 'selected' : ''}>${c.nome}</option>`).join('')}
       </select>
@@ -7162,7 +7255,7 @@ function abrirModalNovoPraga(item = null) {
     </div>
     <div class="form-group">
       <label class="form-label">Nível de Risco</label>
-      <select class="form-select" id="config-risco">
+      <select class="form-select" id="config-risco" data-campo="nivel_risco">
         <option value="baixo" ${item && item.nivel_risco === 'baixo' ? 'selected' : ''}>Baixo</option>
         <option value="medio" ${!item || item.nivel_risco === 'medio' ? 'selected' : ''}>Médio</option>
         <option value="alto" ${item && item.nivel_risco === 'alto' ? 'selected' : ''}>Alto</option>
@@ -7170,7 +7263,7 @@ function abrirModalNovoPraga(item = null) {
     </div>
     <div class="form-group">
       <label class="form-label">Descrição</label>
-      <textarea class="form-textarea" id="config-descricao" style="min-height:80px">${item ? (item.descricao || '') : ''}</textarea>
+      <textarea class="form-textarea" id="config-descricao" data-campo="descricao" style="min-height:80px">${item ? (item.descricao || '') : ''}</textarea>
     </div>
   `;
   document.getElementById('form-config').dataset.tipo = 'praga';
@@ -7242,6 +7335,8 @@ async function salvarNovoItemConfig(e) {
       else if (tipo === 'variedade') carregarVariedades();
       else if (tipo === 'adubo') carregarAdubos();
       else if (tipo === 'praga') carregarPragas();
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
     } else {
       showToast('❌ Erro: ' + (d?.erro || 'Desconhecido'), true);
     }
