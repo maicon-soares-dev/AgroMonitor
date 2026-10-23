@@ -24,6 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'perfil' => VerificaPerfil::class,
         ]);
+
+        // Não há tela de login no Laravel (o login é do front): visitante sem
+        // token recebe 401 em JSON em vez de redirecionamento.
+        $middleware->redirectGuestsTo(fn () => null);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Na API, todo erro sai no formato do AgroMonitor:
