@@ -519,6 +519,26 @@ tr:hover td { background: var(--gray-50); }
             <h3 class="card-title">Histórico de Plantios</h3>
           </div>
           <div class="card-body">
+            <form class="filtro-form" id="filtroPlantios" onsubmit="event.preventDefault(); carregarPlantios()">
+              <div class="form-group">
+                <label class="form-label">Área</label>
+                <select class="form-select" id="filtroPlantioArea" onchange="carregarPlantios()"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Safra</label>
+                <select class="form-select" id="filtroPlantioSafra" onchange="carregarPlantios()"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Cultura</label>
+                <select class="form-select" id="filtroPlantioCultura" onchange="carregarPlantios()"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroPlantioBusca" placeholder="Área, cultura ou variedade">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarPlantios()">Limpar</button>
+            </form>
             <table>
               <thead>
                 <tr>
@@ -559,34 +579,34 @@ tr:hover td { background: var(--gray-50); }
           <div class="card-header">
             <h3 class="card-title" id="novoPlantioTitulo">Registro de Plantio</h3>
           </div>
-          <form onsubmit="salvarPlantio(event)" class="card-body">
+          <form id="formPlantio" onsubmit="salvarPlantio(event)" class="card-body" novalidate>
             <div class="form-row cols-3">
               <div class="form-group">
                 <label class="form-label">Data do Plantio *</label>
-                <input type="date" class="form-input" id="plantioData" required>
+                <input type="date" class="form-input" id="plantioData" data-campo="data_plantio">
               </div>
               <div class="form-group">
                 <label class="form-label">Área *</label>
-                <select class="form-select" id="plantioArea" required onchange="carregarTalhoesPlantio()"></select>
+                <select class="form-select" id="plantioArea" data-campo="area_id" onchange="carregarTalhoesPlantio()"></select>
               </div>
               <div class="form-group">
                 <label class="form-label">Safra *</label>
-                <select class="form-select" id="plantioSafra" required></select>
+                <select class="form-select" id="plantioSafra" data-campo="safra_id"></select>
               </div>
             </div>
 
             <div class="form-row cols-3">
               <div class="form-group">
                 <label class="form-label">Cultura *</label>
-                <select class="form-select" id="plantioCultura" required onchange="carregarVariedadesNovoPlantio()"></select>
+                <select class="form-select" id="plantioCultura" data-campo="cultura_id" onchange="carregarVariedadesNovoPlantio()"></select>
               </div>
               <div class="form-group">
                 <label class="form-label" id="plantioVariedadeLabel">Variedade / Híbrido</label>
-                <select class="form-select" id="plantioVariedade" onchange="aplicarVariedadeTodosTalhoes()"><option value="">Selecione a cultura primeiro</option></select>
+                <select class="form-select" id="plantioVariedade" data-campo="variedade_id" onchange="aplicarVariedadeTodosTalhoes()"><option value="">Selecione a cultura primeiro</option></select>
               </div>
               <div class="form-group">
                 <label class="form-label">População (sementes/metro)</label>
-                <input type="number" class="form-input" id="plantioPopulacao" step="0.1">
+                <input type="number" class="form-input" id="plantioPopulacao" data-campo="populacao_semente" step="0.1">
               </div>
             </div>
 
@@ -603,11 +623,11 @@ tr:hover td { background: var(--gray-50); }
             <div class="form-row cols-3">
               <div class="form-group">
                 <label class="form-label">Adubo</label>
-                <select class="form-select" id="plantioAdubo"><option value="">Nenhum</option></select>
+                <select class="form-select" id="plantioAdubo" data-campo="adubo_id"><option value="">Nenhum</option></select>
               </div>
               <div class="form-group">
                 <label class="form-label">Quantidade (kg/ha)</label>
-                <input type="number" class="form-input" id="plantioAduboQtd" step="1">
+                <input type="number" class="form-input" id="plantioAduboQtd" data-campo="adubo_qtd_kg" step="1">
               </div>
               <div class="form-group">
                 <label class="form-label">Plantio</label>
@@ -632,7 +652,7 @@ tr:hover td { background: var(--gray-50); }
 
             <div class="form-group">
               <label class="form-label">Observações</label>
-              <textarea class="form-textarea" id="plantioObs" style="min-height:60px"></textarea>
+              <textarea class="form-textarea" id="plantioObs" data-campo="observacoes" style="min-height:60px"></textarea>
             </div>
 
             <div class="card-footer">
@@ -1590,8 +1610,10 @@ tr:hover td { background: var(--gray-50); }
 <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
-// Endereço da API Laravel — único lugar a mudar ao trocar de servidor
-const API = 'http://localhost:8000/api';
+// Endereço da API Laravel — único lugar a mudar ao trocar de servidor.
+// 127.0.0.1 e não "localhost": no Windows, "localhost" tenta antes o IPv6 (::1),
+// que o "php artisan serve" não escuta, e cada chamada perde ~0,2 s.
+const API = 'http://127.0.0.1:8000/api';
 const state = { areas: [], plantios: [], monitoramentos: [], culturas: [], pragas: [], pontos: [], clientes: [] };
 let map;
 
@@ -1778,7 +1800,7 @@ function carregarConteudoPagina(pagina) {
   if (pagina === 'page-dashboard') carregarDashboard();
   else if (pagina === 'page-areas') { carregarFiltrosAreas(); carregarAreas(); }
   else if (pagina === 'page-cadastro-area') { /* editarArea() carrega o select de clientes com a seleção certa */ }
-  else if (pagina === 'page-plantio') carregarPlantios();
+  else if (pagina === 'page-plantio') { carregarFiltrosPlantios(); carregarPlantios(); }
   else if (pagina === 'page-novoPlantio') { carregarSelectAreas(); preencherSelectSafra('plantioSafra'); carregarSelectCulturas('plantioCultura'); carregarVariedadesNovoPlantio(); carregarAdubosNovoPlantio(); }
   else if (pagina === 'page-monitoramento') { carregarResumoMonitoramento(); }
   else if (pagina === 'page-registrarMonitoramento') { carregarSelectAreas(); carregarPragas(); limparItensPraga(); }
@@ -2034,22 +2056,39 @@ async function carregarAreas() {
   } catch (e) { console.error(e); }
 }
 
-// Preenche os selects de cliente e safra do filtro da tela de Áreas, mantendo a escolha atual
+// Preenche um select de formulário de filtro (opção vazia = todos), mantendo a escolha atual
+function preencherSelectFiltro(id, vazio, itens) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const atual = el.value;
+  el.innerHTML = `<option value="">${vazio}</option>` +
+    itens.map(i => `<option value="${i.id}">${escHTML(i.nome)}</option>`).join('');
+  el.value = atual;
+}
+
+// Selects de cliente e safra do filtro da tela de Áreas
 async function carregarFiltrosAreas() {
   try {
     const [clientes, safras] = await Promise.all([
       apiFetch(`${API}/clientes`).then(r => r.json()),
       apiFetch(`${API}/safras`).then(r => r.json())
     ]);
-    const preencher = (id, vazio, itens) => {
-      const el = document.getElementById(id);
-      const atual = el.value;
-      el.innerHTML = `<option value="">${vazio}</option>` +
-        itens.map(i => `<option value="${i.id}">${escHTML(i.nome)}</option>`).join('');
-      el.value = atual;
-    };
-    preencher('filtroAreaCliente', 'Todos', clientes.dados || []);
-    preencher('filtroAreaSafra', 'Todas', safras.dados || []);
+    preencherSelectFiltro('filtroAreaCliente', 'Todos', clientes.dados || []);
+    preencherSelectFiltro('filtroAreaSafra', 'Todas', safras.dados || []);
+  } catch (e) { console.error(e); }
+}
+
+// Selects de área, safra e cultura do filtro do Histórico de Plantios
+async function carregarFiltrosPlantios() {
+  try {
+    const [areas, safras, culturas] = await Promise.all([
+      apiFetch(`${API}/areas`).then(r => r.json()),
+      apiFetch(`${API}/safras`).then(r => r.json()),
+      apiFetch(`${API}/culturas`).then(r => r.json())
+    ]);
+    preencherSelectFiltro('filtroPlantioArea', 'Todas', areas.dados || []);
+    preencherSelectFiltro('filtroPlantioSafra', 'Todas', safras.dados || []);
+    preencherSelectFiltro('filtroPlantioCultura', 'Todas', culturas.dados || []);
   } catch (e) { console.error(e); }
 }
 
@@ -2088,9 +2127,12 @@ async function carregarSelectAreas() {
     selects.forEach(id => {
       const el = document.getElementById(id);
       if (el) {
+        // Mantém a área já escolhida (a resposta pode chegar depois que o usuário ou a edição já escolheu)
+        const atual = el.value;
         el.innerHTML = '<option value="">Selecione...</option>' + state.areas.map(a =>
           `<option value="${a.id}">${a.nome} - ${a.nome_cliente}</option>`
         ).join('');
+        el.value = atual;
       }
     });
   } catch (e) { console.error(e); }
@@ -2106,9 +2148,11 @@ async function carregarSelectCulturas(selectId) {
     if (el) {
       // Nos formulários de filtro (filtroVar, filtroPrag) a opção vazia significa "todas"
       const opcaoVazia = selectId.startsWith('filtro') ? 'Todas' : 'Selecione...';
+      const atual = el.value;
       el.innerHTML = `<option value="">${opcaoVazia}</option>` + (d.dados || []).map(c =>
         `<option value="${c.id}">${c.nome}</option>`
       ).join('');
+      el.value = atual; // mantém a cultura já escolhida
     }
     
     // Se é o campo de cultura em "Novo Plantio", carregar variedades também
@@ -2340,17 +2384,25 @@ async function salvarArea(e) {
 
 async function carregarPlantios() {
   try {
-    const r = await apiFetch(`${API}/plantios`);
+    // Os filtros só valem no próprio Histórico: o Dashboard também usa esta
+    // função (últimos plantios) e precisa da lista completa.
+    const noHistorico = document.getElementById('page-plantio').classList.contains('active');
+    const filtros = noHistorico
+      ? queryFiltros({ area_id: 'filtroPlantioArea', safra_id: 'filtroPlantioSafra', cultura_id: 'filtroPlantioCultura', busca: 'filtroPlantioBusca' })
+      : '';
+    const r = await apiFetch(`${API}/plantios${filtros}`);
     const d = await r.json();
     state.plantios = d.dados || [];
 
     const bodies = ['plantioBody', 'dashPlantios'];
     bodies.forEach(id => {
       const tbody = document.getElementById(id);
-      if (tbody) {
+      if (tbody && id === 'plantioBody' && !state.plantios.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-400)">Nenhum plantio encontrado</td></tr>';
+      } else if (tbody) {
         const lista = id === 'plantioBody' ? (state.plantios || []) : (state.plantios || []).slice(0, 10);
         tbody.innerHTML = lista.map(p => {
-          const areaNome = p.area_id != null ? (state.areas.find(a => a.id == p.area_id)?.nome || '—') : '—';
+          const areaNome = p.area_nome || (state.areas.find(a => a.id == p.area_id)?.nome || '—');
           const culturaNome = p.cultura_nome || '—';
           const variedadeNome = p.variedade_nome || '—';
           const acao = id === 'plantioBody'
@@ -2414,8 +2466,8 @@ function cancelarEdicaoPlantio() {
   document.getElementById('novoPlantioTitulo').textContent = 'Registro de Plantio';
   document.getElementById('btnSalvarPlantio').textContent = 'Salvar Plantio';
   document.getElementById('btnCancelarEdicaoPlantio').style.display = 'none';
-  const form = document.querySelector('#page-novoPlantio form');
-  if (form) form.reset();
+  const form = document.getElementById('formPlantio');
+  if (form) { form.reset(); limparErrosCampos(form); }
   carregarTalhoesPlantio();
 
   // Veio do Detalhe do Plantio → volta pra ele
@@ -2442,11 +2494,8 @@ async function salvarPlantio(e) {
     condicao_solo: document.getElementById('plantioSolo').value,
     observacoes: document.getElementById('plantioObs').value
   };
-
-  if (!data.safra_id) {
-    showToast('❌ Selecione a safra', true);
-    return;
-  }
+  const form = document.getElementById('formPlantio');
+  limparErrosCampos(form);
 
   // Área dividida em talhões: manda a variedade de cada talhão plantado
   const talhoes = coletarTalhoesPlantio();
@@ -2478,6 +2527,11 @@ async function salvarPlantio(e) {
       carregarPlantios();
       carregarDashboard();
       abrirDetalhePlantio(plantioSalvoId);
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
+      // Erros da lista de talhões (talhoes.0.talhao_id...) não têm campo próprio na tela
+      const erroTalhao = Object.keys(d.erros).find(c => c.startsWith('talhoes.'));
+      showToast('❌ ' + (erroTalhao ? d.erros[erroTalhao][0] : 'Corrija os campos destacados'), true);
     } else {
       showToast('❌ Erro: ' + (d?.erro || 'Desconhecido'), true);
     }
