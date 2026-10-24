@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\PlantioService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -20,6 +22,25 @@ class Plantio extends Modelo
         'populacao_semente', 'adubo_id', 'adubo_qtd_kg', 'condicao_plantio', 'condicao_solo',
         'observacoes',
     ];
+
+    const CONDICOES_PLANTIO = ['apos_chuva', 'irrigado', 'seco'];
+    const CONDICOES_SOLO = ['boa', 'media', 'ruim'];
+
+    /**
+     * Colunas do plantio + nomes de cultura, safra, área, adubo e da(s)
+     * variedade(s) (formato da API antiga, com area_nome a mais).
+     */
+    public function scopeComResumo(Builder $query): Builder
+    {
+        return $query->join('culturas', 'culturas.id', '=', 'plantios.cultura_id')
+            ->join('safras', 'safras.id', '=', 'plantios.safra_id')
+            ->join('areas', 'areas.id', '=', 'plantios.area_id')
+            ->leftJoin('variedades', 'variedades.id', '=', 'plantios.variedade_id')
+            ->leftJoin('adubos', 'adubos.id', '=', 'plantios.adubo_id')
+            ->select('plantios.*', 'culturas.nome as cultura_nome', 'safras.nome as safra_nome',
+                'adubos.nome as adubo_nome', 'areas.nome as area_nome')
+            ->selectRaw(PlantioService::sqlVariedadeNome().' as variedade_nome');
+    }
 
     public function area(): BelongsTo
     {

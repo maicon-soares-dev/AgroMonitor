@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AreaController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClienteController;
 use App\Http\Controllers\Api\CulturaController;
+use App\Http\Controllers\Api\PlantioController;
 use App\Http\Controllers\Api\PontoController;
 use App\Http\Controllers\Api\PragaController;
 use App\Http\Controllers\Api\SafraController;
@@ -45,12 +46,13 @@ Route::middleware('auth:sanctum')->group(function () {
         }
     });
 
-    // Áreas, talhões e pontos: qualquer perfil consulta (o técnico usa no
-    // monitoramento); só gestor e agrônomo alteram.
+    // Áreas, talhões, pontos e plantios: qualquer perfil consulta (o técnico
+    // usa no monitoramento); só gestor e agrônomo alteram.
     $estrutura = [
         'areas' => AreaController::class,
         'talhoes' => TalhaoController::class,
         'pontos' => PontoController::class,
+        'plantios' => PlantioController::class,
     ];
     $parametros = ['talhoes' => 'talhao', 'pontos' => 'ponto'];
 
