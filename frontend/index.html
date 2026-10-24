@@ -402,10 +402,25 @@ tr:hover td { background: var(--gray-50); }
 
       <!-- PÁGINA: Áreas -->
       <div class="page" id="page-areas">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;flex-wrap:wrap">
-          <input type="text" id="areasFiltro" class="form-input" placeholder="🔍 Buscar por nome ou cliente..." style="max-width:280px" oninput="filtrarAreas()">
-          <button type="button" class="btn btn-primary" onclick="cancelarEdicaoArea(); abrirAbaImportar('desenhar'); irPara('page-importar-earth', null)">+ Nova Área</button>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+          <button type="button" class="btn btn-primary" data-perfis="gestor,agronomo" onclick="cancelarEdicaoArea(); abrirAbaImportar('desenhar'); irPara('page-importar-earth', null)">+ Nova Área</button>
         </div>
+        <form class="filtro-form card" id="filtroAreas" onsubmit="event.preventDefault(); carregarAreas()" style="padding:14px 16px">
+          <div class="form-group">
+            <label class="form-label">Buscar</label>
+            <input type="text" class="form-input" id="filtroAreaBusca" placeholder="Nome da área ou do cliente">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cliente</label>
+            <select class="form-select" id="filtroAreaCliente" onchange="carregarAreas()"><option value="">Todos</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Com plantio na safra</label>
+            <select class="form-select" id="filtroAreaSafra" onchange="carregarAreas()"><option value="">Todas</option></select>
+          </div>
+          <button type="submit" class="btn btn-primary">Filtrar</button>
+          <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarAreas()">Limpar</button>
+        </form>
         <div style="padding:10px 14px;background:var(--green-50);border-radius:var(--radius-sm);font-size:12px;color:var(--green-700);margin-bottom:16px">
           📍 Toda área nova precisa ser desenhada ou importada no mapa primeiro — é assim que o sistema calcula os hectares certos e sabe onde ficam os pontos de monitoramento.
         </div>
@@ -420,15 +435,15 @@ tr:hover td { background: var(--gray-50); }
             <div class="card-header">
               <h3 class="card-title" id="cadastroAreaTitulo">Dados da Área</h3>
             </div>
-            <form onsubmit="salvarArea(event)" class="card-body">
+            <form id="formArea" onsubmit="salvarArea(event)" class="card-body" novalidate>
               <div class="form-row cols-2">
                 <div class="form-group">
                   <label class="form-label">Nome da Área *</label>
-                  <input type="text" class="form-input" id="inputNomeArea" placeholder="Ex: Fazenda Santa Maria" required>
+                  <input type="text" class="form-input" id="inputNomeArea" data-campo="nome" placeholder="Ex: Fazenda Santa Maria">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Cliente *</label>
-                  <select class="form-select" id="inputCliente" required></select>
+                  <select class="form-select" id="inputCliente" data-campo="cliente_id"></select>
                   <div class="form-hint">Cliente não cadastrado ainda? Vá em "Clientes" no menu primeiro.</div>
                 </div>
               </div>
@@ -436,7 +451,7 @@ tr:hover td { background: var(--gray-50); }
               <div class="form-row cols-3">
                 <div class="form-group">
                   <label class="form-label">Hectares (ha) *</label>
-                  <input type="number" class="form-input" id="inputHa" placeholder="0,00" step="0.01" oninput="converterHaAlq()" required>
+                  <input type="number" class="form-input" id="inputHa" data-campo="hectares" placeholder="0,00" step="0.01" oninput="converterHaAlq()">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Alqueires (alq)</label>
@@ -445,7 +460,7 @@ tr:hover td { background: var(--gray-50); }
                 </div>
                 <div class="form-group">
                   <label class="form-label">Pontos de Monitoramento</label>
-                  <input type="number" class="form-input" id="qtdPontos" value="5" min="1" max="50" readonly>
+                  <input type="number" class="form-input" id="qtdPontos" data-campo="qtd_pontos" value="5" min="1" max="50" readonly>
                   <div class="form-hint" id="pontoRecomendacao">Recomendado: 1 ponto a cada 20-25 ha</div>
                 </div>
               </div>
@@ -934,11 +949,11 @@ tr:hover td { background: var(--gray-50); }
               <div class="form-row cols-2" style="margin-top:16px">
                 <div class="form-group">
                   <label class="form-label">Nome da Área *</label>
-                  <input type="text" class="form-input" id="importNomeArea" placeholder="Ex: Talhão Norte">
+                  <input type="text" class="form-input" id="importNomeArea" data-campo="nome" placeholder="Ex: Talhão Norte">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Cliente *</label>
-                  <select class="form-select" id="importCliente"></select>
+                  <select class="form-select" id="importCliente" data-campo="cliente_id"></select>
                   <div class="form-hint">Cliente não cadastrado ainda? Vá em "Clientes" no menu primeiro.</div>
                 </div>
               </div>
@@ -1699,10 +1714,10 @@ async function sair() {
   encerrarSessao();
 }
 
-// Esconde os itens do menu que o perfil não pode usar (atributo data-perfis;
-// sem o atributo, o item aparece para todos) e as seções que ficarem vazias.
+// Esconde os itens do menu (e botões) que o perfil não pode usar (atributo
+// data-perfis; sem o atributo, aparece para todos) e as seções que ficarem vazias.
 function aplicarMenuPorPerfil(perfil) {
-  document.querySelectorAll('.nav-item[data-perfis]').forEach(item => {
+  document.querySelectorAll('[data-perfis]').forEach(item => {
     item.style.display = item.dataset.perfis.split(',').includes(perfil) ? '' : 'none';
   });
   document.querySelectorAll('.nav-section').forEach(secao => {
@@ -1761,7 +1776,7 @@ function irPara(pagina, elemento) {
 
 function carregarConteudoPagina(pagina) {
   if (pagina === 'page-dashboard') carregarDashboard();
-  else if (pagina === 'page-areas') carregarAreas();
+  else if (pagina === 'page-areas') { carregarFiltrosAreas(); carregarAreas(); }
   else if (pagina === 'page-cadastro-area') { /* editarArea() carrega o select de clientes com a seleção certa */ }
   else if (pagina === 'page-plantio') carregarPlantios();
   else if (pagina === 'page-novoPlantio') { carregarSelectAreas(); preencherSelectSafra('plantioSafra'); carregarSelectCulturas('plantioCultura'); carregarVariedadesNovoPlantio(); carregarAdubosNovoPlantio(); }
@@ -2011,13 +2026,30 @@ async function excluirArea(id) {
 
 async function carregarAreas() {
   try {
-    const r = await apiFetch(`${API}/areas`);
+    const filtros = queryFiltros({ busca: 'filtroAreaBusca', cliente_id: 'filtroAreaCliente', safra_id: 'filtroAreaSafra' });
+    const r = await apiFetch(`${API}/areas${filtros}`);
     const d = await r.json();
     state.areas = d.dados || [];
     renderAreasGrid(state.areas);
+  } catch (e) { console.error(e); }
+}
 
-    const filtro = document.getElementById('areasFiltro');
-    if (filtro && filtro.value) filtrarAreas(); // reaplica o filtro se já tinha algo digitado
+// Preenche os selects de cliente e safra do filtro da tela de Áreas, mantendo a escolha atual
+async function carregarFiltrosAreas() {
+  try {
+    const [clientes, safras] = await Promise.all([
+      apiFetch(`${API}/clientes`).then(r => r.json()),
+      apiFetch(`${API}/safras`).then(r => r.json())
+    ]);
+    const preencher = (id, vazio, itens) => {
+      const el = document.getElementById(id);
+      const atual = el.value;
+      el.innerHTML = `<option value="">${vazio}</option>` +
+        itens.map(i => `<option value="${i.id}">${escHTML(i.nome)}</option>`).join('');
+      el.value = atual;
+    };
+    preencher('filtroAreaCliente', 'Todos', clientes.dados || []);
+    preencher('filtroAreaSafra', 'Todas', safras.dados || []);
   } catch (e) { console.error(e); }
 }
 
@@ -2044,18 +2076,6 @@ function renderAreasGrid(areas) {
       </div>
     </div>
   `).join('');
-}
-
-function filtrarAreas() {
-  const termo = (document.getElementById('areasFiltro').value || '').toLowerCase().trim();
-  if (!termo) {
-    renderAreasGrid(state.areas);
-    return;
-  }
-  const filtradas = state.areas.filter(a =>
-    a.nome.toLowerCase().includes(termo) || a.nome_cliente.toLowerCase().includes(termo)
-  );
-  renderAreasGrid(filtradas);
 }
 
 async function carregarSelectAreas() {
@@ -2245,8 +2265,8 @@ function cancelarEdicaoArea() {
   document.getElementById('btnSalvarArea').textContent = 'Salvar Área';
   document.getElementById('btnCancelarEdicaoArea').style.display = 'none';
   document.getElementById('avisoEdicaoArea').style.display = 'none';
-  const form = document.querySelector('#page-cadastro-area form');
-  if (form) form.reset();
+  const form = document.getElementById('formArea');
+  if (form) { form.reset(); limparErrosCampos(form); }
   converterHaAlq();
 }
 
@@ -2274,17 +2294,15 @@ async function salvarArea(e) {
   const clienteId = document.getElementById('inputCliente').value;
   const hectares = parseFloat(document.getElementById('inputHa').value);
   const pontos = parseInt(document.getElementById('qtdPontos').value);
+  const form = document.getElementById('formArea');
+  limparErrosCampos(form);
 
-  if (!nome || !clienteId || !hectares) {
-    showToast('❌ Preencha todos os campos obrigatórios', true);
-    return;
-  }
-
+  // Campos vazios vão como null e a API devolve a mensagem de cada um
   const data = {
     nome: nome,
-    cliente_id: clienteId,
-    hectares: hectares,
-    qtd_pontos: pontos
+    cliente_id: clienteId || null,
+    hectares: isNaN(hectares) ? null : hectares,
+    qtd_pontos: isNaN(pontos) ? null : pontos
   };
 
   const editando = !!editingAreaId;
@@ -2309,6 +2327,8 @@ async function salvarArea(e) {
       cancelarEdicaoArea();
       carregarAreas();
       carregarDashboard();
+    } else if (d.erros) {
+      mostrarErrosCampos(form, d.erros);
     } else {
       showToast('❌ Erro: ' + (d.erro || 'Desconhecido'), true);
     }
@@ -4886,11 +4906,8 @@ async function confirmarImportacaoKML() {
 
   const nome = document.getElementById('importNomeArea').value.trim();
   const clienteId = document.getElementById('importCliente').value;
-
-  if (!nome || !clienteId) {
-    showToast('❌ Preencha o Nome da Área e selecione o Cliente', true);
-    return;
-  }
+  const telaNovaArea = document.getElementById('page-importar-earth');
+  limparErrosCampos(telaNovaArea);
 
   const hectares = calcularHectaresGeoJSON(geojsonImportado);
   if (!hectares || hectares <= 0) {
@@ -4903,7 +4920,7 @@ async function confirmarImportacaoKML() {
 
   const data = {
     nome: nome,
-    cliente_id: clienteId,
+    cliente_id: clienteId || null,
     hectares: hectares,
     qtd_pontos: pontos,
     geometria: geojsonImportado,
@@ -4932,6 +4949,9 @@ async function confirmarImportacaoKML() {
       carregarDashboard();
       // Abre a área recém-criada no mapa (lá dá pra ajustar talhões e pontos)
       verAreaNoMapa(d.id);
+    } else if (d.erros) {
+      mostrarErrosCampos(telaNovaArea, d.erros);
+      showToast('❌ Corrija os campos destacados', true);
     } else {
       showToast('❌ Erro ao salvar: ' + (d.erro || 'Desconhecido'), true);
     }
