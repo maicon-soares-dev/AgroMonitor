@@ -1,11 +1,14 @@
 <?php
 
 use App\Http\Controllers\Api\AduboController;
+use App\Http\Controllers\Api\AreaController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClienteController;
 use App\Http\Controllers\Api\CulturaController;
+use App\Http\Controllers\Api\PontoController;
 use App\Http\Controllers\Api\PragaController;
 use App\Http\Controllers\Api\SafraController;
+use App\Http\Controllers\Api\TalhaoController;
 use App\Http\Controllers\Api\UsuarioController;
 use App\Http\Controllers\Api\VariedadeController;
 use Illuminate\Support\Facades\Route;
@@ -39,6 +42,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('perfil:gestor,agronomo')->group(function () use ($cadastros) {
         foreach ($cadastros as $recurso => $controller) {
             Route::apiResource($recurso, $controller)->only(['store', 'update', 'destroy']);
+        }
+    });
+
+    // Áreas, talhões e pontos: qualquer perfil consulta (o técnico usa no
+    // monitoramento); só gestor e agrônomo alteram.
+    $estrutura = [
+        'areas' => AreaController::class,
+        'talhoes' => TalhaoController::class,
+        'pontos' => PontoController::class,
+    ];
+    $parametros = ['talhoes' => 'talhao', 'pontos' => 'ponto'];
+
+    foreach ($estrutura as $recurso => $controller) {
+        Route::apiResource($recurso, $controller)->only(['index', 'show'])->parameters($parametros);
+    }
+
+    Route::middleware('perfil:gestor,agronomo')->group(function () use ($estrutura, $parametros) {
+        foreach ($estrutura as $recurso => $controller) {
+            Route::apiResource($recurso, $controller)->only(['store', 'update', 'destroy'])->parameters($parametros);
         }
     });
 

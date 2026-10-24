@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -14,6 +15,14 @@ class Area extends Modelo
     protected $table = 'areas';
 
     protected $fillable = ['cliente_id', 'nome', 'hectares', 'qtd_pontos', 'observacoes', 'geometria'];
+
+    /** Colunas da área + nome_cliente + qtd_talhoes (formato da API antiga). */
+    public function scopeComResumo(Builder $query): Builder
+    {
+        return $query->join('clientes', 'clientes.id', '=', 'areas.cliente_id')
+            ->select('areas.*', 'clientes.nome as nome_cliente')
+            ->withCount('talhoes as qtd_talhoes');
+    }
 
     public function cliente(): BelongsTo
     {
