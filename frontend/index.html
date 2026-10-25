@@ -695,7 +695,7 @@ tr:hover td { background: var(--gray-50); }
           <div class="card-header">
             <h3 class="card-title">Registro de Monitoramento</h3>
           </div>
-          <form onsubmit="salvarMonitoramento(event)" class="card-body">
+          <form id="formMonitoramento" onsubmit="salvarMonitoramento(event)" class="card-body" novalidate>
             <div class="form-row cols-3">
               <div class="form-group">
                 <label class="form-label">Área *</label>
@@ -703,23 +703,23 @@ tr:hover td { background: var(--gray-50); }
               </div>
               <div class="form-group">
                 <label class="form-label">Plantio *</label>
-                <select class="form-select" id="monPlantio" required onchange="atualizarCamposMonitor()"></select>
+                <select class="form-select" id="monPlantio" data-campo="plantio_id" required onchange="atualizarCamposMonitor()"></select>
                 <div class="form-hint">Safra e cultura vêm do plantio escolhido</div>
               </div>
               <div class="form-group">
                 <label class="form-label">Ponto de Monitoramento *</label>
-                <select class="form-select" id="monPonto" required></select>
+                <select class="form-select" id="monPonto" data-campo="ponto_id" required></select>
               </div>
             </div>
 
             <div class="form-row cols-2">
               <div class="form-group">
                 <label class="form-label">Data *</label>
-                <input type="date" class="form-input" id="monData" required>
+                <input type="date" class="form-input" id="monData" data-campo="data_monitoramento" required>
               </div>
               <div class="form-group">
                 <label class="form-label">Estágio Fenológico</label>
-                <input type="text" class="form-input" id="monEstagio" list="listaEstagios" placeholder="Ex: V6, R1...">
+                <input type="text" class="form-input" id="monEstagio" data-campo="estagio_fenologico" list="listaEstagios" placeholder="Ex: V6, R1...">
                 <datalist id="listaEstagios"></datalist>
                 <div class="form-hint">Digite livremente ou escolha uma sugestão pra cultura do plantio</div>
               </div>
@@ -737,7 +737,7 @@ tr:hover td { background: var(--gray-50); }
                 </div>
                 <div class="form-group">
                   <label class="form-label">Plantas com Praga</label>
-                  <div class="counter-group">
+                  <div class="counter-group" data-campo="milho_plantas_praga milho_plantas_avaliadas">
                     <button type="button" class="counter-btn" onclick="decrementMilho()">−</button>
                     <input type="number" class="counter-input" id="milhoPraga" value="0" oninput="calcMilho()" readonly>
                     <button type="button" class="counter-btn" onclick="incrementMilho()">+</button>
@@ -760,7 +760,7 @@ tr:hover td { background: var(--gray-50); }
               <div class="form-row cols-2">
                 <div class="form-group">
                   <label class="form-label">Pragas Encontradas</label>
-                  <div class="counter-group">
+                  <div class="counter-group" data-campo="soja_pragas_encontradas">
                     <button type="button" class="counter-btn" onclick="decrementSoja()">−</button>
                     <input type="number" class="counter-input" id="sojaPragas" value="0" oninput="calcSoja()" readonly>
                     <button type="button" class="counter-btn" onclick="incrementSoja()">+</button>
@@ -768,7 +768,7 @@ tr:hover td { background: var(--gray-50); }
                 </div>
                 <div class="form-group">
                   <label class="form-label">Metros Lineares</label>
-                  <input type="number" class="form-input" id="sojaMetros" value="2" step="0.1" oninput="calcSoja()">
+                  <input type="number" class="form-input" id="sojaMetros" data-campo="soja_metros_lineares" value="2" step="0.1" oninput="calcSoja()">
                 </div>
               </div>
               <div class="calc-result-box">
@@ -795,7 +795,7 @@ tr:hover td { background: var(--gray-50); }
 
             <div class="form-group">
               <label class="form-label">Observações Gerais</label>
-              <textarea class="form-textarea" id="monObs" style="min-height:60px"></textarea>
+              <textarea class="form-textarea" id="monObs" data-campo="observacoes" style="min-height:60px"></textarea>
             </div>
 
             <div class="card-footer">
@@ -816,7 +816,7 @@ tr:hover td { background: var(--gray-50); }
               <button type="button" class="btn btn-secondary btn-sm" onclick="voltarDoDetalheMonitoramento()">← Voltar</button>
               <button type="button" class="btn btn-primary btn-sm" onclick="registrarProximoMonitoramento()" title="Abre um registro novo já com a mesma área, plantio, data e estádio, no próximo ponto">➕ Registrar Monitoramento</button>
               <button type="button" class="btn btn-secondary btn-sm" id="btnEditarDetMon">✏️ Editar</button>
-              <button type="button" class="btn btn-secondary btn-sm" style="color:#dc2626" id="btnExcluirDetMon">🗑️ Excluir</button>
+              <button type="button" class="btn btn-secondary btn-sm" style="color:#dc2626" id="btnExcluirDetMon" data-perfis="gestor,agronomo">🗑️ Excluir</button>
             </div>
           </div>
           <div class="card-body">
@@ -3003,8 +3003,8 @@ function renderMonFotosPreview() {
     ${legenda || ''}
     </div>`;
 
-  const existentesHTML = monFotosExistentes.map(f => miniatura(f.url, `excluirFotoDoForm(${f.id})`, '', botaoFavoritaHTML(f, `favoritarFotoDoForm(${f.id})`),
-    campoLegendaHTML(f.descricao, `salvarLegendaFoto(${f.id}, this.value)`, 90))).join('');
+  const existentesHTML = monFotosExistentes.map(f => miniatura(f.url, `excluirFotoDoForm('${f.id}')`, '', botaoFavoritaHTML(f, `favoritarFotoDoForm('${f.id}')`),
+    campoLegendaHTML(f.descricao, `salvarLegendaFoto('${f.id}', this.value)`, 90))).join('');
   // Fotos novas: a legenda fica guardada no próprio File e vai junto no upload
   const stagedHTML = monFotosStaged.map((file, i) => miniatura(URL.createObjectURL(file), `removerFotoStaged(${i})`, 'nova', '',
     campoLegendaHTML(file.descricao, `monFotosStaged[${i}].descricao = this.value`, 90))).join('');
@@ -3100,7 +3100,7 @@ function cancelarEdicaoMonitoramento() {
   document.getElementById('btnSalvarMonitoramento').textContent = 'Salvar Monitoramento';
   document.getElementById('btnCancelarEdicaoMonitoramento').style.display = 'none';
   const form = document.querySelector('#page-registrarMonitoramento form');
-  if (form) form.reset();
+  if (form) { form.reset(); limparErrosCampos(form); }
   limparItensPraga();
   monFotosStaged = [];
   monFotosExistentes = [];
@@ -3159,11 +3159,8 @@ async function salvarMonitoramento(e) {
     itens: itens
   };
 
-  if (!plantioId) {
-    showToast('❌ Selecione o plantio que está sendo monitorado', true);
-    return;
-  }
-
+  const form = document.getElementById('formMonitoramento');
+  limparErrosCampos(form);
   const editando = !!editingMonitoramentoId;
   const url = editando ? `${API}/monitoramentos/${editingMonitoramentoId}` : `${API}/monitoramentos`;
 
@@ -3183,6 +3180,11 @@ async function salvarMonitoramento(e) {
       cancelarEdicaoMonitoramento();
       carregarDashboard();
       abrirDetalheMonitoramento(monitoramentoId);
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
+      // Erros da lista de pragas (itens.0.nome...) não têm campo próprio na tela
+      const erroItem = Object.keys(d.erros).find(c => c.startsWith('itens.'));
+      showToast('❌ ' + (erroItem ? d.erros[erroItem][0] : 'Corrija os campos destacados'), true);
     } else {
       showToast('❌ Erro: ' + (d?.erro || 'Desconhecido'), true);
     }
@@ -3272,8 +3274,10 @@ async function carregarMonitoramentosDoPlantio(plantioId) {
       return;
     }
 
+    // Só gestor e agrônomo excluem monitoramento (o técnico lança e edita)
+    const podeExcluirMon = ['gestor', 'agronomo'].includes(usuarioLogado?.perfil);
     div.innerHTML = monitoramentos.map(m => {
-      const resultado = m.resultado_final != null ? `${parseFloat(m.resultado_final).toFixed(1)}${m.unidade_resultado || (m.cultura_nome === 'Soja' ? '/m²' : '%')}` : '—';
+      const resultado =m.resultado_final != null ? `${parseFloat(m.resultado_final).toFixed(1)}${m.unidade_resultado || (m.cultura_nome === 'Soja' ? '/m²' : '%')}` : '—';
       const critico = m.nivel_controle === 'critico';
       const itens = m.itens || [];
       const badgeTipo = (tipo) => tipo === 'doenca' ? 'badge-amber' : (tipo === 'clima' ? 'badge-info' : (tipo === 'planta_daninha' ? 'badge-green' : 'badge-red'));
@@ -3299,7 +3303,7 @@ async function carregarMonitoramentosDoPlantio(plantioId) {
         : '';
 
       return `
-        <div style="border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:16px;cursor:pointer;${critico ? 'border-left:4px solid #dc2626' : ''}" onclick="abrirDetalheMonitoramento(${m.id})">
+        <div style="border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:16px;cursor:pointer;${critico ? 'border-left:4px solid #dc2626' : ''}" onclick="abrirDetalheMonitoramento('${m.id}')">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
             <div style="min-width:0">
               <div style="font-weight:600">${m.area_nome || 'Área #' + m.area_id} — Ponto ${m.numero_ponto ?? '?'}</div>
@@ -3312,8 +3316,8 @@ async function carregarMonitoramentosDoPlantio(plantioId) {
               ${fotosHTML}
             </div>
             <div style="display:flex;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
-              <button type="button" class="btn btn-secondary btn-sm" onclick="editarMonitoramento(${m.id})" title="Editar">✏️</button>
-              <button type="button" class="btn btn-secondary btn-sm" style="color:#dc2626" onclick="excluirMonitoramento(${m.id})" title="Excluir">🗑️</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="editarMonitoramento('${m.id}')" title="Editar">✏️</button>
+              ${podeExcluirMon ? `<button type="button" class="btn btn-secondary btn-sm" style="color:#dc2626" onclick="excluirMonitoramento('${m.id}')" title="Excluir">🗑️</button>` : ''}
             </div>
           </div>
         </div>`;
@@ -3429,11 +3433,11 @@ async function carregarDetalheMonitoramento(id) {
       ? `<div style="display:flex;flex-wrap:wrap;gap:10px">${fotos.map(f => `
           <div style="width:120px"><div style="position:relative;width:120px;height:120px">
             <img src="${f.url}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--gray-200);cursor:pointer" onclick="window.open('${f.url}','_blank')" title="Clique pra ver em tamanho grande">
-            ${botaoFavoritaHTML(f, `alternarFavoritaFoto(${f.id}, ${f.favorita == 1 ? 0 : 1}, () => carregarDetalheMonitoramento(${m.id}))`)}
-            <button type="button" onclick="excluirFotoMonitoramento(${f.id}, () => carregarDetalheMonitoramento(${m.id}))" title="Excluir foto"
+            ${botaoFavoritaHTML(f, `alternarFavoritaFoto('${f.id}', ${f.favorita == 1 ? 0 : 1}, () => carregarDetalheMonitoramento('${m.id}'))`)}
+            <button type="button" onclick="excluirFotoMonitoramento('${f.id}', () => carregarDetalheMonitoramento('${m.id}'))" title="Excluir foto"
               style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#dc2626;color:white;border:2px solid white;cursor:pointer;font-size:12px;line-height:1;padding:0">×</button>
           </div>
-          ${campoLegendaHTML(f.descricao, `salvarLegendaFoto(${f.id}, this.value)`, 120)}
+          ${campoLegendaHTML(f.descricao, `salvarLegendaFoto('${f.id}', this.value)`, 120)}
           </div>`).join('')}</div>`
       : '<p style="color:var(--gray-400);font-size:13px">Nenhuma foto anexada a este monitoramento</p>';
 
