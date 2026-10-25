@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,6 +23,21 @@ class Monitoramento extends Modelo
         'soja_pragas_encontradas', 'soja_metros_lineares', 'soja_pragas_por_m2',
         'resultado_final', 'unidade_resultado', 'nivel_controle', 'observacoes',
     ];
+
+    /**
+     * Colunas do monitoramento + área e número do ponto, data do plantio,
+     * safra e cultura (formato da API antiga).
+     */
+    public function scopeComResumo(Builder $query): Builder
+    {
+        return $query->join('pontos_monitoramento as p', 'p.id', '=', 'monitoramentos.ponto_id')
+            ->join('areas as a', 'a.id', '=', 'p.area_id')
+            ->join('plantios as pl', 'pl.id', '=', 'monitoramentos.plantio_id')
+            ->join('safras as s', 's.id', '=', 'pl.safra_id')
+            ->join('culturas as c', 'c.id', '=', 'pl.cultura_id')
+            ->select('monitoramentos.*', 'p.area_id', 'p.numero_ponto', 'a.nome as area_nome',
+                'pl.data_plantio', 'pl.safra_id', 's.nome as safra_nome', 'c.nome as cultura_nome');
+    }
 
     public function ponto(): BelongsTo
     {
