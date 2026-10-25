@@ -7209,7 +7209,12 @@ async function montarRelatorioHTML(tipo, areaId) {
   `;
 }
 
+// Cada prévia ganha um número; resposta de uma prévia antiga que chega depois
+// da mais nova é descartada (senão o relatório anterior sobrescreve o escolhido)
+let previewRelatorioSeq = 0;
+
 async function previewRelatorioCompleto() {
+  const seq = ++previewRelatorioSeq;
   const tipoEl = document.getElementById('relatorioTipo');
   const preview = document.getElementById('relatorioPreview');
   if (!tipoEl || !preview) return; // estamos em outra página (ex: Configurações), nada a fazer
@@ -7229,9 +7234,11 @@ async function previewRelatorioCompleto() {
   preview.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray-400)">⏳ Carregando relatório...</div>';
   try {
     const html = await montarRelatorioHTML(tipo, areaId);
+    if (seq !== previewRelatorioSeq) return;
     preview.innerHTML = `<div style="max-height:600px;overflow:auto;background:white;padding:20px;border-radius:8px">${html}</div>`;
   } catch (e) {
     console.error(e);
+    if (seq !== previewRelatorioSeq) return;
     preview.innerHTML = `<div style="text-align:center;padding:30px;color:#dc2626">Erro ao montar relatório: ${e.message}</div>`;
   }
 }
