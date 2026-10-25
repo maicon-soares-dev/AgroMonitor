@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Api\AduboController;
+use App\Http\Controllers\Api\AplicacaoController;
 use App\Http\Controllers\Api\AreaController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClienteController;
+use App\Http\Controllers\Api\ColheitaController;
 use App\Http\Controllers\Api\CulturaController;
 use App\Http\Controllers\Api\MonitoramentoController;
 use App\Http\Controllers\Api\MonitoramentoFotoController;
@@ -78,6 +80,12 @@ Route::middleware('auth:sanctum')->group(function () {
         ->parameters(['monitoramento-fotos' => 'foto']);
     Route::delete('monitoramentos/{monitoramento}', [MonitoramentoController::class, 'destroy'])
         ->middleware('perfil:gestor,agronomo');
+
+    // Aplicações e colheitas: só gestor e agrônomo (o técnico não usa essas telas)
+    Route::middleware('perfil:gestor,agronomo')->group(function () {
+        Route::apiResource('aplicacoes', AplicacaoController::class)->parameters(['aplicacoes' => 'aplicacao']);
+        Route::apiResource('colheitas', ColheitaController::class)->parameters(['colheitas' => 'colheita']);
+    });
 
     Route::middleware('perfil:gestor')->group(function () {
         Route::apiResource('usuarios', UsuarioController::class)
