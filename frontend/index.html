@@ -1419,39 +1419,60 @@ tr:hover td { background: var(--gray-50); }
             <div style="padding:10px 14px;background:var(--green-50);border-radius:var(--radius-sm);font-size:12px;color:var(--green-700);margin-bottom:16px">
               Lance a colheita no fim da safra (uma por plantio). Esses dados alimentam o resumo da safra e o comparativo entre safras.
             </div>
-            <form onsubmit="salvarColheita(event)" style="margin-bottom:20px">
-              <div style="display:grid;grid-template-columns:1fr 1.6fr 1fr 1fr 1fr;gap:10px;align-items:end">
+            <form id="formColheita" onsubmit="salvarColheita(event)" style="margin-bottom:20px" novalidate>
+              <div style="display:grid;grid-template-columns:1fr 1.6fr 1fr 1fr 1fr;gap:10px;align-items:start">
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Área *</label>
                   <select class="form-select" id="colheitaArea" onchange="carregarPlantiosColheita()" required></select>
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Plantio *</label>
-                  <select class="form-select" id="colheitaPlantio" required>
+                  <select class="form-select" id="colheitaPlantio" data-campo="plantio_id" required>
                     <option value="">Selecione a área primeiro</option>
                   </select>
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Data da colheita *</label>
-                  <input type="date" class="form-input" id="colheitaData" required>
+                  <input type="date" class="form-input" id="colheitaData" data-campo="data_colheita" required>
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Produtividade (sc/ha) *</label>
-                  <input type="number" class="form-input" id="colheitaProd" min="0.01" step="0.01" placeholder="Ex: 62,5" required>
+                  <input type="number" class="form-input" id="colheitaProd" data-campo="produtividade_sc_ha" min="0.01" step="0.01" placeholder="Ex: 62,5" required>
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Umidade (%)</label>
-                  <input type="number" class="form-input" id="colheitaUmidade" min="0" max="100" step="0.1" placeholder="Ex: 14">
+                  <input type="number" class="form-input" id="colheitaUmidade" data-campo="umidade_pct" min="0" max="100" step="0.1" placeholder="Ex: 14">
                 </div>
               </div>
               <div style="display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:end;margin-top:10px">
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Observações</label>
-                  <input type="text" class="form-input" id="colheitaObs" placeholder="Ex: perdas na plataforma, chuva na colheita...">
+                  <input type="text" class="form-input" id="colheitaObs" data-campo="observacoes" placeholder="Ex: perdas na plataforma, chuva na colheita...">
                 </div>
                 <button type="button" class="btn btn-secondary" id="btnCancelarColheita" onclick="cancelarEdicaoColheita()" style="display:none">Cancelar</button>
                 <button type="submit" class="btn btn-primary" id="btnSalvarColheita">Adicionar</button>
               </div>
+            </form>
+
+            <form class="filtro-form" id="filtroColheitas" onsubmit="event.preventDefault(); carregarColheitas()">
+              <div class="form-group">
+                <label class="form-label">Área</label>
+                <select class="form-select" id="filtroColheitaArea" onchange="carregarColheitas()"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Safra</label>
+                <select class="form-select" id="filtroColheitaSafra" onchange="carregarColheitas()"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Cultura</label>
+                <select class="form-select" id="filtroColheitaCultura" onchange="carregarColheitas()"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroColheitaBusca" placeholder="Área, cliente ou variedade">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarColheitas()">Limpar</button>
             </form>
 
             <div style="overflow-x:auto">
@@ -1485,31 +1506,31 @@ tr:hover td { background: var(--gray-50); }
             <div style="padding:10px 14px;background:var(--green-50);border-radius:var(--radius-sm);font-size:12px;color:var(--green-700);margin-bottom:16px">
               Só área, plantio, data e produto são obrigatórios. Preencha dose e tipo quando tiver a informação.
             </div>
-            <form onsubmit="salvarAplicacao(event)" style="margin-bottom:20px">
-              <div style="display:grid;grid-template-columns:1fr 1.6fr 1fr 1.4fr;gap:10px;align-items:end">
+            <form id="formAplicacao" onsubmit="salvarAplicacao(event)" style="margin-bottom:20px" novalidate>
+              <div style="display:grid;grid-template-columns:1fr 1.6fr 1fr 1.4fr;gap:10px;align-items:start">
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Área *</label>
                   <select class="form-select" id="aplicArea" onchange="carregarPlantiosAplicacao()" required></select>
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Plantio *</label>
-                  <select class="form-select" id="aplicPlantio" required>
+                  <select class="form-select" id="aplicPlantio" data-campo="plantio_id" required>
                     <option value="">Selecione a área primeiro</option>
                   </select>
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Data *</label>
-                  <input type="date" class="form-input" id="aplicData" required>
+                  <input type="date" class="form-input" id="aplicData" data-campo="data_aplicacao" required>
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Produto *</label>
-                  <input type="text" class="form-input" id="aplicProduto" maxlength="150" placeholder="Ex: Engeo Pleno" required>
+                  <input type="text" class="form-input" id="aplicProduto" data-campo="produto" maxlength="150" placeholder="Ex: Engeo Pleno" required>
                 </div>
               </div>
               <div style="display:grid;grid-template-columns:1fr 0.8fr 0.8fr 2fr auto auto;gap:10px;align-items:end;margin-top:10px">
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Tipo</label>
-                  <select class="form-select" id="aplicTipo">
+                  <select class="form-select" id="aplicTipo" data-campo="tipo_produto">
                     <option value="">—</option>
                     <option value="defensivo">Defensivo</option>
                     <option value="adubo">Adubo / foliar</option>
@@ -1518,20 +1539,54 @@ tr:hover td { background: var(--gray-50); }
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Dose</label>
-                  <input type="number" class="form-input" id="aplicDose" min="0" step="0.01">
+                  <input type="number" class="form-input" id="aplicDose" data-campo="dose" min="0" step="0.01">
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Unidade</label>
-                  <input type="text" class="form-input" id="aplicUnidade" list="aplicUnidades" maxlength="20" placeholder="L/ha">
+                  <input type="text" class="form-input" id="aplicUnidade" data-campo="unidade_dose" list="aplicUnidades" maxlength="20" placeholder="L/ha">
                   <datalist id="aplicUnidades"><option value="L/ha"><option value="mL/ha"><option value="kg/ha"><option value="g/ha"></datalist>
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Observações</label>
-                  <input type="text" class="form-input" id="aplicObs" placeholder="Ex: controle de percevejo, aplicação aérea...">
+                  <input type="text" class="form-input" id="aplicObs" data-campo="observacoes" placeholder="Ex: controle de percevejo, aplicação aérea...">
                 </div>
                 <button type="button" class="btn btn-secondary" id="btnCancelarAplicacao" onclick="cancelarEdicaoAplicacao()" style="display:none">Cancelar</button>
                 <button type="submit" class="btn btn-primary" id="btnSalvarAplicacao">Adicionar</button>
               </div>
+            </form>
+
+            <form class="filtro-form" id="filtroAplicacoes" onsubmit="event.preventDefault(); carregarAplicacoes()">
+              <div class="form-group">
+                <label class="form-label">Área</label>
+                <select class="form-select" id="filtroAplicArea" onchange="carregarAplicacoes()"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Safra</label>
+                <select class="form-select" id="filtroAplicSafra" onchange="carregarAplicacoes()"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tipo</label>
+                <select class="form-select" id="filtroAplicTipo" onchange="carregarAplicacoes()">
+                  <option value="">Todos</option>
+                  <option value="defensivo">Defensivo</option>
+                  <option value="adubo">Adubo / foliar</option>
+                  <option value="corretivo">Corretivo</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">De</label>
+                <input type="date" class="form-input" id="filtroAplicInicio" onchange="carregarAplicacoes()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Até</label>
+                <input type="date" class="form-input" id="filtroAplicFim" onchange="carregarAplicacoes()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroAplicBusca" placeholder="Produto, área, cliente ou observação">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarAplicacoes()">Limpar</button>
             </form>
 
             <div style="overflow-x:auto">
@@ -5417,10 +5472,14 @@ let aplicacoesCache = [];
 
 async function carregarPaginaAplicacoes() {
   try {
-    const r = await apiFetch(`${API}/areas`);
-    const d = await r.json();
+    const [d, safras] = await Promise.all([
+      apiFetch(`${API}/areas`).then(r => r.json()),
+      apiFetch(`${API}/safras`).then(r => r.json())
+    ]);
     document.getElementById('aplicArea').innerHTML = '<option value="">Selecione...</option>' +
       (d.dados || []).map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+    preencherSelectFiltro('filtroAplicArea', 'Todas', d.dados || []);
+    preencherSelectFiltro('filtroAplicSafra', 'Todas', safras.dados || []);
   } catch (e) { console.error(e); }
   if (!document.getElementById('aplicData').value) document.getElementById('aplicData').value = new Date().toISOString().slice(0, 10);
   carregarAplicacoes();
@@ -5449,11 +5508,13 @@ async function carregarAplicacoes() {
   const body = document.getElementById('aplicacoesBody');
   const nomeTipo = { defensivo: 'Defensivo', adubo: 'Adubo / foliar', corretivo: 'Corretivo' };
   try {
-    const r = await apiFetch(`${API}/aplicacoes`);
+    const filtros = queryFiltros({ area_id: 'filtroAplicArea', safra_id: 'filtroAplicSafra', tipo_produto: 'filtroAplicTipo',
+      data_inicio: 'filtroAplicInicio', data_fim: 'filtroAplicFim', busca: 'filtroAplicBusca' });
+    const r = await apiFetch(`${API}/aplicacoes${filtros}`);
     const d = await r.json();
     aplicacoesCache = d.dados || [];
     if (!aplicacoesCache.length) {
-      body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-400)">Nenhuma aplicação lançada</td></tr>';
+      body.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-400)">${filtros ? 'Nenhuma aplicação encontrada' : 'Nenhuma aplicação lançada'}</td></tr>`;
       return;
     }
     body.innerHTML = aplicacoesCache.map(a => `
@@ -5487,7 +5548,8 @@ async function salvarAplicacao(e) {
     unidade_dose: document.getElementById('aplicUnidade').value.trim(),
     observacoes: document.getElementById('aplicObs').value.trim()
   };
-  if (!data.plantio_id) { showToast('❌ Selecione o plantio', true); return; }
+  const form = document.getElementById('formAplicacao');
+  limparErrosCampos(form);
 
   const editando = !!editingAplicacaoId;
   const url = editando ? `${API}/aplicacoes/${editingAplicacaoId}` : `${API}/aplicacoes`;
@@ -5504,6 +5566,9 @@ async function salvarAplicacao(e) {
       if (editando) cancelarEdicaoAplicacao();
       else ['aplicProduto', 'aplicTipo', 'aplicDose', 'aplicUnidade', 'aplicObs'].forEach(id => document.getElementById(id).value = '');
       carregarAplicacoes();
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
+      showToast('❌ Corrija os campos destacados', true);
     } else {
       showToast('❌ ' + (d?.erro || 'Erro desconhecido'), true);
     }
@@ -5531,7 +5596,9 @@ async function editarAplicacao(id) {
 
 function cancelarEdicaoAplicacao() {
   editingAplicacaoId = null;
-  document.querySelector('#page-aplicacoes form').reset();
+  const form = document.getElementById('formAplicacao');
+  form.reset();
+  limparErrosCampos(form);
   document.getElementById('aplicPlantio').innerHTML = '<option value="">Selecione a área primeiro</option>';
   document.getElementById('aplicData').value = new Date().toISOString().slice(0, 10);
   document.getElementById('btnSalvarAplicacao').textContent = 'Adicionar';
@@ -5561,10 +5628,16 @@ let colheitasCache = [];
 
 async function carregarPaginaColheita() {
   try {
-    const r = await apiFetch(`${API}/areas`);
-    const d = await r.json();
+    const [d, safras, culturas] = await Promise.all([
+      apiFetch(`${API}/areas`).then(r => r.json()),
+      apiFetch(`${API}/safras`).then(r => r.json()),
+      apiFetch(`${API}/culturas`).then(r => r.json())
+    ]);
     document.getElementById('colheitaArea').innerHTML = '<option value="">Selecione...</option>' +
       (d.dados || []).map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+    preencherSelectFiltro('filtroColheitaArea', 'Todas', d.dados || []);
+    preencherSelectFiltro('filtroColheitaSafra', 'Todas', safras.dados || []);
+    preencherSelectFiltro('filtroColheitaCultura', 'Todas', culturas.dados || []);
   } catch (e) { console.error(e); }
   carregarColheitas();
 }
@@ -5575,13 +5648,17 @@ async function carregarPlantiosColheita(plantioSelecionado = null) {
   const sel = document.getElementById('colheitaPlantio');
   if (!areaId) { sel.innerHTML = '<option value="">Selecione a área primeiro</option>'; return; }
   try {
-    const r = await apiFetch(`${API}/plantios?area_id=${areaId}`);
-    const d = await r.json();
+    // As colheitas da área vêm da API (a lista da tela pode estar filtrada)
+    const [d, colheitasArea] = await Promise.all([
+      apiFetch(`${API}/plantios?area_id=${areaId}`).then(r => r.json()),
+      apiFetch(`${API}/colheitas?area_id=${areaId}`).then(r => r.json())
+    ]);
     const plantios = d.dados || [];
-    const editando = colheitasCache.find(c => c.id == editingColheitaId);
+    const colhidos = colheitasArea.dados || [];
+    const editando = colhidos.find(c => c.id == editingColheitaId);
     sel.innerHTML = plantios.length
       ? '<option value="">Selecione...</option>' + plantios.map(p => {
-          const colhido = colheitasCache.some(c => c.plantio_id == p.id) && !(editando && editando.plantio_id == p.id);
+          const colhido = colhidos.some(c => c.plantio_id == p.id) && !(editando && editando.plantio_id == p.id);
           return `<option value="${p.id}" ${colhido ? 'disabled' : ''}>${p.safra_nome} · ${p.cultura_nome}${p.variedade_nome ? ' (' + p.variedade_nome + ')' : ''} · plantado em ${fmtDataBR(p.data_plantio)}${colhido ? ' — já colhido' : ''}</option>`;
         }).join('')
       : '<option value="">Nenhum plantio nesta área</option>';
@@ -5595,11 +5672,13 @@ async function carregarPlantiosColheita(plantioSelecionado = null) {
 async function carregarColheitas() {
   const body = document.getElementById('colheitasBody');
   try {
-    const r = await apiFetch(`${API}/colheitas`);
+    const filtros = queryFiltros({ area_id: 'filtroColheitaArea', safra_id: 'filtroColheitaSafra',
+      cultura_id: 'filtroColheitaCultura', busca: 'filtroColheitaBusca' });
+    const r = await apiFetch(`${API}/colheitas${filtros}`);
     const d = await r.json();
     colheitasCache = d.dados || [];
     if (!colheitasCache.length) {
-      body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-400)">Nenhuma colheita lançada</td></tr>';
+      body.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-400)">${filtros ? 'Nenhuma colheita encontrada' : 'Nenhuma colheita lançada'}</td></tr>`;
       return;
     }
     const num = (v, casas = 1) => Number(v).toLocaleString('pt-BR', { maximumFractionDigits: casas });
@@ -5636,7 +5715,8 @@ async function salvarColheita(e) {
     umidade_pct: document.getElementById('colheitaUmidade').value,
     observacoes: document.getElementById('colheitaObs').value.trim()
   };
-  if (!data.plantio_id) { showToast('❌ Selecione o plantio', true); return; }
+  const form = document.getElementById('formColheita');
+  limparErrosCampos(form);
 
   const editando = !!editingColheitaId;
   const url = editando ? `${API}/colheitas/${editingColheitaId}` : `${API}/colheitas`;
@@ -5651,6 +5731,9 @@ async function salvarColheita(e) {
       showToast(editando ? '✅ Colheita atualizada!' : '✅ Colheita lançada!');
       cancelarEdicaoColheita();
       carregarColheitas();
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
+      showToast('❌ Corrija os campos destacados', true);
     } else {
       showToast('❌ ' + (d?.erro || 'Erro desconhecido'), true);
     }
@@ -5676,7 +5759,9 @@ async function editarColheita(id) {
 
 function cancelarEdicaoColheita() {
   editingColheitaId = null;
-  document.querySelector('#page-colheita form').reset();
+  const form = document.getElementById('formColheita');
+  form.reset();
+  limparErrosCampos(form);
   document.getElementById('colheitaPlantio').innerHTML = '<option value="">Selecione a área primeiro</option>';
   document.getElementById('btnSalvarColheita').textContent = 'Adicionar';
   document.getElementById('btnCancelarColheita').style.display = 'none';
