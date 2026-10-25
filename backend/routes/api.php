@@ -5,9 +5,12 @@ use App\Http\Controllers\Api\AreaController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClienteController;
 use App\Http\Controllers\Api\CulturaController;
+use App\Http\Controllers\Api\MonitoramentoController;
+use App\Http\Controllers\Api\MonitoramentoFotoController;
 use App\Http\Controllers\Api\PlantioController;
 use App\Http\Controllers\Api\PontoController;
 use App\Http\Controllers\Api\PragaController;
+use App\Http\Controllers\Api\ResumoMonitoramentoController;
 use App\Http\Controllers\Api\SafraController;
 use App\Http\Controllers\Api\TalhaoController;
 use App\Http\Controllers\Api\UsuarioController;
@@ -65,6 +68,16 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::apiResource($recurso, $controller)->only(['store', 'update', 'destroy'])->parameters($parametros);
         }
     });
+
+    // Monitoramentos: todos os perfis lançam e editam (o técnico é quem vai a
+    // campo), inclusive as fotos; só gestor e agrônomo excluem o monitoramento.
+    Route::get('resumo-monitoramento', ResumoMonitoramentoController::class);
+    Route::apiResource('monitoramentos', MonitoramentoController::class)->except('destroy');
+    Route::apiResource('monitoramento-fotos', MonitoramentoFotoController::class)
+        ->only(['store', 'update', 'destroy'])
+        ->parameters(['monitoramento-fotos' => 'foto']);
+    Route::delete('monitoramentos/{monitoramento}', [MonitoramentoController::class, 'destroy'])
+        ->middleware('perfil:gestor,agronomo');
 
     Route::middleware('perfil:gestor')->group(function () {
         Route::apiResource('usuarios', UsuarioController::class)
