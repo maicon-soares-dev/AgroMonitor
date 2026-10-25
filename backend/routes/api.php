@@ -7,11 +7,13 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClienteController;
 use App\Http\Controllers\Api\ColheitaController;
 use App\Http\Controllers\Api\CulturaController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\MonitoramentoController;
 use App\Http\Controllers\Api\MonitoramentoFotoController;
 use App\Http\Controllers\Api\PlantioController;
 use App\Http\Controllers\Api\PontoController;
 use App\Http\Controllers\Api\PragaController;
+use App\Http\Controllers\Api\RelatorioController;
 use App\Http\Controllers\Api\ResumoMonitoramentoController;
 use App\Http\Controllers\Api\SafraController;
 use App\Http\Controllers\Api\TalhaoController;
@@ -69,6 +71,16 @@ Route::middleware('auth:sanctum')->group(function () {
         foreach ($estrutura as $recurso => $controller) {
             Route::apiResource($recurso, $controller)->only(['store', 'update', 'destroy'])->parameters($parametros);
         }
+    });
+
+    // Dashboard e relatórios: todos os perfis consultam
+    Route::get('dashboard', DashboardController::class);
+    Route::controller(RelatorioController::class)->prefix('relatorios')->group(function () {
+        Route::get('dias', 'dias');
+        Route::get('diario', 'diario');
+        Route::get('safra', 'safra');
+        Route::get('comparativo', 'comparativo');
+        Route::get('cliente', 'cliente');
     });
 
     // Monitoramentos: todos os perfis lançam e editam (o técnico é quem vai a
