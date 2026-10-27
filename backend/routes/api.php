@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\PlantioController;
 use App\Http\Controllers\Api\PontoController;
 use App\Http\Controllers\Api\PragaController;
 use App\Http\Controllers\Api\RelatorioController;
+use App\Http\Controllers\Api\RelatorioGerencialController;
 use App\Http\Controllers\Api\ResumoMonitoramentoController;
 use App\Http\Controllers\Api\SafraController;
 use App\Http\Controllers\Api\TalhaoController;
@@ -82,6 +83,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('comparativo', 'comparativo');
         Route::get('cliente', 'cliente');
     });
+
+    // Relatórios gerenciais (agrupamento e pivot): gestor e agrônomo
+    Route::controller(RelatorioGerencialController::class)
+        ->prefix('relatorios-gerenciais')->name('relatorios-gerenciais.')
+        ->middleware('perfil:gestor,agronomo')
+        ->group(function () {
+            Route::get('agrupamentos', 'agrupamentos')->name('agrupamentos');
+            Route::get('pivot', 'pivot')->name('pivot');
+        });
 
     // Monitoramentos: todos os perfis lançam e editam (o técnico é quem vai a
     // campo), inclusive as fotos; só gestor e agrônomo excluem o monitoramento.
