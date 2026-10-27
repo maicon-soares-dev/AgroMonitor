@@ -187,9 +187,42 @@ tr:hover td { background: var(--gray-50); }
 @media (max-width: 1200px) {
   .cadastro-area-wrapper { grid-template-columns: 1fr; }
 }
+
+/* Login e usuário logado */
+.login-tela { position: fixed; inset: 0; background: var(--green-800); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 3000; }
+.login-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow-md); width: 100%; max-width: 380px; padding: 32px 28px; }
+.login-card img { width: 100%; max-width: 240px; display: block; margin: 0 auto 24px; }
+.login-card .btn { width: 100%; justify-content: center; padding: 11px 16px; margin-top: 4px; }
+.topbar-usuario { display: flex; align-items: center; gap: 12px; }
+.topbar-usuario-nome { font-size: 13px; font-weight: 600; text-align: right; line-height: 1.2; }
+.topbar-usuario-perfil { font-size: 11px; color: var(--gray-500); font-weight: 500; }
+
+/* Mensagens de validação ao lado de cada campo (vêm do "erros" da API) */
+.form-input.invalido, .form-select.invalido, .form-textarea.invalido { border-color: var(--red-600); }
+.form-erro { font-size: 11px; color: var(--red-600); margin-top: 4px; }
+
+/* Formulário de filtro das telas de cadastro */
+.filtro-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--gray-100); }
+.filtro-form .form-group { margin: 0; flex: 1 1 170px; }
 </style>
 </head>
 <body>
+
+<!-- TELA DE LOGIN (escondida quando há token válido) -->
+<div class="login-tela" id="loginTela" style="display:none">
+  <form class="login-card" id="formLogin" onsubmit="fazerLogin(event)" novalidate>
+    <img src="assets/logo-full-light.png" alt="AgroMonitor">
+    <div class="form-group">
+      <label class="form-label" for="loginUsuario">Login</label>
+      <input type="text" class="form-input" id="loginUsuario" data-campo="login" autocomplete="username" autofocus>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="loginSenha">Senha</label>
+      <input type="password" class="form-input" id="loginSenha" data-campo="senha" autocomplete="current-password">
+    </div>
+    <button type="submit" class="btn btn-primary" id="btnEntrar">Entrar</button>
+  </form>
+</div>
 
 <div class="app">
   <aside class="sidebar">
@@ -217,27 +250,29 @@ tr:hover td { background: var(--gray-50); }
       <div class="nav-section">
         <div class="nav-section-title">Operações</div>
         <div class="nav-item" onclick="irPara('page-plantio', this)">🌱 Histórico Plantio</div>
-        <div class="nav-item" onclick="cancelarEdicaoPlantio(); irPara('page-novoPlantio', this)">📝 Novo Plantio</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="cancelarEdicaoPlantio(); irPara('page-novoPlantio', this)">📝 Novo Plantio</div>
         <div class="nav-item" onclick="irPara('page-monitoramento', this)">📈 Monitoramento</div>
         <div class="nav-item" onclick="cancelarEdicaoMonitoramento(); irPara('page-registrarMonitoramento', this)">🧪 Registrar Monitoramento</div>
-        <div class="nav-item" onclick="cancelarEdicaoColheita(); irPara('page-colheita', this)">🚜 Colheita</div>
-        <div class="nav-item" onclick="cancelarEdicaoAplicacao(); irPara('page-aplicacoes', this)">💧 Aplicações</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="cancelarEdicaoColheita(); irPara('page-colheita', this)">🚜 Colheita</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="cancelarEdicaoAplicacao(); irPara('page-aplicacoes', this)">💧 Aplicações</div>
       </div>
 
       <div class="nav-section">
         <div class="nav-section-title">Configuração</div>
-        <div class="nav-item" onclick="irPara('page-culturas', this)">🌾 Culturas</div>
-        <div class="nav-item" onclick="irPara('page-variedades', this)">🔬 Variedades</div>
-        <div class="nav-item" onclick="irPara('page-adubos', this)">🧪 Adubos</div>
-        <div class="nav-item" onclick="irPara('page-pragas', this)">🐛 Pragas e Doenças</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="irPara('page-culturas', this)">🌾 Culturas</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="irPara('page-variedades', this)">🔬 Variedades</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="irPara('page-adubos', this)">🧪 Adubos</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="irPara('page-pragas', this)">🐛 Pragas e Doenças</div>
       </div>
 
       <div class="nav-section">
         <div class="nav-section-title">Gestão</div>
-        <div class="nav-item" onclick="irPara('page-clientes', this)">🧑‍🌾 Clientes</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="irPara('page-clientes', this)">🧑‍🌾 Clientes</div>
         <div class="nav-item" onclick="irPara('page-relatorio', this)">📊 Relatório</div>
-        <div class="nav-item" onclick="irPara('page-safras', this)">📅 Safras</div>
-        <div class="nav-item" onclick="irPara('page-configuracoes', this)">🎨 Configurações</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="irPara('page-gerencial', this)">📈 Relatórios Gerenciais</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="irPara('page-safras', this)">📅 Safras</div>
+        <div class="nav-item" data-perfis="gestor" onclick="cancelarEdicaoUsuario(); irPara('page-usuarios', this)">👤 Usuários</div>
+        <div class="nav-item" data-perfis="gestor" onclick="irPara('page-configuracoes', this)">🎨 Configurações</div>
       </div>
     </nav>
 
@@ -253,7 +288,15 @@ tr:hover td { background: var(--gray-50); }
   <main class="main">
     <div class="topbar">
       <h1 class="page-title" id="pageTitle">Dashboard</h1>
-      <div class="topbar-actions" id="topbarActions"></div>
+      <div class="topbar-actions" id="topbarActions">
+        <div class="topbar-usuario">
+          <div>
+            <div class="topbar-usuario-nome" id="usuarioNome"></div>
+            <div class="topbar-usuario-perfil" id="usuarioPerfil"></div>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="sair()">Sair</button>
+        </div>
+      </div>
     </div>
 
     <div class="content">
@@ -360,10 +403,25 @@ tr:hover td { background: var(--gray-50); }
 
       <!-- PÁGINA: Áreas -->
       <div class="page" id="page-areas">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;flex-wrap:wrap">
-          <input type="text" id="areasFiltro" class="form-input" placeholder="🔍 Buscar por nome ou cliente..." style="max-width:280px" oninput="filtrarAreas()">
-          <button type="button" class="btn btn-primary" onclick="cancelarEdicaoArea(); abrirAbaImportar('desenhar'); irPara('page-importar-earth', null)">+ Nova Área</button>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+          <button type="button" class="btn btn-primary" data-perfis="gestor,agronomo" onclick="cancelarEdicaoArea(); abrirAbaImportar('desenhar'); irPara('page-importar-earth', null)">+ Nova Área</button>
         </div>
+        <form class="filtro-form card" id="filtroAreas" onsubmit="event.preventDefault(); carregarAreas()" style="padding:14px 16px">
+          <div class="form-group">
+            <label class="form-label">Buscar</label>
+            <input type="text" class="form-input" id="filtroAreaBusca" placeholder="Nome da área ou do cliente">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cliente</label>
+            <select class="form-select" id="filtroAreaCliente" onchange="carregarAreas()"><option value="">Todos</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Com plantio na safra</label>
+            <select class="form-select" id="filtroAreaSafra" onchange="carregarAreas()"><option value="">Todas</option></select>
+          </div>
+          <button type="submit" class="btn btn-primary">Filtrar</button>
+          <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarAreas()">Limpar</button>
+        </form>
         <div style="padding:10px 14px;background:var(--green-50);border-radius:var(--radius-sm);font-size:12px;color:var(--green-700);margin-bottom:16px">
           📍 Toda área nova precisa ser desenhada ou importada no mapa primeiro — é assim que o sistema calcula os hectares certos e sabe onde ficam os pontos de monitoramento.
         </div>
@@ -378,15 +436,15 @@ tr:hover td { background: var(--gray-50); }
             <div class="card-header">
               <h3 class="card-title" id="cadastroAreaTitulo">Dados da Área</h3>
             </div>
-            <form onsubmit="salvarArea(event)" class="card-body">
+            <form id="formArea" onsubmit="salvarArea(event)" class="card-body" novalidate>
               <div class="form-row cols-2">
                 <div class="form-group">
                   <label class="form-label">Nome da Área *</label>
-                  <input type="text" class="form-input" id="inputNomeArea" placeholder="Ex: Fazenda Santa Maria" required>
+                  <input type="text" class="form-input" id="inputNomeArea" data-campo="nome" placeholder="Ex: Fazenda Santa Maria">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Cliente *</label>
-                  <select class="form-select" id="inputCliente" required></select>
+                  <select class="form-select" id="inputCliente" data-campo="cliente_id"></select>
                   <div class="form-hint">Cliente não cadastrado ainda? Vá em "Clientes" no menu primeiro.</div>
                 </div>
               </div>
@@ -394,7 +452,7 @@ tr:hover td { background: var(--gray-50); }
               <div class="form-row cols-3">
                 <div class="form-group">
                   <label class="form-label">Hectares (ha) *</label>
-                  <input type="number" class="form-input" id="inputHa" placeholder="0,00" step="0.01" oninput="converterHaAlq()" required>
+                  <input type="number" class="form-input" id="inputHa" data-campo="hectares" placeholder="0,00" step="0.01" oninput="converterHaAlq()">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Alqueires (alq)</label>
@@ -403,7 +461,7 @@ tr:hover td { background: var(--gray-50); }
                 </div>
                 <div class="form-group">
                   <label class="form-label">Pontos de Monitoramento</label>
-                  <input type="number" class="form-input" id="qtdPontos" value="5" min="1" max="50" readonly>
+                  <input type="number" class="form-input" id="qtdPontos" data-campo="qtd_pontos" value="5" min="1" max="50" readonly>
                   <div class="form-hint" id="pontoRecomendacao">Recomendado: 1 ponto a cada 20-25 ha</div>
                 </div>
               </div>
@@ -462,6 +520,26 @@ tr:hover td { background: var(--gray-50); }
             <h3 class="card-title">Histórico de Plantios</h3>
           </div>
           <div class="card-body">
+            <form class="filtro-form" id="filtroPlantios" onsubmit="event.preventDefault(); carregarPlantios()">
+              <div class="form-group">
+                <label class="form-label">Área</label>
+                <select class="form-select" id="filtroPlantioArea" onchange="carregarPlantios()"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Safra</label>
+                <select class="form-select" id="filtroPlantioSafra" onchange="carregarPlantios()"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Cultura</label>
+                <select class="form-select" id="filtroPlantioCultura" onchange="carregarPlantios()"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroPlantioBusca" placeholder="Área, cultura ou variedade">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarPlantios()">Limpar</button>
+            </form>
             <table>
               <thead>
                 <tr>
@@ -502,34 +580,34 @@ tr:hover td { background: var(--gray-50); }
           <div class="card-header">
             <h3 class="card-title" id="novoPlantioTitulo">Registro de Plantio</h3>
           </div>
-          <form onsubmit="salvarPlantio(event)" class="card-body">
+          <form id="formPlantio" onsubmit="salvarPlantio(event)" class="card-body" novalidate>
             <div class="form-row cols-3">
               <div class="form-group">
                 <label class="form-label">Data do Plantio *</label>
-                <input type="date" class="form-input" id="plantioData" required>
+                <input type="date" class="form-input" id="plantioData" data-campo="data_plantio">
               </div>
               <div class="form-group">
                 <label class="form-label">Área *</label>
-                <select class="form-select" id="plantioArea" required onchange="carregarTalhoesPlantio()"></select>
+                <select class="form-select" id="plantioArea" data-campo="area_id" onchange="carregarTalhoesPlantio()"></select>
               </div>
               <div class="form-group">
                 <label class="form-label">Safra *</label>
-                <select class="form-select" id="plantioSafra" required></select>
+                <select class="form-select" id="plantioSafra" data-campo="safra_id"></select>
               </div>
             </div>
 
             <div class="form-row cols-3">
               <div class="form-group">
                 <label class="form-label">Cultura *</label>
-                <select class="form-select" id="plantioCultura" required onchange="carregarVariedadesNovoPlantio()"></select>
+                <select class="form-select" id="plantioCultura" data-campo="cultura_id" onchange="carregarVariedadesNovoPlantio()"></select>
               </div>
               <div class="form-group">
                 <label class="form-label" id="plantioVariedadeLabel">Variedade / Híbrido</label>
-                <select class="form-select" id="plantioVariedade" onchange="aplicarVariedadeTodosTalhoes()"><option value="">Selecione a cultura primeiro</option></select>
+                <select class="form-select" id="plantioVariedade" data-campo="variedade_id" onchange="aplicarVariedadeTodosTalhoes()"><option value="">Selecione a cultura primeiro</option></select>
               </div>
               <div class="form-group">
                 <label class="form-label">População (sementes/metro)</label>
-                <input type="number" class="form-input" id="plantioPopulacao" step="0.1">
+                <input type="number" class="form-input" id="plantioPopulacao" data-campo="populacao_semente" step="0.1">
               </div>
             </div>
 
@@ -546,11 +624,11 @@ tr:hover td { background: var(--gray-50); }
             <div class="form-row cols-3">
               <div class="form-group">
                 <label class="form-label">Adubo</label>
-                <select class="form-select" id="plantioAdubo"><option value="">Nenhum</option></select>
+                <select class="form-select" id="plantioAdubo" data-campo="adubo_id"><option value="">Nenhum</option></select>
               </div>
               <div class="form-group">
                 <label class="form-label">Quantidade (kg/ha)</label>
-                <input type="number" class="form-input" id="plantioAduboQtd" step="1">
+                <input type="number" class="form-input" id="plantioAduboQtd" data-campo="adubo_qtd_kg" step="1">
               </div>
               <div class="form-group">
                 <label class="form-label">Plantio</label>
@@ -575,7 +653,7 @@ tr:hover td { background: var(--gray-50); }
 
             <div class="form-group">
               <label class="form-label">Observações</label>
-              <textarea class="form-textarea" id="plantioObs" style="min-height:60px"></textarea>
+              <textarea class="form-textarea" id="plantioObs" data-campo="observacoes" style="min-height:60px"></textarea>
             </div>
 
             <div class="card-footer">
@@ -618,7 +696,7 @@ tr:hover td { background: var(--gray-50); }
           <div class="card-header">
             <h3 class="card-title">Registro de Monitoramento</h3>
           </div>
-          <form onsubmit="salvarMonitoramento(event)" class="card-body">
+          <form id="formMonitoramento" onsubmit="salvarMonitoramento(event)" class="card-body" novalidate>
             <div class="form-row cols-3">
               <div class="form-group">
                 <label class="form-label">Área *</label>
@@ -626,23 +704,23 @@ tr:hover td { background: var(--gray-50); }
               </div>
               <div class="form-group">
                 <label class="form-label">Plantio *</label>
-                <select class="form-select" id="monPlantio" required onchange="atualizarCamposMonitor()"></select>
+                <select class="form-select" id="monPlantio" data-campo="plantio_id" required onchange="atualizarCamposMonitor()"></select>
                 <div class="form-hint">Safra e cultura vêm do plantio escolhido</div>
               </div>
               <div class="form-group">
                 <label class="form-label">Ponto de Monitoramento *</label>
-                <select class="form-select" id="monPonto" required></select>
+                <select class="form-select" id="monPonto" data-campo="ponto_id" required></select>
               </div>
             </div>
 
             <div class="form-row cols-2">
               <div class="form-group">
                 <label class="form-label">Data *</label>
-                <input type="date" class="form-input" id="monData" required>
+                <input type="date" class="form-input" id="monData" data-campo="data_monitoramento" required>
               </div>
               <div class="form-group">
                 <label class="form-label">Estágio Fenológico</label>
-                <input type="text" class="form-input" id="monEstagio" list="listaEstagios" placeholder="Ex: V6, R1...">
+                <input type="text" class="form-input" id="monEstagio" data-campo="estagio_fenologico" list="listaEstagios" placeholder="Ex: V6, R1...">
                 <datalist id="listaEstagios"></datalist>
                 <div class="form-hint">Digite livremente ou escolha uma sugestão pra cultura do plantio</div>
               </div>
@@ -660,7 +738,7 @@ tr:hover td { background: var(--gray-50); }
                 </div>
                 <div class="form-group">
                   <label class="form-label">Plantas com Praga</label>
-                  <div class="counter-group">
+                  <div class="counter-group" data-campo="milho_plantas_praga milho_plantas_avaliadas">
                     <button type="button" class="counter-btn" onclick="decrementMilho()">−</button>
                     <input type="number" class="counter-input" id="milhoPraga" value="0" oninput="calcMilho()" readonly>
                     <button type="button" class="counter-btn" onclick="incrementMilho()">+</button>
@@ -683,7 +761,7 @@ tr:hover td { background: var(--gray-50); }
               <div class="form-row cols-2">
                 <div class="form-group">
                   <label class="form-label">Pragas Encontradas</label>
-                  <div class="counter-group">
+                  <div class="counter-group" data-campo="soja_pragas_encontradas">
                     <button type="button" class="counter-btn" onclick="decrementSoja()">−</button>
                     <input type="number" class="counter-input" id="sojaPragas" value="0" oninput="calcSoja()" readonly>
                     <button type="button" class="counter-btn" onclick="incrementSoja()">+</button>
@@ -691,7 +769,7 @@ tr:hover td { background: var(--gray-50); }
                 </div>
                 <div class="form-group">
                   <label class="form-label">Metros Lineares</label>
-                  <input type="number" class="form-input" id="sojaMetros" value="2" step="0.1" oninput="calcSoja()">
+                  <input type="number" class="form-input" id="sojaMetros" data-campo="soja_metros_lineares" value="2" step="0.1" oninput="calcSoja()">
                 </div>
               </div>
               <div class="calc-result-box">
@@ -718,7 +796,7 @@ tr:hover td { background: var(--gray-50); }
 
             <div class="form-group">
               <label class="form-label">Observações Gerais</label>
-              <textarea class="form-textarea" id="monObs" style="min-height:60px"></textarea>
+              <textarea class="form-textarea" id="monObs" data-campo="observacoes" style="min-height:60px"></textarea>
             </div>
 
             <div class="card-footer">
@@ -739,7 +817,7 @@ tr:hover td { background: var(--gray-50); }
               <button type="button" class="btn btn-secondary btn-sm" onclick="voltarDoDetalheMonitoramento()">← Voltar</button>
               <button type="button" class="btn btn-primary btn-sm" onclick="registrarProximoMonitoramento()" title="Abre um registro novo já com a mesma área, plantio, data e estádio, no próximo ponto">➕ Registrar Monitoramento</button>
               <button type="button" class="btn btn-secondary btn-sm" id="btnEditarDetMon">✏️ Editar</button>
-              <button type="button" class="btn btn-secondary btn-sm" style="color:#dc2626" id="btnExcluirDetMon">🗑️ Excluir</button>
+              <button type="button" class="btn btn-secondary btn-sm" style="color:#dc2626" id="btnExcluirDetMon" data-perfis="gestor,agronomo">🗑️ Excluir</button>
             </div>
           </div>
           <div class="card-body">
@@ -892,11 +970,11 @@ tr:hover td { background: var(--gray-50); }
               <div class="form-row cols-2" style="margin-top:16px">
                 <div class="form-group">
                   <label class="form-label">Nome da Área *</label>
-                  <input type="text" class="form-input" id="importNomeArea" placeholder="Ex: Talhão Norte">
+                  <input type="text" class="form-input" id="importNomeArea" data-campo="nome" placeholder="Ex: Talhão Norte">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Cliente *</label>
-                  <select class="form-select" id="importCliente"></select>
+                  <select class="form-select" id="importCliente" data-campo="cliente_id"></select>
                   <div class="form-hint">Cliente não cadastrado ainda? Vá em "Clientes" no menu primeiro.</div>
                 </div>
               </div>
@@ -933,6 +1011,14 @@ tr:hover td { background: var(--gray-50); }
             <button class="btn btn-primary btn-sm" onclick="abrirModalNovoCultura()">+ Novo</button>
           </div>
           <div class="card-body">
+            <form class="filtro-form" id="filtroCulturas" onsubmit="event.preventDefault(); carregarCulturas()">
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroCulturaBusca" placeholder="Nome ou descrição">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarCulturas()">Limpar</button>
+            </form>
             <table>
               <thead>
                 <tr>
@@ -955,12 +1041,20 @@ tr:hover td { background: var(--gray-50); }
             <button class="btn btn-primary btn-sm" onclick="abrirModalNovoVariedade()">+ Novo</button>
           </div>
           <div class="card-body">
-            <div class="form-group" style="margin-bottom:16px">
-              <label class="form-label">Filtrar por Cultura</label>
-              <select id="filtroVar" class="form-select" onchange="carregarVariedades()">
-                <option value="">Todas</option>
-              </select>
-            </div>
+            <form class="filtro-form" id="filtroVariedades" onsubmit="event.preventDefault(); carregarVariedades()">
+              <div class="form-group">
+                <label class="form-label">Cultura</label>
+                <select id="filtroVar" class="form-select" onchange="carregarVariedades()">
+                  <option value="">Todas</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroVarBusca" placeholder="Nome ou descrição">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarVariedades()">Limpar</button>
+            </form>
             <table>
               <thead>
                 <tr>
@@ -984,6 +1078,14 @@ tr:hover td { background: var(--gray-50); }
             <button class="btn btn-primary btn-sm" onclick="abrirModalNovoAdubo()">+ Novo</button>
           </div>
           <div class="card-body">
+            <form class="filtro-form" id="filtroAdubos" onsubmit="event.preventDefault(); carregarAdubos()">
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroAduboBusca" placeholder="Nome, tipo ou NPK">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarAdubos()">Limpar</button>
+            </form>
             <table>
               <thead>
                 <tr>
@@ -1007,12 +1109,39 @@ tr:hover td { background: var(--gray-50); }
             <button class="btn btn-primary btn-sm" onclick="abrirModalNovoPraga()">+ Novo</button>
           </div>
           <div class="card-body">
-            <div class="form-group" style="margin-bottom:16px">
-              <label class="form-label">Filtrar por Cultura</label>
-              <select id="filtroPrag" class="form-select" onchange="carregarPragas()">
-                <option value="">Todas</option>
-              </select>
-            </div>
+            <form class="filtro-form" id="filtroPragas" onsubmit="event.preventDefault(); carregarPragas()">
+              <div class="form-group">
+                <label class="form-label">Cultura</label>
+                <select id="filtroPrag" class="form-select" onchange="carregarPragas()">
+                  <option value="">Todas</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tipo</label>
+                <select id="filtroPragTipo" class="form-select" onchange="carregarPragas()">
+                  <option value="">Todos</option>
+                  <option value="praga">🐛 Praga</option>
+                  <option value="doenca">🦠 Doença</option>
+                  <option value="planta_daninha">🌿 Planta Daninha</option>
+                  <option value="clima">🌦️ Condição Climática</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Risco</label>
+                <select id="filtroPragRisco" class="form-select" onchange="carregarPragas()">
+                  <option value="">Todos</option>
+                  <option value="baixo">Baixo</option>
+                  <option value="medio">Médio</option>
+                  <option value="alto">Alto</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroPragBusca" placeholder="Nome ou descrição">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarPragas()">Limpar</button>
+            </form>
             <table>
               <thead>
                 <tr>
@@ -1074,6 +1203,97 @@ tr:hover td { background: var(--gray-50); }
         </div>
       </div>
 
+      <!-- PÁGINA: Relatórios gerenciais (agrupamento e pivot) -->
+      <div class="page" id="page-gerencial">
+        <form class="filtro-form card" id="filtroGerencial" onsubmit="event.preventDefault(); carregarRelatoriosGerenciais()" novalidate style="padding:14px 16px">
+          <div class="form-group">
+            <label class="form-label">Safra</label>
+            <select class="form-select" id="gerSafra" data-campo="safra_id" onchange="carregarRelatoriosGerenciais()"><option value="">Todas</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Plantio</label>
+            <select class="form-select" id="gerPlantio" data-campo="plantio_id" onchange="carregarRelatoriosGerenciais()"><option value="">Todos</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cliente</label>
+            <select class="form-select" id="gerCliente" data-campo="cliente_id" onchange="carregarRelatoriosGerenciais()"><option value="">Todos</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tipo</label>
+            <select class="form-select" id="gerTipo" data-campo="tipo" onchange="carregarRelatoriosGerenciais()">
+              <option value="">Todos</option>
+              <option value="praga">Pragas</option>
+              <option value="doenca">Doenças</option>
+              <option value="planta_daninha">Plantas daninhas</option>
+              <option value="clima">Clima</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">De</label>
+            <input type="date" class="form-input" id="gerInicio" data-campo="data_inicio">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Até</label>
+            <input type="date" class="form-input" id="gerFim" data-campo="data_fim">
+          </div>
+          <button type="submit" class="btn btn-primary">Filtrar</button>
+          <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarRelatoriosGerenciais()">Limpar</button>
+        </form>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-header">
+            <h3 class="card-title">Pragas por mês (pivot)</h3>
+            <div style="display:flex;gap:8px">
+              <select class="form-select" id="gerPivotTipo" onchange="carregarPivotGerencial()" style="width:auto">
+                <option value="praga">Pragas</option>
+                <option value="doenca">Doenças</option>
+                <option value="planta_daninha">Plantas daninhas</option>
+                <option value="clima">Clima</option>
+                <option value="todos">Todos os tipos</option>
+              </select>
+              <select class="form-select" id="gerPivotMedida" onchange="carregarPivotGerencial()" style="width:auto">
+                <option value="ocorrencias">Nº de ocorrências</option>
+                <option value="quantidade">Quantidade contada</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-hint" style="margin-bottom:10px">Linhas: pragas · colunas: meses da safra (ou da safra do plantio escolhido no filtro).</div>
+            <div id="gerPivot" style="overflow-x:auto"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-header"><h3 class="card-title">Ocorrências por praga / doença</h3></div>
+          <div class="card-body" style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Item</th><th>Tipo</th><th style="text-align:right">Ocorrências</th><th style="text-align:right">Monitoramentos</th><th style="text-align:right">Áreas</th><th style="text-align:right">Qtd. total</th><th style="text-align:right">Média</th><th>Período</th></tr></thead>
+              <tbody id="gerPorPraga"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-header"><h3 class="card-title">Ocorrências por área</h3></div>
+          <div class="card-body" style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Área / Cliente</th><th style="text-align:right">Hectares</th><th style="text-align:right">Monitoramentos</th><th style="text-align:right">Dias</th><th style="text-align:right">Ocorrências</th><th style="text-align:right">Críticos</th></tr></thead>
+              <tbody id="gerPorArea"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-header"><h3 class="card-title">Hectares por cliente</h3></div>
+          <div class="card-body" style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Cliente</th><th style="text-align:right">Áreas</th><th style="text-align:right">Hectares</th><th style="text-align:right">Alqueires</th><th style="text-align:right">Média ha/área</th></tr></thead>
+              <tbody id="gerHectares"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- PÁGINA: Clientes -->
       <div class="page" id="page-clientes">
         <div class="card">
@@ -1081,24 +1301,33 @@ tr:hover td { background: var(--gray-50); }
             <h3 class="card-title">🧑‍🌾 Clientes</h3>
           </div>
           <div class="card-body">
-            <form onsubmit="salvarCliente(event)" style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:20px">
+            <form id="formCliente" onsubmit="salvarCliente(event)" novalidate style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:10px;align-items:start;margin-bottom:20px">
               <div class="form-group" style="margin:0">
                 <label class="form-label">Nome *</label>
-                <input type="text" class="form-input" id="clienteNome" placeholder="Ex: Exemplo Agropecuária" required>
+                <input type="text" class="form-input" id="clienteNome" data-campo="nome" placeholder="Ex: Exemplo Agropecuária">
               </div>
               <div class="form-group" style="margin:0">
                 <label class="form-label">Documento (CPF/CNPJ)</label>
-                <input type="text" class="form-input" id="clienteDocumento" placeholder="Opcional">
+                <input type="text" class="form-input" id="clienteDocumento" data-campo="documento" placeholder="Opcional">
               </div>
               <div class="form-group" style="margin:0">
                 <label class="form-label">Telefone</label>
-                <input type="text" class="form-input" id="clienteTelefone" placeholder="Opcional">
+                <input type="text" class="form-input" id="clienteTelefone" data-campo="telefone" placeholder="Opcional">
               </div>
               <div class="form-group" style="margin:0">
                 <label class="form-label">Email</label>
-                <input type="email" class="form-input" id="clienteEmail" placeholder="Opcional">
+                <input type="email" class="form-input" id="clienteEmail" data-campo="email" placeholder="Opcional">
               </div>
-              <button type="submit" class="btn btn-primary" id="btnSalvarCliente">Adicionar</button>
+              <button type="submit" class="btn btn-primary" id="btnSalvarCliente" style="margin-top:20px">Adicionar</button>
+            </form>
+
+            <form class="filtro-form" id="filtroClientes" onsubmit="event.preventDefault(); carregarClientes()">
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroClienteBusca" placeholder="Nome, documento, telefone ou e-mail">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarClientes()">Limpar</button>
             </form>
 
             <table>
@@ -1117,6 +1346,106 @@ tr:hover td { background: var(--gray-50); }
         </div>
       </div>
 
+      <!-- PÁGINA: Usuários (só gestor) -->
+      <div class="page" id="page-usuarios">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title" id="usuarioFormTitulo">👤 Novo Usuário</h3>
+          </div>
+          <div class="card-body">
+            <form id="formUsuario" onsubmit="salvarUsuario(event)" novalidate>
+              <div class="form-row cols-3">
+                <div class="form-group">
+                  <label class="form-label">Nome *</label>
+                  <input type="text" class="form-input" id="usuarioNomeInput" data-campo="nome">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Login *</label>
+                  <input type="text" class="form-input" id="usuarioLogin" data-campo="login" placeholder="Sem espaços, ex: joao.silva" autocomplete="off">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">E-mail</label>
+                  <input type="email" class="form-input" id="usuarioEmail" data-campo="email" placeholder="Opcional">
+                </div>
+              </div>
+              <div class="form-row cols-3">
+                <div class="form-group">
+                  <label class="form-label" id="usuarioSenhaLabel">Senha *</label>
+                  <input type="password" class="form-input" id="usuarioSenha" data-campo="senha" autocomplete="new-password">
+                  <div class="form-hint" id="usuarioSenhaHint" style="display:none">Deixe em branco para manter a senha atual</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Perfil *</label>
+                  <select class="form-select" id="usuarioPerfilInput" data-campo="perfil">
+                    <option value="tecnico">Técnico</option>
+                    <option value="agronomo">Agrônomo</option>
+                    <option value="gestor">Gestor</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Situação</label>
+                  <select class="form-select" id="usuarioAtivo" data-campo="ativo">
+                    <option value="1">Ativo</option>
+                    <option value="0">Inativo</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;justify-content:flex-end">
+                <button type="button" class="btn btn-secondary" id="btnCancelarUsuario" style="display:none" onclick="cancelarEdicaoUsuario()">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="btnSalvarUsuario">Adicionar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Usuários cadastrados</h3>
+          </div>
+          <div class="card-body">
+            <form id="formFiltroUsuarios" onsubmit="event.preventDefault(); carregarUsuarios()" style="display:grid;grid-template-columns:1.6fr 1fr 1fr auto auto;gap:10px;align-items:end;margin-bottom:20px">
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroUsuarioBusca" placeholder="Nome, login ou e-mail">
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Perfil</label>
+                <select class="form-select" id="filtroUsuarioPerfil">
+                  <option value="">Todos</option>
+                  <option value="gestor">Gestor</option>
+                  <option value="agronomo">Agrônomo</option>
+                  <option value="tecnico">Técnico</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Situação</label>
+                <select class="form-select" id="filtroUsuarioAtivo">
+                  <option value="">Todos</option>
+                  <option value="1">Ativos</option>
+                  <option value="0">Inativos</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="document.getElementById('formFiltroUsuarios').reset(); carregarUsuarios()">Limpar</button>
+            </form>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Login</th>
+                  <th>E-mail</th>
+                  <th>Perfil</th>
+                  <th>Situação</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="usuariosBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- PÁGINA: Safras -->
       <div class="page" id="page-safras">
         <div class="card">
@@ -1128,20 +1457,33 @@ tr:hover td { background: var(--gray-50); }
               Com mês e ano, o sistema calcula sozinho qual safra está valendo hoje — e usa isso pra
               pré-preencher a safra certa ao cadastrar uma área, sem você precisar lembrar de marcar "ativa" na mão.
             </div>
-            <form onsubmit="salvarSafra(event)" style="display:grid;grid-template-columns:1.6fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:20px">
+            <form id="formSafra" onsubmit="salvarSafra(event)" novalidate style="display:grid;grid-template-columns:1.6fr 1fr 1fr auto;gap:10px;align-items:start;margin-bottom:20px">
               <div class="form-group" style="margin:0">
                 <label class="form-label">Nome da Safra *</label>
-                <input type="text" class="form-input" id="safraNome" placeholder="Ex: Safra 2026/2027" required>
+                <input type="text" class="form-input" id="safraNome" data-campo="nome" placeholder="Ex: Safra 2026/2027">
               </div>
               <div class="form-group" style="margin:0">
                 <label class="form-label">Início (mês/ano) *</label>
-                <input type="month" class="form-input" id="safraInicio" required>
+                <input type="month" class="form-input" id="safraInicio" data-campo="mes_inicio ano_inicio">
               </div>
               <div class="form-group" style="margin:0">
                 <label class="form-label">Fim (mês/ano) *</label>
-                <input type="month" class="form-input" id="safraFim" required>
+                <input type="month" class="form-input" id="safraFim" data-campo="mes_fim ano_fim">
               </div>
-              <button type="submit" class="btn btn-primary" id="btnSalvarSafra">Adicionar</button>
+              <button type="submit" class="btn btn-primary" id="btnSalvarSafra" style="margin-top:20px">Adicionar</button>
+            </form>
+
+            <form class="filtro-form" id="filtroSafras" onsubmit="event.preventDefault(); carregarSafras()">
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroSafraBusca" placeholder="Nome da safra">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Ano</label>
+                <input type="number" class="form-input" id="filtroSafraAno" placeholder="Ex: 2026" min="2000" max="2100">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarSafras()">Limpar</button>
             </form>
 
             <table>
@@ -1169,39 +1511,60 @@ tr:hover td { background: var(--gray-50); }
             <div style="padding:10px 14px;background:var(--green-50);border-radius:var(--radius-sm);font-size:12px;color:var(--green-700);margin-bottom:16px">
               Lance a colheita no fim da safra (uma por plantio). Esses dados alimentam o resumo da safra e o comparativo entre safras.
             </div>
-            <form onsubmit="salvarColheita(event)" style="margin-bottom:20px">
-              <div style="display:grid;grid-template-columns:1fr 1.6fr 1fr 1fr 1fr;gap:10px;align-items:end">
+            <form id="formColheita" onsubmit="salvarColheita(event)" style="margin-bottom:20px" novalidate>
+              <div style="display:grid;grid-template-columns:1fr 1.6fr 1fr 1fr 1fr;gap:10px;align-items:start">
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Área *</label>
                   <select class="form-select" id="colheitaArea" onchange="carregarPlantiosColheita()" required></select>
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Plantio *</label>
-                  <select class="form-select" id="colheitaPlantio" required>
+                  <select class="form-select" id="colheitaPlantio" data-campo="plantio_id" required>
                     <option value="">Selecione a área primeiro</option>
                   </select>
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Data da colheita *</label>
-                  <input type="date" class="form-input" id="colheitaData" required>
+                  <input type="date" class="form-input" id="colheitaData" data-campo="data_colheita" required>
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Produtividade (sc/ha) *</label>
-                  <input type="number" class="form-input" id="colheitaProd" min="0.01" step="0.01" placeholder="Ex: 62,5" required>
+                  <input type="number" class="form-input" id="colheitaProd" data-campo="produtividade_sc_ha" min="0.01" step="0.01" placeholder="Ex: 62,5" required>
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Umidade (%)</label>
-                  <input type="number" class="form-input" id="colheitaUmidade" min="0" max="100" step="0.1" placeholder="Ex: 14">
+                  <input type="number" class="form-input" id="colheitaUmidade" data-campo="umidade_pct" min="0" max="100" step="0.1" placeholder="Ex: 14">
                 </div>
               </div>
               <div style="display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:end;margin-top:10px">
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Observações</label>
-                  <input type="text" class="form-input" id="colheitaObs" placeholder="Ex: perdas na plataforma, chuva na colheita...">
+                  <input type="text" class="form-input" id="colheitaObs" data-campo="observacoes" placeholder="Ex: perdas na plataforma, chuva na colheita...">
                 </div>
                 <button type="button" class="btn btn-secondary" id="btnCancelarColheita" onclick="cancelarEdicaoColheita()" style="display:none">Cancelar</button>
                 <button type="submit" class="btn btn-primary" id="btnSalvarColheita">Adicionar</button>
               </div>
+            </form>
+
+            <form class="filtro-form" id="filtroColheitas" onsubmit="event.preventDefault(); carregarColheitas()">
+              <div class="form-group">
+                <label class="form-label">Área</label>
+                <select class="form-select" id="filtroColheitaArea" onchange="carregarColheitas()"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Safra</label>
+                <select class="form-select" id="filtroColheitaSafra" onchange="carregarColheitas()"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Cultura</label>
+                <select class="form-select" id="filtroColheitaCultura" onchange="carregarColheitas()"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroColheitaBusca" placeholder="Área, cliente ou variedade">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarColheitas()">Limpar</button>
             </form>
 
             <div style="overflow-x:auto">
@@ -1235,31 +1598,31 @@ tr:hover td { background: var(--gray-50); }
             <div style="padding:10px 14px;background:var(--green-50);border-radius:var(--radius-sm);font-size:12px;color:var(--green-700);margin-bottom:16px">
               Só área, plantio, data e produto são obrigatórios. Preencha dose e tipo quando tiver a informação.
             </div>
-            <form onsubmit="salvarAplicacao(event)" style="margin-bottom:20px">
-              <div style="display:grid;grid-template-columns:1fr 1.6fr 1fr 1.4fr;gap:10px;align-items:end">
+            <form id="formAplicacao" onsubmit="salvarAplicacao(event)" style="margin-bottom:20px" novalidate>
+              <div style="display:grid;grid-template-columns:1fr 1.6fr 1fr 1.4fr;gap:10px;align-items:start">
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Área *</label>
                   <select class="form-select" id="aplicArea" onchange="carregarPlantiosAplicacao()" required></select>
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Plantio *</label>
-                  <select class="form-select" id="aplicPlantio" required>
+                  <select class="form-select" id="aplicPlantio" data-campo="plantio_id" required>
                     <option value="">Selecione a área primeiro</option>
                   </select>
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Data *</label>
-                  <input type="date" class="form-input" id="aplicData" required>
+                  <input type="date" class="form-input" id="aplicData" data-campo="data_aplicacao" required>
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Produto *</label>
-                  <input type="text" class="form-input" id="aplicProduto" maxlength="150" placeholder="Ex: Engeo Pleno" required>
+                  <input type="text" class="form-input" id="aplicProduto" data-campo="produto" maxlength="150" placeholder="Ex: Engeo Pleno" required>
                 </div>
               </div>
               <div style="display:grid;grid-template-columns:1fr 0.8fr 0.8fr 2fr auto auto;gap:10px;align-items:end;margin-top:10px">
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Tipo</label>
-                  <select class="form-select" id="aplicTipo">
+                  <select class="form-select" id="aplicTipo" data-campo="tipo_produto">
                     <option value="">—</option>
                     <option value="defensivo">Defensivo</option>
                     <option value="adubo">Adubo / foliar</option>
@@ -1268,20 +1631,54 @@ tr:hover td { background: var(--gray-50); }
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Dose</label>
-                  <input type="number" class="form-input" id="aplicDose" min="0" step="0.01">
+                  <input type="number" class="form-input" id="aplicDose" data-campo="dose" min="0" step="0.01">
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Unidade</label>
-                  <input type="text" class="form-input" id="aplicUnidade" list="aplicUnidades" maxlength="20" placeholder="L/ha">
+                  <input type="text" class="form-input" id="aplicUnidade" data-campo="unidade_dose" list="aplicUnidades" maxlength="20" placeholder="L/ha">
                   <datalist id="aplicUnidades"><option value="L/ha"><option value="mL/ha"><option value="kg/ha"><option value="g/ha"></datalist>
                 </div>
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Observações</label>
-                  <input type="text" class="form-input" id="aplicObs" placeholder="Ex: controle de percevejo, aplicação aérea...">
+                  <input type="text" class="form-input" id="aplicObs" data-campo="observacoes" placeholder="Ex: controle de percevejo, aplicação aérea...">
                 </div>
                 <button type="button" class="btn btn-secondary" id="btnCancelarAplicacao" onclick="cancelarEdicaoAplicacao()" style="display:none">Cancelar</button>
                 <button type="submit" class="btn btn-primary" id="btnSalvarAplicacao">Adicionar</button>
               </div>
+            </form>
+
+            <form class="filtro-form" id="filtroAplicacoes" onsubmit="event.preventDefault(); carregarAplicacoes()">
+              <div class="form-group">
+                <label class="form-label">Área</label>
+                <select class="form-select" id="filtroAplicArea" onchange="carregarAplicacoes()"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Safra</label>
+                <select class="form-select" id="filtroAplicSafra" onchange="carregarAplicacoes()"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tipo</label>
+                <select class="form-select" id="filtroAplicTipo" onchange="carregarAplicacoes()">
+                  <option value="">Todos</option>
+                  <option value="defensivo">Defensivo</option>
+                  <option value="adubo">Adubo / foliar</option>
+                  <option value="corretivo">Corretivo</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">De</label>
+                <input type="date" class="form-input" id="filtroAplicInicio" onchange="carregarAplicacoes()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Até</label>
+                <input type="date" class="form-input" id="filtroAplicFim" onchange="carregarAplicacoes()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-input" id="filtroAplicBusca" placeholder="Produto, área, cliente ou observação">
+              </div>
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarAplicacoes()">Limpar</button>
             </form>
 
             <div style="overflow-x:auto">
@@ -1344,7 +1741,7 @@ tr:hover td { background: var(--gray-50); }
 <div id="modal-config" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;overflow:auto">
   <div style="background:white;border-radius:var(--radius);max-width:500px;margin:50px auto;padding:24px;box-shadow:var(--shadow-md)">
     <h2 id="modal-titulo" style="margin-bottom:20px;font-size:16px;font-weight:700">Novo</h2>
-    <form id="form-config" style="display:grid;gap:16px" onsubmit="salvarNovoItemConfig(event)">
+    <form id="form-config" style="display:grid;gap:16px" onsubmit="salvarNovoItemConfig(event)" novalidate>
       <!-- Campos dinâmicos inseridos aqui -->
     </form>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px">
@@ -1360,9 +1757,153 @@ tr:hover td { background: var(--gray-50); }
 <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
-const API = 'api/index.php';
+// Endereço da API Laravel — único lugar a mudar ao trocar de servidor.
+// 127.0.0.1 e não "localhost": no Windows, "localhost" tenta antes o IPv6 (::1),
+// que o "php artisan serve" não escuta, e cada chamada perde ~0,2 s.
+const API = 'http://127.0.0.1:8000/api';
 const state = { areas: [], plantios: [], monitoramentos: [], culturas: [], pragas: [], pontos: [], clientes: [] };
 let map;
+
+// ============= AUTENTICAÇÃO =============
+const CHAVE_TOKEN = 'agromonitor_token';
+let usuarioLogado = null;
+const NOMES_PERFIL = { gestor: 'Gestor', agronomo: 'Agrônomo', tecnico: 'Técnico' };
+
+function lerToken() {
+  try { return localStorage.getItem(CHAVE_TOKEN); } catch (e) { return null; }
+}
+
+function gravarToken(token) {
+  try {
+    if (token) localStorage.setItem(CHAVE_TOKEN, token);
+    else localStorage.removeItem(CHAVE_TOKEN);
+  } catch (e) { /* navegador sem localStorage: a sessão dura só até recarregar */ }
+}
+
+// fetch() da API com o token Bearer. Se a API responder 401 (token ausente,
+// expirado ou revogado), limpa a sessão e volta para a tela de login.
+async function apiFetch(url, opcoes = {}) {
+  const headers = new Headers(opcoes.headers || {});
+  headers.set('Accept', 'application/json');
+  const token = lerToken();
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+
+  const r = await fetch(url, { ...opcoes, headers });
+  if (r.status === 401) {
+    encerrarSessao();
+    throw new Error('Sessão expirada. Faça login novamente.');
+  }
+  return r;
+}
+
+// Mostra as mensagens do "erros" da API ao lado de cada campo do formulário.
+// Os campos são achados pelo atributo data-campo (= nome do campo na API; um
+// campo da tela pode responder por vários da API: data-campo="mes_inicio ano_inicio").
+function mostrarErrosCampos(form, erros) {
+  limparErrosCampos(form);
+  Object.entries(erros || {}).forEach(([campo, mensagens]) => {
+    const el = form.querySelector(`[data-campo~="${campo}"]`);
+    if (!el || el.classList.contains('invalido')) return;
+    el.classList.add('invalido');
+    const msg = document.createElement('div');
+    msg.className = 'form-erro';
+    msg.textContent = mensagens[0];
+    el.insertAdjacentElement('afterend', msg);
+  });
+}
+
+function limparErrosCampos(form) {
+  form.querySelectorAll('.form-erro').forEach(m => m.remove());
+  form.querySelectorAll('.invalido').forEach(el => el.classList.remove('invalido'));
+}
+
+// Monta a query string dos formulários de filtro: { parametroDaApi: 'idDoCampo' }.
+// Só entram os campos preenchidos. Ex.: '?busca=milho&tipo=praga' ou ''.
+function queryFiltros(campos) {
+  const params = new URLSearchParams();
+  Object.entries(campos).forEach(([param, id]) => {
+    const valor = (document.getElementById(id)?.value || '').trim();
+    if (valor) params.set(param, valor);
+  });
+  const texto = params.toString();
+  return texto ? `?${texto}` : '';
+}
+
+function mostrarLogin() {
+  document.getElementById('loginTela').style.display = 'flex';
+  document.getElementById('loginSenha').value = '';
+  setTimeout(() => document.getElementById('loginUsuario').focus(), 0);
+}
+
+function encerrarSessao() {
+  gravarToken(null);
+  usuarioLogado = null;
+  mostrarLogin();
+}
+
+async function fazerLogin(e) {
+  e.preventDefault();
+  const form = document.getElementById('formLogin');
+  const btn = document.getElementById('btnEntrar');
+  limparErrosCampos(form);
+  btn.disabled = true;
+  btn.textContent = 'Entrando...';
+
+  try {
+    const r = await fetch(`${API}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        login: document.getElementById('loginUsuario').value.trim(),
+        senha: document.getElementById('loginSenha').value
+      })
+    });
+    const d = await r.json().catch(() => null);
+
+    if (d && d.sucesso) {
+      gravarToken(d.dados.token);
+      document.getElementById('loginTela').style.display = 'none';
+      form.reset();
+      iniciarSistema(d.dados.usuario);
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
+    } else {
+      showToast('❌ ' + (d?.erro || 'Não foi possível entrar'), true);
+    }
+  } catch (err) {
+    showToast('❌ Não foi possível conectar à API em ' + API, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  }
+}
+
+async function sair() {
+  try { await apiFetch(`${API}/logout`, { method: 'POST' }); } catch (e) { /* já sem sessão */ }
+  encerrarSessao();
+}
+
+// Esconde os itens do menu (e botões) que o perfil não pode usar (atributo
+// data-perfis; sem o atributo, aparece para todos) e as seções que ficarem vazias.
+function aplicarMenuPorPerfil(perfil) {
+  document.querySelectorAll('[data-perfis]').forEach(item => {
+    item.style.display = item.dataset.perfis.split(',').includes(perfil) ? '' : 'none';
+  });
+  document.querySelectorAll('.nav-section').forEach(secao => {
+    const visiveis = [...secao.querySelectorAll('.nav-item')].some(i => i.style.display !== 'none');
+    secao.style.display = visiveis ? '' : 'none';
+  });
+}
+
+// Chamado depois do login (ou ao abrir a página já com token válido)
+function iniciarSistema(usuario) {
+  usuarioLogado = usuario;
+  document.getElementById('usuarioNome').textContent = usuario.nome;
+  document.getElementById('usuarioPerfil').textContent = NOMES_PERFIL[usuario.perfil] || usuario.perfil;
+  aplicarMenuPorPerfil(usuario.perfil);
+  irPara('page-dashboard', document.querySelector('.nav-item[onclick*="page-dashboard"]'));
+  carregarAreas();
+}
 
 function irPara(pagina, elemento) {
   if (pagina !== 'page-mapa' && typeof desligarEdicaoTalhoes === 'function') desligarEdicaoTalhoes();
@@ -1390,10 +1931,12 @@ function irPara(pagina, elemento) {
     'page-adubos': 'Adubos',
     'page-pragas': 'Pragas e Doenças',
     'page-relatorio': 'Relatório',
+    'page-gerencial': 'Relatórios Gerenciais',
     'page-safras': 'Safras',
     'page-colheita': 'Colheita',
     'page-aplicacoes': 'Aplicações',
     'page-clientes': 'Clientes',
+    'page-usuarios': 'Usuários',
     'page-configuracoes': 'Configurações'
   };
   document.getElementById('pageTitle').textContent = titulos[pagina] || 'AgroMonitor';
@@ -1403,9 +1946,9 @@ function irPara(pagina, elemento) {
 
 function carregarConteudoPagina(pagina) {
   if (pagina === 'page-dashboard') carregarDashboard();
-  else if (pagina === 'page-areas') carregarAreas();
+  else if (pagina === 'page-areas') { carregarFiltrosAreas(); carregarAreas(); }
   else if (pagina === 'page-cadastro-area') { /* editarArea() carrega o select de clientes com a seleção certa */ }
-  else if (pagina === 'page-plantio') carregarPlantios();
+  else if (pagina === 'page-plantio') { carregarFiltrosPlantios(); carregarPlantios(); }
   else if (pagina === 'page-novoPlantio') { carregarSelectAreas(); preencherSelectSafra('plantioSafra'); carregarSelectCulturas('plantioCultura'); carregarVariedadesNovoPlantio(); carregarAdubosNovoPlantio(); }
   else if (pagina === 'page-monitoramento') { carregarResumoMonitoramento(); }
   else if (pagina === 'page-registrarMonitoramento') { carregarSelectAreas(); carregarPragas(); limparItensPraga(); }
@@ -1418,8 +1961,10 @@ function carregarConteudoPagina(pagina) {
   else if (pagina === 'page-mapa') abrirPaginaMapa();
   else if (pagina === 'page-importar-earth') { abrirAbaImportar(abaImportarAtual || 'desenhar'); carregarSelectClientes('importCliente'); }
   else if (pagina === 'page-relatorio') { carregarSelectAreasRelatorio(); carregarSelectClientesRelatorio(); }
+  else if (pagina === 'page-gerencial') carregarPaginaGerencial();
   else if (pagina === 'page-safras') { carregarSafras(); }
   else if (pagina === 'page-clientes') { carregarClientes(); }
+  else if (pagina === 'page-usuarios') { carregarUsuarios(); }
   else if (pagina === 'page-configuracoes') { inicializarConfigRelatorio(); }
 }
 
@@ -1448,7 +1993,7 @@ function animarNumero(elId, valorFinal, casasDecimais = 0, sufixo = '') {
 async function carregarDashboard() {
   try {
     const periodo = document.getElementById('dashPeriodo')?.value || '6';
-    const r = await fetch(`${API}/dashboard?periodo=${encodeURIComponent(periodo)}`);
+    const r = await apiFetch(`${API}/dashboard?periodo=${encodeURIComponent(periodo)}`);
     const d = await r.json();
     if (!d.sucesso) throw new Error(d.erro || 'Erro ao carregar dashboard');
     const dados = d.dados;
@@ -1629,7 +2174,7 @@ async function excluirArea(id) {
   if (!confirmado) return;
 
   try {
-    const r = await fetch(`${API}/areas/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/areas/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
 
     if (!d) {
@@ -1652,13 +2197,47 @@ async function excluirArea(id) {
 
 async function carregarAreas() {
   try {
-    const r = await fetch(`${API}/areas`);
+    const filtros = queryFiltros({ busca: 'filtroAreaBusca', cliente_id: 'filtroAreaCliente', safra_id: 'filtroAreaSafra' });
+    const r = await apiFetch(`${API}/areas${filtros}`);
     const d = await r.json();
     state.areas = d.dados || [];
     renderAreasGrid(state.areas);
+  } catch (e) { console.error(e); }
+}
 
-    const filtro = document.getElementById('areasFiltro');
-    if (filtro && filtro.value) filtrarAreas(); // reaplica o filtro se já tinha algo digitado
+// Preenche um select de formulário de filtro (opção vazia = todos), mantendo a escolha atual
+function preencherSelectFiltro(id, vazio, itens) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const atual = el.value;
+  el.innerHTML = `<option value="">${vazio}</option>` +
+    itens.map(i => `<option value="${i.id}">${escHTML(i.nome)}</option>`).join('');
+  el.value = atual;
+}
+
+// Selects de cliente e safra do filtro da tela de Áreas
+async function carregarFiltrosAreas() {
+  try {
+    const [clientes, safras] = await Promise.all([
+      apiFetch(`${API}/clientes`).then(r => r.json()),
+      apiFetch(`${API}/safras`).then(r => r.json())
+    ]);
+    preencherSelectFiltro('filtroAreaCliente', 'Todos', clientes.dados || []);
+    preencherSelectFiltro('filtroAreaSafra', 'Todas', safras.dados || []);
+  } catch (e) { console.error(e); }
+}
+
+// Selects de área, safra e cultura do filtro do Histórico de Plantios
+async function carregarFiltrosPlantios() {
+  try {
+    const [areas, safras, culturas] = await Promise.all([
+      apiFetch(`${API}/areas`).then(r => r.json()),
+      apiFetch(`${API}/safras`).then(r => r.json()),
+      apiFetch(`${API}/culturas`).then(r => r.json())
+    ]);
+    preencherSelectFiltro('filtroPlantioArea', 'Todas', areas.dados || []);
+    preencherSelectFiltro('filtroPlantioSafra', 'Todas', safras.dados || []);
+    preencherSelectFiltro('filtroPlantioCultura', 'Todas', culturas.dados || []);
   } catch (e) { console.error(e); }
 }
 
@@ -1687,21 +2266,9 @@ function renderAreasGrid(areas) {
   `).join('');
 }
 
-function filtrarAreas() {
-  const termo = (document.getElementById('areasFiltro').value || '').toLowerCase().trim();
-  if (!termo) {
-    renderAreasGrid(state.areas);
-    return;
-  }
-  const filtradas = state.areas.filter(a =>
-    a.nome.toLowerCase().includes(termo) || a.nome_cliente.toLowerCase().includes(termo)
-  );
-  renderAreasGrid(filtradas);
-}
-
 async function carregarSelectAreas() {
   try {
-    const r = await fetch(`${API}/areas`);
+    const r = await apiFetch(`${API}/areas`);
     const d = await r.json();
     state.areas = d.dados || [];
 
@@ -1709,9 +2276,12 @@ async function carregarSelectAreas() {
     selects.forEach(id => {
       const el = document.getElementById(id);
       if (el) {
+        // Mantém a área já escolhida (a resposta pode chegar depois que o usuário ou a edição já escolheu)
+        const atual = el.value;
         el.innerHTML = '<option value="">Selecione...</option>' + state.areas.map(a =>
           `<option value="${a.id}">${a.nome} - ${a.nome_cliente}</option>`
         ).join('');
+        el.value = atual;
       }
     });
   } catch (e) { console.error(e); }
@@ -1719,15 +2289,19 @@ async function carregarSelectAreas() {
 
 async function carregarSelectCulturas(selectId) {
   try {
-    const r = await fetch(`${API}/culturas`);
+    const r = await apiFetch(`${API}/culturas`);
     const d = await r.json();
     state.culturas = d.dados || [];
 
     const el = document.getElementById(selectId);
     if (el) {
-      el.innerHTML = '<option value="">Selecione...</option>' + (d.dados || []).map(c =>
+      // Nos formulários de filtro (filtroVar, filtroPrag) a opção vazia significa "todas"
+      const opcaoVazia = selectId.startsWith('filtro') ? 'Todas' : 'Selecione...';
+      const atual = el.value;
+      el.innerHTML = `<option value="">${opcaoVazia}</option>` + (d.dados || []).map(c =>
         `<option value="${c.id}">${c.nome}</option>`
       ).join('');
+      el.value = atual; // mantém a cultura já escolhida
     }
     
     // Se é o campo de cultura em "Novo Plantio", carregar variedades também
@@ -1742,7 +2316,7 @@ async function carregarSelectCulturas(selectId) {
 // nenhum cliente ainda, o próprio select avisa e sugere ir cadastrar um.
 async function carregarSelectClientes(selectId, valorAtual) {
   try {
-    const r = await fetch(`${API}/clientes`);
+    const r = await apiFetch(`${API}/clientes`);
     const d = await r.json();
     state.clientes = d.dados || [];
 
@@ -1773,7 +2347,7 @@ async function carregarVariedadesNovoPlantio() {
   }
 
   try {
-    const r = await fetch(`${API}/variedades?cultura_id=${culturaId}`);
+    const r = await apiFetch(`${API}/variedades?cultura_id=${culturaId}`);
     const d = await r.json();
     const variedades = d.dados || [];
 
@@ -1789,7 +2363,7 @@ async function carregarVariedadesNovoPlantio() {
 
 async function carregarAdubosNovoPlantio(valorAtual) {
   try {
-    const r = await fetch(`${API}/adubos`);
+    const r = await apiFetch(`${API}/adubos`);
     const d = await r.json();
     const adubos = d.dados || [];
 
@@ -1805,7 +2379,7 @@ async function carregarAdubosNovoPlantio(valorAtual) {
 
 async function carregarSelectAreasMapa() {
   try {
-    const r = await fetch(`${API}/areas`);
+    const r = await apiFetch(`${API}/areas`);
     const d = await r.json();
     state.areas = d.dados || [];
 
@@ -1820,7 +2394,7 @@ async function carregarSelectAreasMapa() {
 
 async function carregarSelectAreasRelatorio() {
   try {
-    const r = await fetch(`${API}/areas`);
+    const r = await apiFetch(`${API}/areas`);
     const d = await r.json();
     const el = document.getElementById('relatorioAreaSelect');
     el.innerHTML = '<option value="">Selecione...</option>' + (d.dados || []).map(a =>
@@ -1831,7 +2405,7 @@ async function carregarSelectAreasRelatorio() {
 
 async function carregarSelectClientesRelatorio() {
   try {
-    const r = await fetch(`${API}/clientes`);
+    const r = await apiFetch(`${API}/clientes`);
     const d = await r.json();
     document.getElementById('relatorioClienteSelect').innerHTML = '<option value="">Selecione...</option>' +
       (d.dados || []).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
@@ -1884,8 +2458,8 @@ function cancelarEdicaoArea() {
   document.getElementById('btnSalvarArea').textContent = 'Salvar Área';
   document.getElementById('btnCancelarEdicaoArea').style.display = 'none';
   document.getElementById('avisoEdicaoArea').style.display = 'none';
-  const form = document.querySelector('#page-cadastro-area form');
-  if (form) form.reset();
+  const form = document.getElementById('formArea');
+  if (form) { form.reset(); limparErrosCampos(form); }
   converterHaAlq();
 }
 
@@ -1913,17 +2487,15 @@ async function salvarArea(e) {
   const clienteId = document.getElementById('inputCliente').value;
   const hectares = parseFloat(document.getElementById('inputHa').value);
   const pontos = parseInt(document.getElementById('qtdPontos').value);
+  const form = document.getElementById('formArea');
+  limparErrosCampos(form);
 
-  if (!nome || !clienteId || !hectares) {
-    showToast('❌ Preencha todos os campos obrigatórios', true);
-    return;
-  }
-
+  // Campos vazios vão como null e a API devolve a mensagem de cada um
   const data = {
     nome: nome,
-    cliente_id: clienteId,
-    hectares: hectares,
-    qtd_pontos: pontos
+    cliente_id: clienteId || null,
+    hectares: isNaN(hectares) ? null : hectares,
+    qtd_pontos: isNaN(pontos) ? null : pontos
   };
 
   const editando = !!editingAreaId;
@@ -1931,7 +2503,7 @@ async function salvarArea(e) {
   const method = editando ? 'PUT' : 'POST';
 
   try {
-    const r = await fetch(url, {
+    const r = await apiFetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -1948,6 +2520,8 @@ async function salvarArea(e) {
       cancelarEdicaoArea();
       carregarAreas();
       carregarDashboard();
+    } else if (d.erros) {
+      mostrarErrosCampos(form, d.erros);
     } else {
       showToast('❌ Erro: ' + (d.erro || 'Desconhecido'), true);
     }
@@ -1959,17 +2533,25 @@ async function salvarArea(e) {
 
 async function carregarPlantios() {
   try {
-    const r = await fetch(`${API}/plantios`);
+    // Os filtros só valem no próprio Histórico: o Dashboard também usa esta
+    // função (últimos plantios) e precisa da lista completa.
+    const noHistorico = document.getElementById('page-plantio').classList.contains('active');
+    const filtros = noHistorico
+      ? queryFiltros({ area_id: 'filtroPlantioArea', safra_id: 'filtroPlantioSafra', cultura_id: 'filtroPlantioCultura', busca: 'filtroPlantioBusca' })
+      : '';
+    const r = await apiFetch(`${API}/plantios${filtros}`);
     const d = await r.json();
     state.plantios = d.dados || [];
 
     const bodies = ['plantioBody', 'dashPlantios'];
     bodies.forEach(id => {
       const tbody = document.getElementById(id);
-      if (tbody) {
+      if (tbody && id === 'plantioBody' && !state.plantios.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-400)">Nenhum plantio encontrado</td></tr>';
+      } else if (tbody) {
         const lista = id === 'plantioBody' ? (state.plantios || []) : (state.plantios || []).slice(0, 10);
         tbody.innerHTML = lista.map(p => {
-          const areaNome = p.area_id != null ? (state.areas.find(a => a.id == p.area_id)?.nome || '—') : '—';
+          const areaNome = p.area_nome || (state.areas.find(a => a.id == p.area_id)?.nome || '—');
           const culturaNome = p.cultura_nome || '—';
           const variedadeNome = p.variedade_nome || '—';
           const acao = id === 'plantioBody'
@@ -2033,8 +2615,8 @@ function cancelarEdicaoPlantio() {
   document.getElementById('novoPlantioTitulo').textContent = 'Registro de Plantio';
   document.getElementById('btnSalvarPlantio').textContent = 'Salvar Plantio';
   document.getElementById('btnCancelarEdicaoPlantio').style.display = 'none';
-  const form = document.querySelector('#page-novoPlantio form');
-  if (form) form.reset();
+  const form = document.getElementById('formPlantio');
+  if (form) { form.reset(); limparErrosCampos(form); }
   carregarTalhoesPlantio();
 
   // Veio do Detalhe do Plantio → volta pra ele
@@ -2061,11 +2643,8 @@ async function salvarPlantio(e) {
     condicao_solo: document.getElementById('plantioSolo').value,
     observacoes: document.getElementById('plantioObs').value
   };
-
-  if (!data.safra_id) {
-    showToast('❌ Selecione a safra', true);
-    return;
-  }
+  const form = document.getElementById('formPlantio');
+  limparErrosCampos(form);
 
   // Área dividida em talhões: manda a variedade de cada talhão plantado
   const talhoes = coletarTalhoesPlantio();
@@ -2082,7 +2661,7 @@ async function salvarPlantio(e) {
   const url = editando ? `${API}/plantios/${editingPlantioId}` : `${API}/plantios`;
 
   try {
-    const r = await fetch(url, {
+    const r = await apiFetch(url, {
       method: editando ? 'PUT' : 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(data)
@@ -2097,6 +2676,11 @@ async function salvarPlantio(e) {
       carregarPlantios();
       carregarDashboard();
       abrirDetalhePlantio(plantioSalvoId);
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
+      // Erros da lista de talhões (talhoes.0.talhao_id...) não têm campo próprio na tela
+      const erroTalhao = Object.keys(d.erros).find(c => c.startsWith('talhoes.'));
+      showToast('❌ ' + (erroTalhao ? d.erros[erroTalhao][0] : 'Corrija os campos destacados'), true);
     } else {
       showToast('❌ Erro: ' + (d?.erro || 'Desconhecido'), true);
     }
@@ -2118,7 +2702,7 @@ async function carregarPontosMon() {
   select.innerHTML = '<option value="">Carregando pontos...</option>';
 
   try {
-    const r = await fetch(`${API}/pontos?area_id=${areaId}`);
+    const r = await apiFetch(`${API}/pontos?area_id=${areaId}`);
     const d = await r.json();
     const pontos = (d.dados || []).slice().sort((a, b) => a.numero_ponto - b.numero_ponto);
 
@@ -2151,7 +2735,7 @@ async function carregarPlantiosMon() {
   select.innerHTML = '<option value="">Carregando plantios...</option>';
 
   try {
-    const r = await fetch(`${API}/plantios?area_id=${areaId}`);
+    const r = await apiFetch(`${API}/plantios?area_id=${areaId}`);
     const d = await r.json();
     const plantios = d.dados || [];
 
@@ -2420,7 +3004,7 @@ function coletarItensPraga() {
 
 async function carregarAdubosParaMonitoramento() {
   try {
-    const r = await fetch(`${API}/adubos`);
+    const r = await apiFetch(`${API}/adubos`);
     const d = await r.json();
     const select = document.getElementById('monAdubo');
     if (!select) return;
@@ -2471,7 +3055,7 @@ function removerFotoStaged(index) {
 async function excluirFotoMonitoramento(fotoId, aoConcluir) {
   if (!confirm('Excluir esta foto? Essa ação não pode ser desfeita.')) return;
   try {
-    const r = await fetch(`${API}/monitoramento-fotos/${fotoId}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/monitoramento-fotos/${fotoId}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
     if (d && d.sucesso) {
       showToast('🗑️ Foto excluída');
@@ -2494,7 +3078,7 @@ function excluirFotoDoForm(fotoId) {
 // Favoritar = escolher a foto pro relatório do dia
 async function alternarFavoritaFoto(fotoId, favorita, aoConcluir) {
   try {
-    const r = await fetch(`${API}/monitoramento-fotos/${fotoId}`, {
+    const r = await apiFetch(`${API}/monitoramento-fotos/${fotoId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ favorita })
@@ -2514,7 +3098,7 @@ async function alternarFavoritaFoto(fotoId, favorita, aoConcluir) {
 // Legenda opcional da foto (aparece embaixo dela no relatório do dia)
 async function salvarLegendaFoto(fotoId, texto) {
   try {
-    const r = await fetch(`${API}/monitoramento-fotos/${fotoId}`, {
+    const r = await apiFetch(`${API}/monitoramento-fotos/${fotoId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ descricao: texto.trim() })
@@ -2568,8 +3152,8 @@ function renderMonFotosPreview() {
     ${legenda || ''}
     </div>`;
 
-  const existentesHTML = monFotosExistentes.map(f => miniatura(f.url, `excluirFotoDoForm(${f.id})`, '', botaoFavoritaHTML(f, `favoritarFotoDoForm(${f.id})`),
-    campoLegendaHTML(f.descricao, `salvarLegendaFoto(${f.id}, this.value)`, 90))).join('');
+  const existentesHTML = monFotosExistentes.map(f => miniatura(f.url, `excluirFotoDoForm('${f.id}')`, '', botaoFavoritaHTML(f, `favoritarFotoDoForm('${f.id}')`),
+    campoLegendaHTML(f.descricao, `salvarLegendaFoto('${f.id}', this.value)`, 90))).join('');
   // Fotos novas: a legenda fica guardada no próprio File e vai junto no upload
   const stagedHTML = monFotosStaged.map((file, i) => miniatura(URL.createObjectURL(file), `removerFotoStaged(${i})`, 'nova', '',
     campoLegendaHTML(file.descricao, `monFotosStaged[${i}].descricao = this.value`, 90))).join('');
@@ -2589,7 +3173,7 @@ async function enviarFotosStaged(monitoramentoId) {
     fd.append('foto', file);
     if (file.descricao) fd.append('descricao', file.descricao);
     try {
-      const r = await fetch(`${API}/monitoramento-fotos`, { method: 'POST', body: fd });
+      const r = await apiFetch(`${API}/monitoramento-fotos`, { method: 'POST', body: fd });
       const d = await r.json().catch(() => null);
       if (!d || !d.sucesso) falhas++;
     } catch (e) {
@@ -2665,7 +3249,7 @@ function cancelarEdicaoMonitoramento() {
   document.getElementById('btnSalvarMonitoramento').textContent = 'Salvar Monitoramento';
   document.getElementById('btnCancelarEdicaoMonitoramento').style.display = 'none';
   const form = document.querySelector('#page-registrarMonitoramento form');
-  if (form) form.reset();
+  if (form) { form.reset(); limparErrosCampos(form); }
   limparItensPraga();
   monFotosStaged = [];
   monFotosExistentes = [];
@@ -2724,16 +3308,13 @@ async function salvarMonitoramento(e) {
     itens: itens
   };
 
-  if (!plantioId) {
-    showToast('❌ Selecione o plantio que está sendo monitorado', true);
-    return;
-  }
-
+  const form = document.getElementById('formMonitoramento');
+  limparErrosCampos(form);
   const editando = !!editingMonitoramentoId;
   const url = editando ? `${API}/monitoramentos/${editingMonitoramentoId}` : `${API}/monitoramentos`;
 
   try {
-    const r = await fetch(url, {
+    const r = await apiFetch(url, {
       method: editando ? 'PUT' : 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(data)
@@ -2748,6 +3329,11 @@ async function salvarMonitoramento(e) {
       cancelarEdicaoMonitoramento();
       carregarDashboard();
       abrirDetalheMonitoramento(monitoramentoId);
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
+      // Erros da lista de pragas (itens.0.nome...) não têm campo próprio na tela
+      const erroItem = Object.keys(d.erros).find(c => c.startsWith('itens.'));
+      showToast('❌ ' + (erroItem ? d.erros[erroItem][0] : 'Corrija os campos destacados'), true);
     } else {
       showToast('❌ Erro: ' + (d?.erro || 'Desconhecido'), true);
     }
@@ -2760,7 +3346,7 @@ async function salvarMonitoramento(e) {
 // por plantio. Clicar num plantio abre a lista de monitoramentos dele.
 async function carregarResumoMonitoramento() {
   try {
-    const r = await fetch(`${API}/resumo-monitoramento`);
+    const r = await apiFetch(`${API}/resumo-monitoramento`);
     const d = await r.json();
     const linhas = d.dados || [];
     const div = document.getElementById('resumoMonitoramento');
@@ -2825,7 +3411,7 @@ async function verMonitoramentosDoPlantio(plantioId, culturaNome, dataPlantioFmt
 
 async function carregarMonitoramentosDoPlantio(plantioId) {
   try {
-    const r = await fetch(`${API}/monitoramentos?plantio_id=${plantioId}`);
+    const r = await apiFetch(`${API}/monitoramentos?plantio_id=${plantioId}`);
     const d = await r.json();
     const monitoramentos = d.dados || [];
     state.monitoramentos = monitoramentos;
@@ -2837,8 +3423,10 @@ async function carregarMonitoramentosDoPlantio(plantioId) {
       return;
     }
 
+    // Só gestor e agrônomo excluem monitoramento (o técnico lança e edita)
+    const podeExcluirMon = ['gestor', 'agronomo'].includes(usuarioLogado?.perfil);
     div.innerHTML = monitoramentos.map(m => {
-      const resultado = m.resultado_final != null ? `${parseFloat(m.resultado_final).toFixed(1)}${m.unidade_resultado || (m.cultura_nome === 'Soja' ? '/m²' : '%')}` : '—';
+      const resultado =m.resultado_final != null ? `${parseFloat(m.resultado_final).toFixed(1)}${m.unidade_resultado || (m.cultura_nome === 'Soja' ? '/m²' : '%')}` : '—';
       const critico = m.nivel_controle === 'critico';
       const itens = m.itens || [];
       const badgeTipo = (tipo) => tipo === 'doenca' ? 'badge-amber' : (tipo === 'clima' ? 'badge-info' : (tipo === 'planta_daninha' ? 'badge-green' : 'badge-red'));
@@ -2864,7 +3452,7 @@ async function carregarMonitoramentosDoPlantio(plantioId) {
         : '';
 
       return `
-        <div style="border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:16px;cursor:pointer;${critico ? 'border-left:4px solid #dc2626' : ''}" onclick="abrirDetalheMonitoramento(${m.id})">
+        <div style="border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:16px;cursor:pointer;${critico ? 'border-left:4px solid #dc2626' : ''}" onclick="abrirDetalheMonitoramento('${m.id}')">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
             <div style="min-width:0">
               <div style="font-weight:600">${m.area_nome || 'Área #' + m.area_id} — Ponto ${m.numero_ponto ?? '?'}</div>
@@ -2877,8 +3465,8 @@ async function carregarMonitoramentosDoPlantio(plantioId) {
               ${fotosHTML}
             </div>
             <div style="display:flex;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
-              <button type="button" class="btn btn-secondary btn-sm" onclick="editarMonitoramento(${m.id})" title="Editar">✏️</button>
-              <button type="button" class="btn btn-secondary btn-sm" style="color:#dc2626" onclick="excluirMonitoramento(${m.id})" title="Excluir">🗑️</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="editarMonitoramento('${m.id}')" title="Editar">✏️</button>
+              ${podeExcluirMon ? `<button type="button" class="btn btn-secondary btn-sm" style="color:#dc2626" onclick="excluirMonitoramento('${m.id}')" title="Excluir">🗑️</button>` : ''}
             </div>
           </div>
         </div>`;
@@ -2927,7 +3515,7 @@ async function carregarDetalheMonitoramento(id) {
   const conteudo = document.getElementById('detMonConteudo');
   conteudo.innerHTML = 'Carregando...';
   try {
-    const r = await fetch(`${API}/monitoramentos/${id}`);
+    const r = await apiFetch(`${API}/monitoramentos/${id}`);
     const d = await r.json();
     const m = (d.dados || [])[0];
     if (!m) {
@@ -2941,7 +3529,7 @@ async function carregarDetalheMonitoramento(id) {
     document.getElementById('btnEditarDetMon').onclick = () => editarMonitoramento(m.id);
     document.getElementById('btnExcluirDetMon').onclick = async () => {
       if (!confirm('Excluir este monitoramento? Essa ação não pode ser desfeita.')) return;
-      const rr = await fetch(`${API}/monitoramentos/${m.id}`, { method: 'DELETE' });
+      const rr = await apiFetch(`${API}/monitoramentos/${m.id}`, { method: 'DELETE' });
       const dd = await rr.json().catch(() => null);
       if (dd && dd.sucesso) {
         showToast('🗑️ Monitoramento excluído');
@@ -2994,11 +3582,11 @@ async function carregarDetalheMonitoramento(id) {
       ? `<div style="display:flex;flex-wrap:wrap;gap:10px">${fotos.map(f => `
           <div style="width:120px"><div style="position:relative;width:120px;height:120px">
             <img src="${f.url}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--gray-200);cursor:pointer" onclick="window.open('${f.url}','_blank')" title="Clique pra ver em tamanho grande">
-            ${botaoFavoritaHTML(f, `alternarFavoritaFoto(${f.id}, ${f.favorita == 1 ? 0 : 1}, () => carregarDetalheMonitoramento(${m.id}))`)}
-            <button type="button" onclick="excluirFotoMonitoramento(${f.id}, () => carregarDetalheMonitoramento(${m.id}))" title="Excluir foto"
+            ${botaoFavoritaHTML(f, `alternarFavoritaFoto('${f.id}', ${f.favorita == 1 ? 0 : 1}, () => carregarDetalheMonitoramento('${m.id}'))`)}
+            <button type="button" onclick="excluirFotoMonitoramento('${f.id}', () => carregarDetalheMonitoramento('${m.id}'))" title="Excluir foto"
               style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#dc2626;color:white;border:2px solid white;cursor:pointer;font-size:12px;line-height:1;padding:0">×</button>
           </div>
-          ${campoLegendaHTML(f.descricao, `salvarLegendaFoto(${f.id}, this.value)`, 120)}
+          ${campoLegendaHTML(f.descricao, `salvarLegendaFoto('${f.id}', this.value)`, 120)}
           </div>`).join('')}</div>`
       : '<p style="color:var(--gray-400);font-size:13px">Nenhuma foto anexada a este monitoramento</p>';
 
@@ -3075,7 +3663,7 @@ function voltarDoDetalheMonitoramento() {
 async function excluirMonitoramento(id) {
   if (!confirm('Excluir este monitoramento? Essa ação não pode ser desfeita.')) return;
   try {
-    const r = await fetch(`${API}/monitoramentos/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/monitoramentos/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
     if (d && d.sucesso) {
       showToast('🗑️ Monitoramento excluído');
@@ -3093,7 +3681,7 @@ async function excluirMonitoramento(id) {
 async function excluirPlantio(id, doDetalhe = false) {
   if (!confirm('Excluir este registro de plantio? Essa ação não pode ser desfeita.')) return;
   try {
-    const r = await fetch(`${API}/plantios/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/plantios/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
     if (d && d.sucesso) {
       showToast('🗑️ Plantio excluído');
@@ -3110,11 +3698,15 @@ async function excluirPlantio(id, doDetalhe = false) {
 
 async function carregarCulturas() {
   try {
-    const r = await fetch(`${API}/culturas`);
+    const r = await apiFetch(`${API}/culturas${queryFiltros({ busca: 'filtroCulturaBusca' })}`);
     const d = await r.json();
     state.culturas = d.dados || [];
 
     const tbody = document.getElementById('culturasList');
+    if (!state.culturas.length) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--gray-400)">Nenhuma cultura encontrada</td></tr>';
+      return;
+    }
     tbody.innerHTML = state.culturas.map(c => `
       <tr>
         <td>${c.nome}</td>
@@ -3131,16 +3723,15 @@ async function carregarCulturas() {
 async function carregarVariedades() {
   try {
     console.log('Carregando variedades...');
-    const cultura = document.getElementById('filtroVar').value;
-    const url = cultura ? `${API}/variedades?cultura_id=${cultura}` : `${API}/variedades`;
-    const r = await fetch(url);
+    const url = `${API}/variedades${queryFiltros({ cultura_id: 'filtroVar', busca: 'filtroVarBusca' })}`;
+    const r = await apiFetch(url);
     const d = await r.json();
     state.variedades = d.dados || d || [];
 
     console.log('Variedades carregadas:', state.variedades);
 
     // Carregar culturas para tradução
-    const rCult = await fetch(`${API}/culturas`);
+    const rCult = await apiFetch(`${API}/culturas`);
     const dCult = await rCult.json();
     const culturas = dCult.dados || dCult || [];
     
@@ -3156,7 +3747,7 @@ async function carregarVariedades() {
     }
     
     if (state.variedades.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">Nenhuma variedade cadastrada</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">Nenhuma variedade encontrada</td></tr>';
       return;
     }
     
@@ -3183,10 +3774,10 @@ async function carregarVariedades() {
 async function carregarAdubos() {
   try {
     console.log('Carregando adubos...');
-    const r = await fetch(`${API}/adubos`);
+    const r = await apiFetch(`${API}/adubos${queryFiltros({ busca: 'filtroAduboBusca' })}`);
     const d = await r.json();
     state.adubos = d.dados || d || [];
-    
+
     console.log('Adubos carregados:', state.adubos);
 
     const tbody = document.getElementById('adubosList');
@@ -3196,7 +3787,7 @@ async function carregarAdubos() {
     }
     
     if (state.adubos.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">Nenhum adubo cadastrado</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">Nenhum adubo encontrado</td></tr>';
       return;
     }
     
@@ -3222,17 +3813,20 @@ async function carregarAdubos() {
 
 async function carregarPragas() {
   try {
-    // v2: pragas.cultura_id é FK de verdade agora (era texto solto antes) —
-    // manda o ID direto, igual já é feito em Variedades
-    const filtroEl = document.getElementById('filtroPrag');
-    const culturaId = filtroEl ? filtroEl.value : '';
-    const url = culturaId ? `${API}/pragas?cultura_id=${encodeURIComponent(culturaId)}` : `${API}/pragas`;
-    const r = await fetch(url);
+    // Os filtros só valem na própria tela de Pragas: o Registrar Monitoramento
+    // também chama esta função e precisa do catálogo inteiro em state.pragas.
+    const naTelaPragas = document.getElementById('page-pragas').classList.contains('active');
+    const filtros = naTelaPragas
+      ? queryFiltros({ cultura_id: 'filtroPrag', tipo: 'filtroPragTipo', nivel_risco: 'filtroPragRisco', busca: 'filtroPragBusca' })
+      : '';
+    const r = await apiFetch(`${API}/pragas${filtros}`);
     const d = await r.json();
     state.pragas = d.dados || [];
 
     const tbody = document.getElementById('pragasList');
-    if (tbody) {
+    if (tbody && !state.pragas.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-400)">Nenhum item encontrado</td></tr>';
+    } else if (tbody) {
       tbody.innerHTML = state.pragas.map(p => {
         const badgeRisco = p.nivel_risco === 'alto' 
           ? '<span class="badge badge-red">Alto</span>'
@@ -3348,7 +3942,7 @@ async function carregarMapaArea() {
   if (modoTodas) {
     pontosBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">Carregando...</td></tr>';
     try {
-      const r = await fetch(`${API}/areas`);
+      const r = await apiFetch(`${API}/areas`);
       const d = await r.json();
       const areas = d.dados || [];
       const bounds = [];
@@ -3392,8 +3986,8 @@ async function carregarMapaArea() {
 
   try {
     const [areaR, pontosR] = await Promise.all([
-      fetch(`${API}/areas/${areaId}`).then(r => r.json()),
-      fetch(`${API}/pontos?area_id=${areaId}`).then(r => r.json())
+      apiFetch(`${API}/areas/${areaId}`).then(r => r.json()),
+      apiFetch(`${API}/pontos?area_id=${areaId}`).then(r => r.json())
     ]);
 
     const area = areaR.dados;
@@ -3482,7 +4076,7 @@ async function salvarPontoInline(id) {
   }
 
   try {
-    const r = await fetch(`${API}/pontos/${id}`, {
+    const r = await apiFetch(`${API}/pontos/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ latitude: lat, longitude: lng })
@@ -3511,7 +4105,7 @@ function criarMarcadorPonto(p) {
   marker.on('dragend', async () => {
     const { lat, lng } = marker.getLatLng();
     try {
-      const r = await fetch(`${API}/pontos/${p.id}`, {
+      const r = await apiFetch(`${API}/pontos/${p.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ latitude: lat, longitude: lng })
@@ -3540,7 +4134,7 @@ async function handleCliqueMapaArea(e) {
   const novoNumero = maxNumero + 1;
 
   try {
-    const r = await fetch(`${API}/pontos`, {
+    const r = await apiFetch(`${API}/pontos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -3568,7 +4162,7 @@ async function excluirPontoIndividual(id) {
   if (!confirm('Remover este ponto? Monitoramentos e ocorrências registrados nele também serão excluídos. Essa ação não pode ser desfeita.')) return;
 
   try {
-    const r = await fetch(`${API}/pontos/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/pontos/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
 
     if (d && d.sucesso) {
@@ -3621,7 +4215,7 @@ async function carregarDetalhePlantio(id) {
   conteudo.innerHTML = 'Carregando...';
   try {
     // Reaproveita os dados do Resumo da Safra (plantio + colheita + talhões + aplicações)
-    const r = await fetch(`${API}/relatorios/safra?plantio_id=${id}`);
+    const r = await apiFetch(`${API}/relatorios/safra?plantio_id=${id}`);
     const resp = await r.json();
     if (!resp.sucesso) {
       conteudo.innerHTML = `<p style="text-align:center;color:var(--gray-400);padding:20px">${escHTML(resp.erro || 'Plantio não encontrado')}</p>`;
@@ -3714,7 +4308,7 @@ async function carregarTalhoesPlantio(selecao = null, variedadeUnica = null) {
   talhoesPlantioForm = [];
   if (areaId) {
     try {
-      const d = await (await fetch(`${API}/talhoes?area_id=${areaId}`)).json();
+      const d = await (await apiFetch(`${API}/talhoes?area_id=${areaId}`)).json();
       talhoesPlantioForm = d.dados || [];
     } catch (e) { console.error(e); }
   }
@@ -4028,7 +4622,7 @@ const editoresTalhoes = {};
 
 // ----- Opção 2: talhões no Mapa da Área (salva direto na API) -----
 async function apiTalhao(metodo, caminho, corpo) {
-  const r = await fetch(`${API}/talhoes${caminho}`, {
+  const r = await apiFetch(`${API}/talhoes${caminho}`, {
     method: metodo,
     headers: { 'Content-Type': 'application/json' },
     body: corpo ? JSON.stringify(corpo) : undefined
@@ -4077,7 +4671,7 @@ async function carregarTalhoesMapa(area) {
   const sel = document.getElementById('mapaColorirPor');
   const valorAnterior = sel.dataset.areaId == areaId ? sel.value : null;
   try {
-    const d = await (await fetch(`${API}/plantios?area_id=${areaId}`)).json();
+    const d = await (await apiFetch(`${API}/plantios?area_id=${areaId}`)).json();
     plantiosMapaArea = d.dados || [];
   } catch (e) { plantiosMapaArea = []; }
   sel.innerHTML = '<option value="">Cores dos talhões</option>' + plantiosMapaArea.map(p =>
@@ -4093,7 +4687,7 @@ async function recarregarTalhoesMapa() {
   if (!editorTalhoesMapa || !areaSelecionadaMapa) return;
   const plantioId = document.getElementById('mapaColorirPor').value;
   try {
-    const d = await (await fetch(`${API}/talhoes?area_id=${areaSelecionadaMapa}${plantioId ? '&plantio_id=' + plantioId : ''}`)).json();
+    const d = await (await apiFetch(`${API}/talhoes?area_id=${areaSelecionadaMapa}${plantioId ? '&plantio_id=' + plantioId : ''}`)).json();
     const lista = (d.dados || []).map(t => plantioId ? t : (({ plantio_variedade_nome, ...resto }) => resto)(t));
     editorTalhoesMapa.carregar(lista);
   } catch (e) {
@@ -4519,11 +5113,8 @@ async function confirmarImportacaoKML() {
 
   const nome = document.getElementById('importNomeArea').value.trim();
   const clienteId = document.getElementById('importCliente').value;
-
-  if (!nome || !clienteId) {
-    showToast('❌ Preencha o Nome da Área e selecione o Cliente', true);
-    return;
-  }
+  const telaNovaArea = document.getElementById('page-importar-earth');
+  limparErrosCampos(telaNovaArea);
 
   const hectares = calcularHectaresGeoJSON(geojsonImportado);
   if (!hectares || hectares <= 0) {
@@ -4536,7 +5127,7 @@ async function confirmarImportacaoKML() {
 
   const data = {
     nome: nome,
-    cliente_id: clienteId,
+    cliente_id: clienteId || null,
     hectares: hectares,
     qtd_pontos: pontos,
     geometria: geojsonImportado,
@@ -4545,7 +5136,7 @@ async function confirmarImportacaoKML() {
   };
 
   try {
-    const r = await fetch(`${API}/areas`, {
+    const r = await apiFetch(`${API}/areas`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -4565,6 +5156,9 @@ async function confirmarImportacaoKML() {
       carregarDashboard();
       // Abre a área recém-criada no mapa (lá dá pra ajustar talhões e pontos)
       verAreaNoMapa(d.id);
+    } else if (d.erros) {
+      mostrarErrosCampos(telaNovaArea, d.erros);
+      showToast('❌ Corrija os campos destacados', true);
     } else {
       showToast('❌ Erro ao salvar: ' + (d.erro || 'Desconhecido'), true);
     }
@@ -4579,14 +5173,14 @@ let editingClienteId = null;
 
 async function carregarClientes() {
   try {
-    const r = await fetch(`${API}/clientes`);
+    const r = await apiFetch(`${API}/clientes${queryFiltros({ busca: 'filtroClienteBusca' })}`);
     const d = await r.json();
     state.clientes = d.dados || [];
     const body = document.getElementById('clientesBody');
     if (!body) return;
 
     if (!state.clientes.length) {
-      body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-400)">Nenhum cliente cadastrado</td></tr>';
+      body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-400)">Nenhum cliente encontrado</td></tr>';
       return;
     }
 
@@ -4613,17 +5207,14 @@ async function salvarCliente(e) {
     telefone: document.getElementById('clienteTelefone').value.trim() || null,
     email: document.getElementById('clienteEmail').value.trim() || null
   };
-
-  if (!data.nome) {
-    showToast('❌ Preencha o nome do cliente', true);
-    return;
-  }
+  const form = document.getElementById('formCliente');
+  limparErrosCampos(form);
 
   const editando = !!editingClienteId;
   const url = editando ? `${API}/clientes/${editingClienteId}` : `${API}/clientes`;
 
   try {
-    const r = await fetch(url, {
+    const r = await apiFetch(url, {
       method: editando ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -4634,6 +5225,8 @@ async function salvarCliente(e) {
       showToast(editando ? '✅ Cliente atualizado!' : '✅ Cliente criado!');
       cancelarEdicaoCliente();
       carregarClientes();
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
     } else {
       showToast('❌ Erro: ' + (d?.erro || 'Desconhecido'), true);
     }
@@ -4657,14 +5250,14 @@ function editarCliente(id) {
 function cancelarEdicaoCliente() {
   editingClienteId = null;
   document.getElementById('btnSalvarCliente').textContent = 'Adicionar';
-  const form = document.querySelector('#page-clientes form');
-  if (form) form.reset();
+  const form = document.getElementById('formCliente');
+  if (form) { form.reset(); limparErrosCampos(form); }
 }
 
 async function excluirCliente(id) {
   if (!confirm('Excluir este cliente? Áreas que já pertencem a ele não são afetadas.')) return;
   try {
-    const r = await fetch(`${API}/clientes/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/clientes/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
     if (d && d.sucesso) {
       showToast('🗑️ Cliente excluído');
@@ -4674,6 +5267,135 @@ async function excluirCliente(id) {
     }
   } catch (e) {
     showToast('❌ Erro de conexão: ' + e.message, true);
+  }
+}
+
+// ============= USUÁRIOS (só gestor) =============
+let editingUsuarioId = null;
+
+async function carregarUsuarios() {
+  const body = document.getElementById('usuariosBody');
+  if (!body) return;
+  const filtros = new URLSearchParams();
+  const busca = document.getElementById('filtroUsuarioBusca').value.trim();
+  const perfil = document.getElementById('filtroUsuarioPerfil').value;
+  const ativo = document.getElementById('filtroUsuarioAtivo').value;
+  if (busca) filtros.set('busca', busca);
+  if (perfil) filtros.set('perfil', perfil);
+  if (ativo) filtros.set('ativo', ativo);
+
+  try {
+    const r = await apiFetch(`${API}/usuarios?${filtros}`);
+    const d = await r.json();
+    if (!d.sucesso) { showToast('❌ ' + (d.erro || 'Erro ao carregar usuários'), true); return; }
+    state.usuarios = d.dados || [];
+
+    if (!state.usuarios.length) {
+      body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-400)">Nenhum usuário encontrado</td></tr>';
+      return;
+    }
+
+    body.innerHTML = state.usuarios.map(u => `
+      <tr>
+        <td>${escHTML(u.nome)}</td>
+        <td>${escHTML(u.login)}</td>
+        <td>${escHTML(u.email || '—')}</td>
+        <td>${NOMES_PERFIL[u.perfil] || escHTML(u.perfil)}</td>
+        <td><span class="badge ${u.ativo ? 'badge-green' : 'badge-red'}">${u.ativo ? 'Ativo' : 'Inativo'}</span></td>
+        <td style="text-align:right;white-space:nowrap">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="editarUsuario(${u.id})">✏️</button>
+          ${usuarioLogado && u.id === usuarioLogado.id ? '' : `<button type="button" class="btn btn-secondary btn-sm" style="color:#dc2626" onclick="excluirUsuario(${u.id})">🗑️</button>`}
+        </td>
+      </tr>`).join('');
+  } catch (e) { console.error(e); }
+}
+
+async function salvarUsuario(e) {
+  e.preventDefault();
+  const form = document.getElementById('formUsuario');
+  limparErrosCampos(form);
+
+  const data = {
+    nome: document.getElementById('usuarioNomeInput').value.trim(),
+    login: document.getElementById('usuarioLogin').value.trim(),
+    email: document.getElementById('usuarioEmail').value.trim() || null,
+    perfil: document.getElementById('usuarioPerfilInput').value,
+    ativo: document.getElementById('usuarioAtivo').value === '1'
+  };
+  const senha = document.getElementById('usuarioSenha').value;
+  if (senha) data.senha = senha;
+
+  const editando = !!editingUsuarioId;
+  const url = editando ? `${API}/usuarios/${editingUsuarioId}` : `${API}/usuarios`;
+
+  try {
+    const r = await apiFetch(url, {
+      method: editando ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const d = await r.json().catch(() => null);
+
+    if (d && d.sucesso) {
+      showToast(editando ? '✅ Usuário atualizado!' : '✅ Usuário criado!');
+      cancelarEdicaoUsuario();
+      carregarUsuarios();
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
+      showToast('❌ Corrija os campos destacados', true);
+    } else {
+      showToast('❌ Erro: ' + (d?.erro || 'Desconhecido'), true);
+    }
+  } catch (e) {
+    showToast('❌ ' + e.message, true);
+  }
+}
+
+function editarUsuario(id) {
+  const u = (state.usuarios || []).find(x => x.id == id);
+  if (!u) return;
+
+  editingUsuarioId = id;
+  limparErrosCampos(document.getElementById('formUsuario'));
+  document.getElementById('usuarioNomeInput').value = u.nome;
+  document.getElementById('usuarioLogin').value = u.login;
+  document.getElementById('usuarioEmail').value = u.email || '';
+  document.getElementById('usuarioSenha').value = '';
+  document.getElementById('usuarioPerfilInput').value = u.perfil;
+  document.getElementById('usuarioAtivo').value = u.ativo ? '1' : '0';
+  document.getElementById('usuarioFormTitulo').textContent = '✏️ Editar Usuário';
+  document.getElementById('usuarioSenhaLabel').textContent = 'Nova senha';
+  document.getElementById('usuarioSenhaHint').style.display = '';
+  document.getElementById('btnSalvarUsuario').textContent = 'Salvar Alterações';
+  document.getElementById('btnCancelarUsuario').style.display = '';
+}
+
+function cancelarEdicaoUsuario() {
+  editingUsuarioId = null;
+  const form = document.getElementById('formUsuario');
+  if (!form) return;
+  form.reset();
+  limparErrosCampos(form);
+  document.getElementById('usuarioFormTitulo').textContent = '👤 Novo Usuário';
+  document.getElementById('usuarioSenhaLabel').textContent = 'Senha *';
+  document.getElementById('usuarioSenhaHint').style.display = 'none';
+  document.getElementById('btnSalvarUsuario').textContent = 'Adicionar';
+  document.getElementById('btnCancelarUsuario').style.display = 'none';
+}
+
+async function excluirUsuario(id) {
+  if (!confirm('Excluir este usuário? Para só bloquear o acesso, edite e marque como Inativo.')) return;
+  try {
+    const r = await apiFetch(`${API}/usuarios/${id}`, { method: 'DELETE' });
+    const d = await r.json().catch(() => null);
+    if (d && d.sucesso) {
+      showToast('🗑️ Usuário excluído');
+      carregarUsuarios();
+    } else {
+      showToast('❌ Erro ao excluir: ' + (d?.erro || 'Desconhecido'), true);
+    }
+  } catch (e) {
+    showToast('❌ ' + e.message, true);
   }
 }
 
@@ -4703,7 +5425,7 @@ async function preencherSelectSafra(selectId, valorAtual = null) {
   const select = document.getElementById(selectId);
   if (!select) return;
   try {
-    const r = await fetch(`${API}/safras`);
+    const r = await apiFetch(`${API}/safras`);
     const d = await r.json();
     const safras = d.dados || [];
 
@@ -4729,13 +5451,13 @@ async function preencherSelectSafra(selectId, valorAtual = null) {
 
 async function carregarSafras() {
   try {
-    const r = await fetch(`${API}/safras`);
+    const r = await apiFetch(`${API}/safras${queryFiltros({ busca: 'filtroSafraBusca', ano: 'filtroSafraAno' })}`);
     const d = await r.json();
     const safras = d.dados || [];
     const body = document.getElementById('safrasBody');
 
     if (!safras.length) {
-      body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">Nenhuma safra cadastrada</td></tr>';
+      body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">Nenhuma safra encontrada</td></tr>';
       return;
     }
 
@@ -4757,16 +5479,11 @@ async function carregarSafras() {
 async function salvarSafra(e) {
   e.preventDefault();
 
-  const inicio = document.getElementById('safraInicio').value; // formato "AAAA-MM"
+  const inicio = document.getElementById('safraInicio').value; // formato "AAAA-MM" (vazio = a API avisa)
   const fim = document.getElementById('safraFim').value;
 
-  if (!inicio || !fim) {
-    showToast('❌ Preencha o início e o fim da safra', true);
-    return;
-  }
-
-  const [anoInicio, mesInicio] = inicio.split('-').map(Number);
-  const [anoFim, mesFim] = fim.split('-').map(Number);
+  const [anoInicio, mesInicio] = inicio ? inicio.split('-').map(Number) : [null, null];
+  const [anoFim, mesFim] = fim ? fim.split('-').map(Number) : [null, null];
 
   const data = {
     nome: document.getElementById('safraNome').value.trim(),
@@ -4776,17 +5493,14 @@ async function salvarSafra(e) {
     ano_fim: anoFim,
     ativa: 1
   };
-
-  if (!data.nome) {
-    showToast('❌ Preencha o nome da safra', true);
-    return;
-  }
+  const form = document.getElementById('formSafra');
+  limparErrosCampos(form);
 
   const editando = !!editingSafraId;
   const url = editando ? `${API}/safras/${editingSafraId}` : `${API}/safras`;
 
   try {
-    const r = await fetch(url, {
+    const r = await apiFetch(url, {
       method: editando ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -4797,6 +5511,8 @@ async function salvarSafra(e) {
       showToast(editando ? '✅ Safra atualizada!' : '✅ Safra criada!');
       cancelarEdicaoSafra();
       carregarSafras();
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
     } else {
       showToast('❌ Erro: ' + (d?.erro || 'Desconhecido'), true);
     }
@@ -4807,7 +5523,7 @@ async function salvarSafra(e) {
 
 async function editarSafra(id) {
   try {
-    const r = await fetch(`${API}/safras`);
+    const r = await apiFetch(`${API}/safras`);
     const d = await r.json();
     const safra = (d.dados || []).find(s => s.id == id);
     if (!safra) return;
@@ -4823,13 +5539,15 @@ async function editarSafra(id) {
 function cancelarEdicaoSafra() {
   editingSafraId = null;
   document.getElementById('btnSalvarSafra').textContent = 'Adicionar';
-  document.querySelector('#page-safras form').reset();
+  const form = document.getElementById('formSafra');
+  form.reset();
+  limparErrosCampos(form);
 }
 
 async function excluirSafra(id) {
   if (!confirm('Excluir esta safra? As áreas que usam ela ficam sem safra vinculada (não são apagadas).')) return;
   try {
-    const r = await fetch(`${API}/safras/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/safras/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
     if (d && d.sucesso) {
       showToast('🗑️ Safra excluída');
@@ -4848,10 +5566,14 @@ let aplicacoesCache = [];
 
 async function carregarPaginaAplicacoes() {
   try {
-    const r = await fetch(`${API}/areas`);
-    const d = await r.json();
+    const [d, safras] = await Promise.all([
+      apiFetch(`${API}/areas`).then(r => r.json()),
+      apiFetch(`${API}/safras`).then(r => r.json())
+    ]);
     document.getElementById('aplicArea').innerHTML = '<option value="">Selecione...</option>' +
       (d.dados || []).map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+    preencherSelectFiltro('filtroAplicArea', 'Todas', d.dados || []);
+    preencherSelectFiltro('filtroAplicSafra', 'Todas', safras.dados || []);
   } catch (e) { console.error(e); }
   if (!document.getElementById('aplicData').value) document.getElementById('aplicData').value = new Date().toISOString().slice(0, 10);
   carregarAplicacoes();
@@ -4862,7 +5584,7 @@ async function carregarPlantiosAplicacao(plantioSelecionado = null) {
   const sel = document.getElementById('aplicPlantio');
   if (!areaId) { sel.innerHTML = '<option value="">Selecione a área primeiro</option>'; return; }
   try {
-    const r = await fetch(`${API}/plantios?area_id=${areaId}`);
+    const r = await apiFetch(`${API}/plantios?area_id=${areaId}`);
     const d = await r.json();
     const plantios = d.dados || [];
     sel.innerHTML = plantios.length
@@ -4880,11 +5602,13 @@ async function carregarAplicacoes() {
   const body = document.getElementById('aplicacoesBody');
   const nomeTipo = { defensivo: 'Defensivo', adubo: 'Adubo / foliar', corretivo: 'Corretivo' };
   try {
-    const r = await fetch(`${API}/aplicacoes`);
+    const filtros = queryFiltros({ area_id: 'filtroAplicArea', safra_id: 'filtroAplicSafra', tipo_produto: 'filtroAplicTipo',
+      data_inicio: 'filtroAplicInicio', data_fim: 'filtroAplicFim', busca: 'filtroAplicBusca' });
+    const r = await apiFetch(`${API}/aplicacoes${filtros}`);
     const d = await r.json();
     aplicacoesCache = d.dados || [];
     if (!aplicacoesCache.length) {
-      body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-400)">Nenhuma aplicação lançada</td></tr>';
+      body.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-400)">${filtros ? 'Nenhuma aplicação encontrada' : 'Nenhuma aplicação lançada'}</td></tr>`;
       return;
     }
     body.innerHTML = aplicacoesCache.map(a => `
@@ -4918,12 +5642,13 @@ async function salvarAplicacao(e) {
     unidade_dose: document.getElementById('aplicUnidade').value.trim(),
     observacoes: document.getElementById('aplicObs').value.trim()
   };
-  if (!data.plantio_id) { showToast('❌ Selecione o plantio', true); return; }
+  const form = document.getElementById('formAplicacao');
+  limparErrosCampos(form);
 
   const editando = !!editingAplicacaoId;
   const url = editando ? `${API}/aplicacoes/${editingAplicacaoId}` : `${API}/aplicacoes`;
   try {
-    const r = await fetch(url, {
+    const r = await apiFetch(url, {
       method: editando ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -4935,6 +5660,9 @@ async function salvarAplicacao(e) {
       if (editando) cancelarEdicaoAplicacao();
       else ['aplicProduto', 'aplicTipo', 'aplicDose', 'aplicUnidade', 'aplicObs'].forEach(id => document.getElementById(id).value = '');
       carregarAplicacoes();
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
+      showToast('❌ Corrija os campos destacados', true);
     } else {
       showToast('❌ ' + (d?.erro || 'Erro desconhecido'), true);
     }
@@ -4962,7 +5690,9 @@ async function editarAplicacao(id) {
 
 function cancelarEdicaoAplicacao() {
   editingAplicacaoId = null;
-  document.querySelector('#page-aplicacoes form').reset();
+  const form = document.getElementById('formAplicacao');
+  form.reset();
+  limparErrosCampos(form);
   document.getElementById('aplicPlantio').innerHTML = '<option value="">Selecione a área primeiro</option>';
   document.getElementById('aplicData').value = new Date().toISOString().slice(0, 10);
   document.getElementById('btnSalvarAplicacao').textContent = 'Adicionar';
@@ -4972,7 +5702,7 @@ function cancelarEdicaoAplicacao() {
 async function excluirAplicacao(id) {
   if (!confirm('Excluir esta aplicação?')) return;
   try {
-    const r = await fetch(`${API}/aplicacoes/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/aplicacoes/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
     if (d && d.sucesso) {
       showToast('🗑️ Aplicação excluída');
@@ -4992,10 +5722,16 @@ let colheitasCache = [];
 
 async function carregarPaginaColheita() {
   try {
-    const r = await fetch(`${API}/areas`);
-    const d = await r.json();
+    const [d, safras, culturas] = await Promise.all([
+      apiFetch(`${API}/areas`).then(r => r.json()),
+      apiFetch(`${API}/safras`).then(r => r.json()),
+      apiFetch(`${API}/culturas`).then(r => r.json())
+    ]);
     document.getElementById('colheitaArea').innerHTML = '<option value="">Selecione...</option>' +
       (d.dados || []).map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+    preencherSelectFiltro('filtroColheitaArea', 'Todas', d.dados || []);
+    preencherSelectFiltro('filtroColheitaSafra', 'Todas', safras.dados || []);
+    preencherSelectFiltro('filtroColheitaCultura', 'Todas', culturas.dados || []);
   } catch (e) { console.error(e); }
   carregarColheitas();
 }
@@ -5006,13 +5742,17 @@ async function carregarPlantiosColheita(plantioSelecionado = null) {
   const sel = document.getElementById('colheitaPlantio');
   if (!areaId) { sel.innerHTML = '<option value="">Selecione a área primeiro</option>'; return; }
   try {
-    const r = await fetch(`${API}/plantios?area_id=${areaId}`);
-    const d = await r.json();
+    // As colheitas da área vêm da API (a lista da tela pode estar filtrada)
+    const [d, colheitasArea] = await Promise.all([
+      apiFetch(`${API}/plantios?area_id=${areaId}`).then(r => r.json()),
+      apiFetch(`${API}/colheitas?area_id=${areaId}`).then(r => r.json())
+    ]);
     const plantios = d.dados || [];
-    const editando = colheitasCache.find(c => c.id == editingColheitaId);
+    const colhidos = colheitasArea.dados || [];
+    const editando = colhidos.find(c => c.id == editingColheitaId);
     sel.innerHTML = plantios.length
       ? '<option value="">Selecione...</option>' + plantios.map(p => {
-          const colhido = colheitasCache.some(c => c.plantio_id == p.id) && !(editando && editando.plantio_id == p.id);
+          const colhido = colhidos.some(c => c.plantio_id == p.id) && !(editando && editando.plantio_id == p.id);
           return `<option value="${p.id}" ${colhido ? 'disabled' : ''}>${p.safra_nome} · ${p.cultura_nome}${p.variedade_nome ? ' (' + p.variedade_nome + ')' : ''} · plantado em ${fmtDataBR(p.data_plantio)}${colhido ? ' — já colhido' : ''}</option>`;
         }).join('')
       : '<option value="">Nenhum plantio nesta área</option>';
@@ -5026,11 +5766,13 @@ async function carregarPlantiosColheita(plantioSelecionado = null) {
 async function carregarColheitas() {
   const body = document.getElementById('colheitasBody');
   try {
-    const r = await fetch(`${API}/colheitas`);
+    const filtros = queryFiltros({ area_id: 'filtroColheitaArea', safra_id: 'filtroColheitaSafra',
+      cultura_id: 'filtroColheitaCultura', busca: 'filtroColheitaBusca' });
+    const r = await apiFetch(`${API}/colheitas${filtros}`);
     const d = await r.json();
     colheitasCache = d.dados || [];
     if (!colheitasCache.length) {
-      body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-400)">Nenhuma colheita lançada</td></tr>';
+      body.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-400)">${filtros ? 'Nenhuma colheita encontrada' : 'Nenhuma colheita lançada'}</td></tr>`;
       return;
     }
     const num = (v, casas = 1) => Number(v).toLocaleString('pt-BR', { maximumFractionDigits: casas });
@@ -5067,12 +5809,13 @@ async function salvarColheita(e) {
     umidade_pct: document.getElementById('colheitaUmidade').value,
     observacoes: document.getElementById('colheitaObs').value.trim()
   };
-  if (!data.plantio_id) { showToast('❌ Selecione o plantio', true); return; }
+  const form = document.getElementById('formColheita');
+  limparErrosCampos(form);
 
   const editando = !!editingColheitaId;
   const url = editando ? `${API}/colheitas/${editingColheitaId}` : `${API}/colheitas`;
   try {
-    const r = await fetch(url, {
+    const r = await apiFetch(url, {
       method: editando ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -5082,6 +5825,9 @@ async function salvarColheita(e) {
       showToast(editando ? '✅ Colheita atualizada!' : '✅ Colheita lançada!');
       cancelarEdicaoColheita();
       carregarColheitas();
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
+      showToast('❌ Corrija os campos destacados', true);
     } else {
       showToast('❌ ' + (d?.erro || 'Erro desconhecido'), true);
     }
@@ -5107,7 +5853,9 @@ async function editarColheita(id) {
 
 function cancelarEdicaoColheita() {
   editingColheitaId = null;
-  document.querySelector('#page-colheita form').reset();
+  const form = document.getElementById('formColheita');
+  form.reset();
+  limparErrosCampos(form);
   document.getElementById('colheitaPlantio').innerHTML = '<option value="">Selecione a área primeiro</option>';
   document.getElementById('btnSalvarColheita').textContent = 'Adicionar';
   document.getElementById('btnCancelarColheita').style.display = 'none';
@@ -5116,7 +5864,7 @@ function cancelarEdicaoColheita() {
 async function excluirColheita(id) {
   if (!confirm('Excluir esta colheita?')) return;
   try {
-    const r = await fetch(`${API}/colheitas/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/colheitas/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
     if (d && d.sucesso) {
       showToast('🗑️ Colheita excluída');
@@ -5127,6 +5875,146 @@ async function excluirColheita(id) {
     }
   } catch (e) {
     showToast('❌ Erro de conexão: ' + e.message, true);
+  }
+}
+
+// ============= RELATÓRIOS GERENCIAIS (agrupamento e pivot) =============
+const NOMES_TIPO_ITEM = { praga: 'Praga', doenca: 'Doença', planta_daninha: 'Planta daninha', clima: 'Clima' };
+let gerencialSafraInicial = false; // na 1ª abertura a tela já vem com a safra mais recente
+let gerencialSeq = 0;              // descartam resposta antiga se o filtro mudar no meio
+let pivotSeq = 0;
+
+async function carregarPaginaGerencial() {
+  try {
+    const [safras, plantios, clientes] = await Promise.all([
+      apiFetch(`${API}/safras`).then(r => r.json()),
+      apiFetch(`${API}/plantios`).then(r => r.json()),
+      apiFetch(`${API}/clientes`).then(r => r.json())
+    ]);
+    preencherSelectFiltro('gerSafra', 'Todas', safras.dados || []);
+    preencherSelectFiltro('gerCliente', 'Todos', clientes.dados || []);
+    preencherSelectFiltro('gerPlantio', 'Todos', (plantios.dados || []).map(p =>
+      ({ id: p.id, nome: `${p.area_nome} · ${p.cultura_nome} · ${p.safra_nome}` })));
+    if (!gerencialSafraInicial && safras.dados?.length) {
+      document.getElementById('gerSafra').value = safras.dados[0].id;
+      gerencialSafraInicial = true;
+    }
+  } catch (e) { console.error(e); }
+  carregarRelatoriosGerenciais();
+}
+
+function filtrosGerencial() {
+  return queryFiltros({ safra_id: 'gerSafra', plantio_id: 'gerPlantio', cliente_id: 'gerCliente', tipo: 'gerTipo',
+    data_inicio: 'gerInicio', data_fim: 'gerFim' });
+}
+
+async function carregarRelatoriosGerenciais() {
+  const seq = ++gerencialSeq;
+  const form = document.getElementById('filtroGerencial');
+  limparErrosCampos(form);
+  const num = (v, casas = 0) => v == null ? '—' : Number(v).toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
+  const vazio = (cols, msg) => `<tr><td colspan="${cols}" style="text-align:center;color:var(--gray-400)">${msg}</td></tr>`;
+  carregarPivotGerencial();
+
+  try {
+    const r = await apiFetch(`${API}/relatorios-gerenciais/agrupamentos${filtrosGerencial()}`);
+    const d = await r.json();
+    if (seq !== gerencialSeq) return;
+    if (!d.sucesso) {
+      if (d.erros) mostrarErrosCampos(form, d.erros);
+      showToast('❌ ' + (d.erro || 'Erro ao carregar os relatórios'), true);
+      return;
+    }
+    const { por_praga, por_area, hectares_por_cliente } = d.dados;
+
+    document.getElementById('gerPorPraga').innerHTML = por_praga.length ? por_praga.map(p => `
+      <tr>
+        <td><b>${escHTML(p.nome)}</b></td>
+        <td>${NOMES_TIPO_ITEM[p.tipo] || escHTML(p.tipo)}</td>
+        <td style="text-align:right"><b>${num(p.ocorrencias)}</b></td>
+        <td style="text-align:right">${num(p.monitoramentos)}</td>
+        <td style="text-align:right">${num(p.areas)}</td>
+        <td style="text-align:right">${num(p.quantidade_total)}</td>
+        <td style="text-align:right">${num(p.media_quantidade, 1)}</td>
+        <td style="font-size:12px;white-space:nowrap">${fmtDataBR(p.primeira_data)} a ${fmtDataBR(p.ultima_data)}</td>
+      </tr>`).join('') : vazio(8, 'Nenhuma ocorrência com esses filtros');
+
+    document.getElementById('gerPorArea').innerHTML = por_area.length ? por_area.map(a => `
+      <tr>
+        <td><b>${escHTML(a.area_nome)}</b><br><span style="font-size:11px;color:var(--gray-500)">${escHTML(a.cliente_nome)}</span></td>
+        <td style="text-align:right">${num(a.hectares, 2)}</td>
+        <td style="text-align:right">${num(a.monitoramentos)}</td>
+        <td style="text-align:right">${num(a.dias_monitorados)}</td>
+        <td style="text-align:right"><b>${num(a.ocorrencias)}</b></td>
+        <td style="text-align:right">${a.criticos > 0 ? `<span class="badge badge-red">${num(a.criticos)}</span>` : '0'}</td>
+      </tr>`).join('') : vazio(6, 'Nenhum monitoramento com esses filtros');
+
+    const soma = c => hectares_por_cliente.reduce((t, x) => t + Number(x[c] || 0), 0);
+    document.getElementById('gerHectares').innerHTML = hectares_por_cliente.length ? hectares_por_cliente.map(c => `
+      <tr>
+        <td><b>${escHTML(c.cliente_nome)}</b></td>
+        <td style="text-align:right">${num(c.qtd_areas)}</td>
+        <td style="text-align:right"><b>${num(c.hectares, 2)}</b></td>
+        <td style="text-align:right">${num(c.alqueires, 2)}</td>
+        <td style="text-align:right">${num(c.media_hectares, 2)}</td>
+      </tr>`).join('') + `
+      <tr style="background:var(--gray-50);font-weight:700">
+        <td>Total</td><td style="text-align:right">${num(soma('qtd_areas'))}</td>
+        <td style="text-align:right">${num(soma('hectares'), 2)}</td><td style="text-align:right">${num(soma('alqueires'), 2)}</td><td></td>
+      </tr>` : vazio(5, 'Nenhuma área com esses filtros');
+  } catch (e) {
+    console.error(e);
+    showToast('❌ Erro de conexão: ' + e.message, true);
+  }
+}
+
+// Pivot: itens (linhas) × meses da safra (colunas), com total por linha e por mês
+async function carregarPivotGerencial() {
+  const div = document.getElementById('gerPivot');
+  const safra = document.getElementById('gerSafra').value;
+  const plantio = document.getElementById('gerPlantio').value;
+  if (!safra && !plantio) {
+    div.innerHTML = '<p style="text-align:center;color:var(--gray-400);padding:20px">Escolha uma safra ou um plantio no filtro para montar o pivot</p>';
+    return;
+  }
+  const params = new URLSearchParams({ tipo: document.getElementById('gerPivotTipo').value, medida: document.getElementById('gerPivotMedida').value });
+  if (plantio) params.set('plantio_id', plantio); else params.set('safra_id', safra);
+  const seq = ++pivotSeq;
+  div.innerHTML = '<p style="text-align:center;color:var(--gray-400);padding:20px">⏳ Carregando...</p>';
+  try {
+    const r = await apiFetch(`${API}/relatorios-gerenciais/pivot?${params}`);
+    const d = await r.json();
+    if (seq !== pivotSeq) return;
+    if (!d.sucesso) { div.innerHTML = `<p style="color:#dc2626">${escHTML(d.erro || 'Erro ao montar o pivot')}</p>`; return; }
+    const { colunas, linhas, totais } = d.dados;
+    if (!linhas.length) {
+      div.innerHTML = `<p style="text-align:center;color:var(--gray-400);padding:20px">Nenhum registro em ${escHTML(d.dados.safra.nome)}</p>`;
+      return;
+    }
+    const celula = (v, negrito) => `<td style="text-align:right;${v ? '' : 'color:var(--gray-300);'}${negrito ? 'font-weight:700' : ''}">${v ? v.toLocaleString('pt-BR') : '·'}</td>`;
+    div.innerHTML = `
+      <table style="font-size:13px">
+        <thead><tr>
+          <th style="position:sticky;left:0;z-index:1">${escHTML(d.dados.safra.nome)}</th>
+          ${colunas.map(c => `<th style="text-align:right;white-space:nowrap">${c.rotulo}</th>`).join('')}
+          <th style="text-align:right">Total</th>
+        </tr></thead>
+        <tbody>
+          ${linhas.map(l => `<tr>
+            <td style="position:sticky;left:0;background:white;white-space:nowrap"><b>${escHTML(l.nome)}</b>${params.get('tipo') === 'todos' ? ` <span style="font-size:11px;color:var(--gray-500)">${NOMES_TIPO_ITEM[l.tipo] || ''}</span>` : ''}</td>
+            ${colunas.map(c => celula(l.meses[c.chave])).join('')}
+            ${celula(l.total, true)}
+          </tr>`).join('')}
+          <tr style="background:var(--gray-50)">
+            <td style="position:sticky;left:0;background:var(--gray-50);font-weight:700">Total</td>
+            ${colunas.map(c => celula(totais.meses[c.chave], true)).join('')}
+            ${celula(totais.total, true)}
+          </tr>
+        </tbody>
+      </table>`;
+  } catch (e) {
+    console.error(e);
+    div.innerHTML = '<p style="color:#dc2626">Erro de conexão</p>';
   }
 }
 
@@ -5301,7 +6189,7 @@ async function carregarDiasRelatorio() {
   // Relatório 2: a escolha é o plantio (safra + cultura) da área
   if (document.getElementById('relatorioTipo').value === 'safra') {
     try {
-      const r = await fetch(`${API}/plantios?area_id=${areaId}`);
+      const r = await apiFetch(`${API}/plantios?area_id=${areaId}`);
       const d = await r.json();
       const plantios = d.dados || [];
       sel.innerHTML = plantios.length
@@ -5315,7 +6203,7 @@ async function carregarDiasRelatorio() {
     return;
   }
   try {
-    const r = await fetch(`${API}/relatorios/dias?area_id=${areaId}`);
+    const r = await apiFetch(`${API}/relatorios/dias?area_id=${areaId}`);
     const d = await r.json();
     const dias = d.dados || [];
     sel.innerHTML = dias.length
@@ -5370,10 +6258,10 @@ function extrairOcorrenciasDeMonitoramentos(monitoramentos) {
 
 async function buscarDadosAreaRelatorio(areaId) {
   const [areaR, plantiosR, pontosR, monitoramentosR] = await Promise.all([
-    fetch(`${API}/areas/${areaId}`).then(r => r.json()),
-    fetch(`${API}/plantios?area_id=${areaId}`).then(r => r.json()),
-    fetch(`${API}/pontos?area_id=${areaId}`).then(r => r.json()),
-    fetch(`${API}/monitoramentos?area_id=${areaId}`).then(r => r.json())
+    apiFetch(`${API}/areas/${areaId}`).then(r => r.json()),
+    apiFetch(`${API}/plantios?area_id=${areaId}`).then(r => r.json()),
+    apiFetch(`${API}/pontos?area_id=${areaId}`).then(r => r.json()),
+    apiFetch(`${API}/monitoramentos?area_id=${areaId}`).then(r => r.json())
   ]);
   const monitoramentos = monitoramentosR.dados || [];
   return {
@@ -5387,13 +6275,13 @@ async function buscarDadosAreaRelatorio(areaId) {
 
 async function buscarTodosDadosRelatorio() {
   const [areasR, culturasR, variedadesR, adubosR, pragasR, plantiosR, monitoramentosR] = await Promise.all([
-    fetch(`${API}/areas`).then(r => r.json()),
-    fetch(`${API}/culturas`).then(r => r.json()),
-    fetch(`${API}/variedades`).then(r => r.json()),
-    fetch(`${API}/adubos`).then(r => r.json()),
-    fetch(`${API}/pragas`).then(r => r.json()),
-    fetch(`${API}/plantios`).then(r => r.json()),
-    fetch(`${API}/monitoramentos`).then(r => r.json())
+    apiFetch(`${API}/areas`).then(r => r.json()),
+    apiFetch(`${API}/culturas`).then(r => r.json()),
+    apiFetch(`${API}/variedades`).then(r => r.json()),
+    apiFetch(`${API}/adubos`).then(r => r.json()),
+    apiFetch(`${API}/pragas`).then(r => r.json()),
+    apiFetch(`${API}/plantios`).then(r => r.json()),
+    apiFetch(`${API}/monitoramentos`).then(r => r.json())
   ]);
   const monitoramentos = monitoramentosR.dados || [];
   return {
@@ -5654,7 +6542,7 @@ function descricaoEstadios(cultura, estadios) {
 }
 
 async function montarRelatorioDiarioHTML(plantioId, data) {
-  const r = await fetch(`${API}/relatorios/diario?plantio_id=${plantioId}&data=${data}`);
+  const r = await apiFetch(`${API}/relatorios/diario?plantio_id=${plantioId}&data=${data}`);
   const resp = await r.json();
   if (!resp.sucesso) return `<p style="padding:20px;text-align:center;color:#999">${escHTML(resp.erro || 'Relatório não encontrado')}</p>`;
   const d = resp.dados;
@@ -5928,7 +6816,7 @@ function graficoPragasSVG(dias, ocorrencias, cultura) {
 }
 
 async function montarRelatorioSafraHTML(plantioId) {
-  const r = await fetch(`${API}/relatorios/safra?plantio_id=${plantioId}`);
+  const r = await apiFetch(`${API}/relatorios/safra?plantio_id=${plantioId}`);
   const resp = await r.json();
   if (!resp.sucesso) return `<p style="padding:20px;text-align:center;color:#999">${escHTML(resp.erro || 'Relatório não encontrado')}</p>`;
   const { cabecalho: c, dias, ocorrencias, aplicacoes, totais } = resp.dados;
@@ -6111,7 +6999,7 @@ function graficoOcorrenciasSVG(plantios) {
 }
 
 async function montarRelatorioComparativoHTML(areaId) {
-  const r = await fetch(`${API}/relatorios/comparativo?area_id=${areaId}`);
+  const r = await apiFetch(`${API}/relatorios/comparativo?area_id=${areaId}`);
   const resp = await r.json();
   if (!resp.sucesso) return `<p style="padding:20px;text-align:center;color:#999">${escHTML(resp.erro || 'Relatório não encontrado')}</p>`;
   const { area, plantios } = resp.dados;
@@ -6257,7 +7145,7 @@ function graficoAreasPorSafraSVG(ciclos, areasNomes) {
 }
 
 async function montarRelatorioClienteHTML(clienteId) {
-  const r = await fetch(`${API}/relatorios/cliente?cliente_id=${clienteId}`);
+  const r = await apiFetch(`${API}/relatorios/cliente?cliente_id=${clienteId}`);
   const resp = await r.json();
   if (!resp.sucesso) return `<p style="padding:20px;text-align:center;color:#999">${escHTML(resp.erro || 'Relatório não encontrado')}</p>`;
   const { cliente, areas, plantios } = resp.dados;
@@ -6555,7 +7443,12 @@ async function montarRelatorioHTML(tipo, areaId) {
   `;
 }
 
+// Cada prévia ganha um número; resposta de uma prévia antiga que chega depois
+// da mais nova é descartada (senão o relatório anterior sobrescreve o escolhido)
+let previewRelatorioSeq = 0;
+
 async function previewRelatorioCompleto() {
+  const seq = ++previewRelatorioSeq;
   const tipoEl = document.getElementById('relatorioTipo');
   const preview = document.getElementById('relatorioPreview');
   if (!tipoEl || !preview) return; // estamos em outra página (ex: Configurações), nada a fazer
@@ -6575,9 +7468,11 @@ async function previewRelatorioCompleto() {
   preview.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray-400)">⏳ Carregando relatório...</div>';
   try {
     const html = await montarRelatorioHTML(tipo, areaId);
+    if (seq !== previewRelatorioSeq) return;
     preview.innerHTML = `<div style="max-height:600px;overflow:auto;background:white;padding:20px;border-radius:8px">${html}</div>`;
   } catch (e) {
     console.error(e);
+    if (seq !== previewRelatorioSeq) return;
     preview.innerHTML = `<div style="text-align:center;padding:30px;color:#dc2626">Erro ao montar relatório: ${e.message}</div>`;
   }
 }
@@ -6640,8 +7535,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el) el.value = hoje;
   });
   aplicarConfigSalvaNoCarregamento();
-  carregarDashboard();
-  carregarAreas();
+
+  // Só abre o sistema com token válido; sem token (ou expirado), mostra o login
+  if (!lerToken()) { mostrarLogin(); return; }
+  apiFetch(`${API}/me`)
+    .then(r => r.json())
+    .then(d => { if (d.sucesso) iniciarSistema(d.dados); else encerrarSessao(); })
+    .catch(() => { if (lerToken()) { showToast('❌ Não foi possível conectar à API em ' + API, true); mostrarLogin(); } });
 });
 
 // ============= MODAL CONFIGURAÇÕES =============
@@ -6670,11 +7570,11 @@ function abrirModalNovoCultura(item = null) {
   document.getElementById('form-config').innerHTML = `
     <div class="form-group">
       <label class="form-label">Nome *</label>
-      <input type="text" class="form-input" id="config-nome" value="${item ? item.nome.replace(/"/g, '&quot;') : ''}" required>
+      <input type="text" class="form-input" id="config-nome" data-campo="nome" value="${item ? item.nome.replace(/"/g, '&quot;') : ''}" required>
     </div>
     <div class="form-group">
       <label class="form-label">Descrição</label>
-      <textarea class="form-textarea" id="config-descricao" style="min-height:80px">${item ? (item.descricao || '') : ''}</textarea>
+      <textarea class="form-textarea" id="config-descricao" data-campo="descricao" style="min-height:80px">${item ? (item.descricao || '') : ''}</textarea>
     </div>
   `;
   document.getElementById('form-config').dataset.tipo = 'cultura';
@@ -6688,18 +7588,18 @@ function abrirModalNovoVariedade(item = null) {
   document.getElementById('form-config').innerHTML = `
     <div class="form-group">
       <label class="form-label">Cultura *</label>
-      <select class="form-select" id="config-cultura" required>
+      <select class="form-select" id="config-cultura" data-campo="cultura_id">
         <option value="">Selecione...</option>
         ${culturas.map(c => `<option value="${c.id}" ${item && item.cultura_id == c.id ? 'selected' : ''}>${c.nome}</option>`).join('')}
       </select>
     </div>
     <div class="form-group">
       <label class="form-label">Nome *</label>
-      <input type="text" class="form-input" id="config-nome" value="${item ? item.nome.replace(/"/g, '&quot;') : ''}" required>
+      <input type="text" class="form-input" id="config-nome" data-campo="nome" value="${item ? item.nome.replace(/"/g, '&quot;') : ''}" required>
     </div>
     <div class="form-group">
       <label class="form-label">Descrição</label>
-      <textarea class="form-textarea" id="config-descricao" style="min-height:80px">${item ? (item.descricao || '') : ''}</textarea>
+      <textarea class="form-textarea" id="config-descricao" data-campo="descricao" style="min-height:80px">${item ? (item.descricao || '') : ''}</textarea>
     </div>
   `;
   document.getElementById('form-config').dataset.tipo = 'variedade';
@@ -6712,19 +7612,19 @@ function abrirModalNovoAdubo(item = null) {
   document.getElementById('form-config').innerHTML = `
     <div class="form-group">
       <label class="form-label">Nome *</label>
-      <input type="text" class="form-input" id="config-nome" value="${item ? item.nome.replace(/"/g, '&quot;') : ''}" required>
+      <input type="text" class="form-input" id="config-nome" data-campo="nome" value="${item ? item.nome.replace(/"/g, '&quot;') : ''}" required>
     </div>
     <div class="form-group">
       <label class="form-label">Tipo</label>
-      <input type="text" class="form-input" id="config-tipo" placeholder="Ex: Fertilizante Misto" value="${item ? (item.tipo || '').replace(/"/g, '&quot;') : ''}">
+      <input type="text" class="form-input" id="config-tipo" data-campo="tipo" placeholder="Ex: Fertilizante Misto" value="${item ? (item.tipo || '').replace(/"/g, '&quot;') : ''}">
     </div>
     <div class="form-group">
       <label class="form-label">NPK</label>
-      <input type="text" class="form-input" id="config-npk" placeholder="Ex: 20-20-20" value="${item ? (item.npk || '').replace(/"/g, '&quot;') : ''}">
+      <input type="text" class="form-input" id="config-npk" data-campo="npk" placeholder="Ex: 20-20-20" value="${item ? (item.npk || '').replace(/"/g, '&quot;') : ''}">
     </div>
     <div class="form-group">
       <label class="form-label">Descrição</label>
-      <textarea class="form-textarea" id="config-descricao" style="min-height:80px">${item ? (item.descricao || '') : ''}</textarea>
+      <textarea class="form-textarea" id="config-descricao" data-campo="descricao" style="min-height:80px">${item ? (item.descricao || '') : ''}</textarea>
     </div>
   `;
   document.getElementById('form-config').dataset.tipo = 'adubo';
@@ -6738,7 +7638,7 @@ function abrirModalNovoPraga(item = null) {
   document.getElementById('form-config').innerHTML = `
     <div class="form-group">
       <label class="form-label">Tipo *</label>
-      <select class="form-select" id="config-tipo-praga" required>
+      <select class="form-select" id="config-tipo-praga" data-campo="tipo">
         <option value="praga" ${!item || item.tipo === 'praga' ? 'selected' : ''}>🐛 Praga</option>
         <option value="doenca" ${item && item.tipo === 'doenca' ? 'selected' : ''}>🦠 Doença</option>
         <option value="planta_daninha" ${item && item.tipo === 'planta_daninha' ? 'selected' : ''}>🌿 Planta Daninha</option>
@@ -6747,11 +7647,11 @@ function abrirModalNovoPraga(item = null) {
     </div>
     <div class="form-group">
       <label class="form-label">Nome *</label>
-      <input type="text" class="form-input" id="config-nome" value="${item ? item.nome.replace(/"/g, '&quot;') : ''}" required>
+      <input type="text" class="form-input" id="config-nome" data-campo="nome" value="${item ? item.nome.replace(/"/g, '&quot;') : ''}" required>
     </div>
     <div class="form-group">
       <label class="form-label">Cultura</label>
-      <select class="form-select" id="config-cultura">
+      <select class="form-select" id="config-cultura" data-campo="cultura_id">
         <option value="">Qualquer cultura</option>
         ${culturas.map(c => `<option value="${c.id}" ${item && String(item.cultura_id) === String(c.id) ? 'selected' : ''}>${c.nome}</option>`).join('')}
       </select>
@@ -6759,7 +7659,7 @@ function abrirModalNovoPraga(item = null) {
     </div>
     <div class="form-group">
       <label class="form-label">Nível de Risco</label>
-      <select class="form-select" id="config-risco">
+      <select class="form-select" id="config-risco" data-campo="nivel_risco">
         <option value="baixo" ${item && item.nivel_risco === 'baixo' ? 'selected' : ''}>Baixo</option>
         <option value="medio" ${!item || item.nivel_risco === 'medio' ? 'selected' : ''}>Médio</option>
         <option value="alto" ${item && item.nivel_risco === 'alto' ? 'selected' : ''}>Alto</option>
@@ -6767,7 +7667,7 @@ function abrirModalNovoPraga(item = null) {
     </div>
     <div class="form-group">
       <label class="form-label">Descrição</label>
-      <textarea class="form-textarea" id="config-descricao" style="min-height:80px">${item ? (item.descricao || '') : ''}</textarea>
+      <textarea class="form-textarea" id="config-descricao" data-campo="descricao" style="min-height:80px">${item ? (item.descricao || '') : ''}</textarea>
     </div>
   `;
   document.getElementById('form-config').dataset.tipo = 'praga';
@@ -6824,7 +7724,7 @@ async function salvarNovoItemConfig(e) {
 
   try {
     const url = editando ? `${API}/${tipo}s/${id}` : `${API}/${tipo}s`;
-    const r = await fetch(url, {
+    const r = await apiFetch(url, {
       method: editando ? 'PUT' : 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(data)
@@ -6839,6 +7739,8 @@ async function salvarNovoItemConfig(e) {
       else if (tipo === 'variedade') carregarVariedades();
       else if (tipo === 'adubo') carregarAdubos();
       else if (tipo === 'praga') carregarPragas();
+    } else if (d && d.erros) {
+      mostrarErrosCampos(form, d.erros);
     } else {
       showToast('❌ Erro: ' + (d?.erro || 'Desconhecido'), true);
     }
@@ -6858,7 +7760,7 @@ async function excluirItemConfig(tipo, id, recarregar) {
   if (!confirm(avisos[tipo] || 'Excluir este item? Essa ação não pode ser desfeita.')) return;
 
   try {
-    const r = await fetch(`${API}/${tipo}s/${id}`, { method: 'DELETE' });
+    const r = await apiFetch(`${API}/${tipo}s/${id}`, { method: 'DELETE' });
     const d = await r.json().catch(() => null);
     if (d && d.sucesso) {
       showToast('🗑️ Excluído(a) com sucesso');
