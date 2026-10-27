@@ -269,6 +269,7 @@ tr:hover td { background: var(--gray-50); }
         <div class="nav-section-title">Gestão</div>
         <div class="nav-item" data-perfis="gestor,agronomo" onclick="irPara('page-clientes', this)">🧑‍🌾 Clientes</div>
         <div class="nav-item" onclick="irPara('page-relatorio', this)">📊 Relatório</div>
+        <div class="nav-item" data-perfis="gestor,agronomo" onclick="irPara('page-gerencial', this)">📈 Relatórios Gerenciais</div>
         <div class="nav-item" data-perfis="gestor,agronomo" onclick="irPara('page-safras', this)">📅 Safras</div>
         <div class="nav-item" data-perfis="gestor" onclick="cancelarEdicaoUsuario(); irPara('page-usuarios', this)">👤 Usuários</div>
         <div class="nav-item" data-perfis="gestor" onclick="irPara('page-configuracoes', this)">🎨 Configurações</div>
@@ -1202,6 +1203,97 @@ tr:hover td { background: var(--gray-50); }
         </div>
       </div>
 
+      <!-- PÁGINA: Relatórios gerenciais (agrupamento e pivot) -->
+      <div class="page" id="page-gerencial">
+        <form class="filtro-form card" id="filtroGerencial" onsubmit="event.preventDefault(); carregarRelatoriosGerenciais()" novalidate style="padding:14px 16px">
+          <div class="form-group">
+            <label class="form-label">Safra</label>
+            <select class="form-select" id="gerSafra" data-campo="safra_id" onchange="carregarRelatoriosGerenciais()"><option value="">Todas</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Plantio</label>
+            <select class="form-select" id="gerPlantio" data-campo="plantio_id" onchange="carregarRelatoriosGerenciais()"><option value="">Todos</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cliente</label>
+            <select class="form-select" id="gerCliente" data-campo="cliente_id" onchange="carregarRelatoriosGerenciais()"><option value="">Todos</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tipo</label>
+            <select class="form-select" id="gerTipo" data-campo="tipo" onchange="carregarRelatoriosGerenciais()">
+              <option value="">Todos</option>
+              <option value="praga">Pragas</option>
+              <option value="doenca">Doenças</option>
+              <option value="planta_daninha">Plantas daninhas</option>
+              <option value="clima">Clima</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">De</label>
+            <input type="date" class="form-input" id="gerInicio" data-campo="data_inicio">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Até</label>
+            <input type="date" class="form-input" id="gerFim" data-campo="data_fim">
+          </div>
+          <button type="submit" class="btn btn-primary">Filtrar</button>
+          <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarRelatoriosGerenciais()">Limpar</button>
+        </form>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-header">
+            <h3 class="card-title">Pragas por mês (pivot)</h3>
+            <div style="display:flex;gap:8px">
+              <select class="form-select" id="gerPivotTipo" onchange="carregarPivotGerencial()" style="width:auto">
+                <option value="praga">Pragas</option>
+                <option value="doenca">Doenças</option>
+                <option value="planta_daninha">Plantas daninhas</option>
+                <option value="clima">Clima</option>
+                <option value="todos">Todos os tipos</option>
+              </select>
+              <select class="form-select" id="gerPivotMedida" onchange="carregarPivotGerencial()" style="width:auto">
+                <option value="ocorrencias">Nº de ocorrências</option>
+                <option value="quantidade">Quantidade contada</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-hint" style="margin-bottom:10px">Linhas: pragas · colunas: meses da safra (ou da safra do plantio escolhido no filtro).</div>
+            <div id="gerPivot" style="overflow-x:auto"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-header"><h3 class="card-title">Ocorrências por praga / doença</h3></div>
+          <div class="card-body" style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Item</th><th>Tipo</th><th style="text-align:right">Ocorrências</th><th style="text-align:right">Monitoramentos</th><th style="text-align:right">Áreas</th><th style="text-align:right">Qtd. total</th><th style="text-align:right">Média</th><th>Período</th></tr></thead>
+              <tbody id="gerPorPraga"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-header"><h3 class="card-title">Ocorrências por área</h3></div>
+          <div class="card-body" style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Área / Cliente</th><th style="text-align:right">Hectares</th><th style="text-align:right">Monitoramentos</th><th style="text-align:right">Dias</th><th style="text-align:right">Ocorrências</th><th style="text-align:right">Críticos</th></tr></thead>
+              <tbody id="gerPorArea"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-header"><h3 class="card-title">Hectares por cliente</h3></div>
+          <div class="card-body" style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Cliente</th><th style="text-align:right">Áreas</th><th style="text-align:right">Hectares</th><th style="text-align:right">Alqueires</th><th style="text-align:right">Média ha/área</th></tr></thead>
+              <tbody id="gerHectares"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- PÁGINA: Clientes -->
       <div class="page" id="page-clientes">
         <div class="card">
@@ -1839,6 +1931,7 @@ function irPara(pagina, elemento) {
     'page-adubos': 'Adubos',
     'page-pragas': 'Pragas e Doenças',
     'page-relatorio': 'Relatório',
+    'page-gerencial': 'Relatórios Gerenciais',
     'page-safras': 'Safras',
     'page-colheita': 'Colheita',
     'page-aplicacoes': 'Aplicações',
@@ -1868,6 +1961,7 @@ function carregarConteudoPagina(pagina) {
   else if (pagina === 'page-mapa') abrirPaginaMapa();
   else if (pagina === 'page-importar-earth') { abrirAbaImportar(abaImportarAtual || 'desenhar'); carregarSelectClientes('importCliente'); }
   else if (pagina === 'page-relatorio') { carregarSelectAreasRelatorio(); carregarSelectClientesRelatorio(); }
+  else if (pagina === 'page-gerencial') carregarPaginaGerencial();
   else if (pagina === 'page-safras') { carregarSafras(); }
   else if (pagina === 'page-clientes') { carregarClientes(); }
   else if (pagina === 'page-usuarios') { carregarUsuarios(); }
@@ -5781,6 +5875,146 @@ async function excluirColheita(id) {
     }
   } catch (e) {
     showToast('❌ Erro de conexão: ' + e.message, true);
+  }
+}
+
+// ============= RELATÓRIOS GERENCIAIS (agrupamento e pivot) =============
+const NOMES_TIPO_ITEM = { praga: 'Praga', doenca: 'Doença', planta_daninha: 'Planta daninha', clima: 'Clima' };
+let gerencialSafraInicial = false; // na 1ª abertura a tela já vem com a safra mais recente
+let gerencialSeq = 0;              // descartam resposta antiga se o filtro mudar no meio
+let pivotSeq = 0;
+
+async function carregarPaginaGerencial() {
+  try {
+    const [safras, plantios, clientes] = await Promise.all([
+      apiFetch(`${API}/safras`).then(r => r.json()),
+      apiFetch(`${API}/plantios`).then(r => r.json()),
+      apiFetch(`${API}/clientes`).then(r => r.json())
+    ]);
+    preencherSelectFiltro('gerSafra', 'Todas', safras.dados || []);
+    preencherSelectFiltro('gerCliente', 'Todos', clientes.dados || []);
+    preencherSelectFiltro('gerPlantio', 'Todos', (plantios.dados || []).map(p =>
+      ({ id: p.id, nome: `${p.area_nome} · ${p.cultura_nome} · ${p.safra_nome}` })));
+    if (!gerencialSafraInicial && safras.dados?.length) {
+      document.getElementById('gerSafra').value = safras.dados[0].id;
+      gerencialSafraInicial = true;
+    }
+  } catch (e) { console.error(e); }
+  carregarRelatoriosGerenciais();
+}
+
+function filtrosGerencial() {
+  return queryFiltros({ safra_id: 'gerSafra', plantio_id: 'gerPlantio', cliente_id: 'gerCliente', tipo: 'gerTipo',
+    data_inicio: 'gerInicio', data_fim: 'gerFim' });
+}
+
+async function carregarRelatoriosGerenciais() {
+  const seq = ++gerencialSeq;
+  const form = document.getElementById('filtroGerencial');
+  limparErrosCampos(form);
+  const num = (v, casas = 0) => v == null ? '—' : Number(v).toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
+  const vazio = (cols, msg) => `<tr><td colspan="${cols}" style="text-align:center;color:var(--gray-400)">${msg}</td></tr>`;
+  carregarPivotGerencial();
+
+  try {
+    const r = await apiFetch(`${API}/relatorios-gerenciais/agrupamentos${filtrosGerencial()}`);
+    const d = await r.json();
+    if (seq !== gerencialSeq) return;
+    if (!d.sucesso) {
+      if (d.erros) mostrarErrosCampos(form, d.erros);
+      showToast('❌ ' + (d.erro || 'Erro ao carregar os relatórios'), true);
+      return;
+    }
+    const { por_praga, por_area, hectares_por_cliente } = d.dados;
+
+    document.getElementById('gerPorPraga').innerHTML = por_praga.length ? por_praga.map(p => `
+      <tr>
+        <td><b>${escHTML(p.nome)}</b></td>
+        <td>${NOMES_TIPO_ITEM[p.tipo] || escHTML(p.tipo)}</td>
+        <td style="text-align:right"><b>${num(p.ocorrencias)}</b></td>
+        <td style="text-align:right">${num(p.monitoramentos)}</td>
+        <td style="text-align:right">${num(p.areas)}</td>
+        <td style="text-align:right">${num(p.quantidade_total)}</td>
+        <td style="text-align:right">${num(p.media_quantidade, 1)}</td>
+        <td style="font-size:12px;white-space:nowrap">${fmtDataBR(p.primeira_data)} a ${fmtDataBR(p.ultima_data)}</td>
+      </tr>`).join('') : vazio(8, 'Nenhuma ocorrência com esses filtros');
+
+    document.getElementById('gerPorArea').innerHTML = por_area.length ? por_area.map(a => `
+      <tr>
+        <td><b>${escHTML(a.area_nome)}</b><br><span style="font-size:11px;color:var(--gray-500)">${escHTML(a.cliente_nome)}</span></td>
+        <td style="text-align:right">${num(a.hectares, 2)}</td>
+        <td style="text-align:right">${num(a.monitoramentos)}</td>
+        <td style="text-align:right">${num(a.dias_monitorados)}</td>
+        <td style="text-align:right"><b>${num(a.ocorrencias)}</b></td>
+        <td style="text-align:right">${a.criticos > 0 ? `<span class="badge badge-red">${num(a.criticos)}</span>` : '0'}</td>
+      </tr>`).join('') : vazio(6, 'Nenhum monitoramento com esses filtros');
+
+    const soma = c => hectares_por_cliente.reduce((t, x) => t + Number(x[c] || 0), 0);
+    document.getElementById('gerHectares').innerHTML = hectares_por_cliente.length ? hectares_por_cliente.map(c => `
+      <tr>
+        <td><b>${escHTML(c.cliente_nome)}</b></td>
+        <td style="text-align:right">${num(c.qtd_areas)}</td>
+        <td style="text-align:right"><b>${num(c.hectares, 2)}</b></td>
+        <td style="text-align:right">${num(c.alqueires, 2)}</td>
+        <td style="text-align:right">${num(c.media_hectares, 2)}</td>
+      </tr>`).join('') + `
+      <tr style="background:var(--gray-50);font-weight:700">
+        <td>Total</td><td style="text-align:right">${num(soma('qtd_areas'))}</td>
+        <td style="text-align:right">${num(soma('hectares'), 2)}</td><td style="text-align:right">${num(soma('alqueires'), 2)}</td><td></td>
+      </tr>` : vazio(5, 'Nenhuma área com esses filtros');
+  } catch (e) {
+    console.error(e);
+    showToast('❌ Erro de conexão: ' + e.message, true);
+  }
+}
+
+// Pivot: itens (linhas) × meses da safra (colunas), com total por linha e por mês
+async function carregarPivotGerencial() {
+  const div = document.getElementById('gerPivot');
+  const safra = document.getElementById('gerSafra').value;
+  const plantio = document.getElementById('gerPlantio').value;
+  if (!safra && !plantio) {
+    div.innerHTML = '<p style="text-align:center;color:var(--gray-400);padding:20px">Escolha uma safra ou um plantio no filtro para montar o pivot</p>';
+    return;
+  }
+  const params = new URLSearchParams({ tipo: document.getElementById('gerPivotTipo').value, medida: document.getElementById('gerPivotMedida').value });
+  if (plantio) params.set('plantio_id', plantio); else params.set('safra_id', safra);
+  const seq = ++pivotSeq;
+  div.innerHTML = '<p style="text-align:center;color:var(--gray-400);padding:20px">⏳ Carregando...</p>';
+  try {
+    const r = await apiFetch(`${API}/relatorios-gerenciais/pivot?${params}`);
+    const d = await r.json();
+    if (seq !== pivotSeq) return;
+    if (!d.sucesso) { div.innerHTML = `<p style="color:#dc2626">${escHTML(d.erro || 'Erro ao montar o pivot')}</p>`; return; }
+    const { colunas, linhas, totais } = d.dados;
+    if (!linhas.length) {
+      div.innerHTML = `<p style="text-align:center;color:var(--gray-400);padding:20px">Nenhum registro em ${escHTML(d.dados.safra.nome)}</p>`;
+      return;
+    }
+    const celula = (v, negrito) => `<td style="text-align:right;${v ? '' : 'color:var(--gray-300);'}${negrito ? 'font-weight:700' : ''}">${v ? v.toLocaleString('pt-BR') : '·'}</td>`;
+    div.innerHTML = `
+      <table style="font-size:13px">
+        <thead><tr>
+          <th style="position:sticky;left:0;z-index:1">${escHTML(d.dados.safra.nome)}</th>
+          ${colunas.map(c => `<th style="text-align:right;white-space:nowrap">${c.rotulo}</th>`).join('')}
+          <th style="text-align:right">Total</th>
+        </tr></thead>
+        <tbody>
+          ${linhas.map(l => `<tr>
+            <td style="position:sticky;left:0;background:white;white-space:nowrap"><b>${escHTML(l.nome)}</b>${params.get('tipo') === 'todos' ? ` <span style="font-size:11px;color:var(--gray-500)">${NOMES_TIPO_ITEM[l.tipo] || ''}</span>` : ''}</td>
+            ${colunas.map(c => celula(l.meses[c.chave])).join('')}
+            ${celula(l.total, true)}
+          </tr>`).join('')}
+          <tr style="background:var(--gray-50)">
+            <td style="position:sticky;left:0;background:var(--gray-50);font-weight:700">Total</td>
+            ${colunas.map(c => celula(totais.meses[c.chave], true)).join('')}
+            ${celula(totais.total, true)}
+          </tr>
+        </tbody>
+      </table>`;
+  } catch (e) {
+    console.error(e);
+    div.innerHTML = '<p style="color:#dc2626">Erro de conexão</p>';
   }
 }
 
