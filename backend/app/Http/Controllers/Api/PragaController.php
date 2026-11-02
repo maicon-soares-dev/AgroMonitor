@@ -13,7 +13,7 @@ class PragaController extends Controller
     /**
      * GET /api/pragas — só ativas, com o nome da cultura (cultura_nome).
      * Filtros: cultura_id (traz também os itens de "qualquer cultura"),
-     * tipo, nivel_risco, busca (nome ou descrição).
+     * tipo, nivel_risco, busca (nome, descrição ou cultura).
      */
     public function index(Request $request): JsonResponse
     {
@@ -28,7 +28,9 @@ class PragaController extends Controller
             ->when($request->filled('nivel_risco'), fn ($q) => $q->where('pragas.nivel_risco', $request->nivel_risco))
             ->when($request->filled('busca'), function ($q) use ($request) {
                 $busca = '%'.$request->busca.'%';
-                $q->where(fn ($w) => $w->where('pragas.nome', 'like', $busca)->orWhere('pragas.descricao', 'like', $busca));
+                $q->where(fn ($w) => $w->where('pragas.nome', 'like', $busca)
+                ->orWhere('pragas.descricao', 'like', $busca)
+                ->orWhere('culturas.nome', 'like', $busca));
             })
             ->orderBy('pragas.nome')
             ->get();

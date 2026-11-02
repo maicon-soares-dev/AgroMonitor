@@ -1137,7 +1137,7 @@ tr:hover td { background: var(--gray-50); }
               </div>
               <div class="form-group">
                 <label class="form-label">Buscar</label>
-                <input type="text" class="form-input" id="filtroPragBusca" placeholder="Nome ou descrição">
+                <input type="text" class="form-input" id="filtroPragBusca" placeholder="Nome, descrição ou cultura">
               </div>
               <button type="submit" class="btn btn-primary">Filtrar</button>
               <button type="button" class="btn btn-secondary" onclick="this.form.reset(); carregarPragas()">Limpar</button>
@@ -1760,7 +1760,10 @@ tr:hover td { background: var(--gray-50); }
 // Endereço da API Laravel — único lugar a mudar ao trocar de servidor.
 // 127.0.0.1 e não "localhost": no Windows, "localhost" tenta antes o IPv6 (::1),
 // que o "php artisan serve" não escuta, e cada chamada perde ~0,2 s.
-const API = 'http://127.0.0.1:8000/api';
+
+// const API = 'http://127.0.0.1:8000/api'; trocado para poder hospedar o site
+const API = '/api';
+
 const state = { areas: [], plantios: [], monitoramentos: [], culturas: [], pragas: [], pontos: [], clientes: [] };
 let map;
 
