@@ -265,7 +265,7 @@ img, canvas { max-width: 100%; }
 <!-- TELA DE LOGIN (escondida quando há token válido) -->
 <div class="login-tela" id="loginTela" style="display:none">
   <form class="login-card" id="formLogin" onsubmit="fazerLogin(event)" novalidate>
-    <img src="assets/logo-full-light.png?v=2" alt="AgroMonitor">
+    <img src="assets/logo-full-light.png?v=3" alt="AgroMonitor">
     <div class="form-group">
       <label class="form-label" for="loginUsuario">Login</label>
       <input type="text" class="form-input" id="loginUsuario" data-campo="login" autocomplete="username" autofocus>
@@ -925,8 +925,6 @@ img, canvas { max-width: 100%; }
                 <tbody id="mapapontosBody"></tbody>
               </table>
             </div>
-            <button class="btn btn-primary" style="margin-top:20px" onclick="document.getElementById('uploadAreaFile').click()">📤 Upload de Área (GeoJSON)</button>
-            <input type="file" id="uploadAreaFile" style="display:none" accept=".geojson,.json" onchange="handleFileUpload(event)">
           </div>
         </div>
       </div>
@@ -4246,22 +4244,6 @@ async function excluirPontoIndividual(id) {
   } catch (e) {
     showToast('❌ Erro de conexão: ' + e.message, true);
   }
-}
-
-function handleFileUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const geojson = JSON.parse(e.target.result);
-      showToast('✅ Arquivo carregado! ' + (geojson.features?.length || 0) + ' features detectadas');
-    } catch (err) {
-      showToast('❌ Erro ao ler arquivo GeoJSON', true);
-    }
-  };
-  reader.readAsText(file);
 }
 
 // ============= DETALHE DO PLANTIO =============
