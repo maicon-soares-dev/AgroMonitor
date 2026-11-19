@@ -42,12 +42,30 @@ class RelatorioService
             ->orderBy('mes')
             ->get();
 
+        /* filtrando as pragas registradas no periodo selecionado
+        SEM FILTRO
         $topPragas = DB::table('monitoramento_itens')
             ->select('nome as tipo_praga')
             ->selectRaw('COUNT(*) as qtd')
             ->whereNotNull('nome')
             ->where('nome', '<>', '')
             ->groupBy('nome')
+            ->orderByDesc('qtd')
+            ->limit(5)
+            ->get();
+        */
+        //COM FILTRO
+        $topPragas = DB::table('monitoramento_itens as i')
+            ->join('monitoramentos as m', 'm.id', '=', 'i.monitoramento_id')
+            ->select('i.nome as tipo_praga')
+            ->selectRaw('COUNT(*) as qtd')
+            ->whereNotNull('i.nome')
+            ->where('i.nome', '<>', '')
+            ->when($periodo !== 'todos', function (Builder $q) use ($periodo) {
+                $meses = in_array($periodo, ['3', '6', '12'], true) ? (int) $periodo : 6;
+                $q->where('m.data_monitoramento', '>=', now()->subMonthsNoOverflow($meses)->toDateString());
+            })
+            ->groupBy('i.nome')
             ->orderByDesc('qtd')
             ->limit(5)
             ->get();
