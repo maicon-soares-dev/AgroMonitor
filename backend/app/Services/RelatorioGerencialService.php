@@ -120,7 +120,15 @@ class RelatorioGerencialService
             ? Plantio::findOrFail($filtros['plantio_id'])->safra
             : Safra::findOrFail($filtros['safra_id']);
         $meses = $this->mesesDaSafra($safra);
-        $valor = ($filtros['medida'] ?? 'ocorrencias') === 'quantidade' ? 'COALESCE(i.quantidade, 0)' : '1';
+        //substituindo
+        // $valor = ($filtros['medida'] ?? 'ocorrencias') === 'quantidade' ? 'COALESCE(i.quantidade, 0)' : '1';
+        $medida = $filtros['medida'] ?? 'ocorrencias';
+        $ehMedia = $medida === 'media';
+        $valor = match ($medida) {
+            'quantidade' => 'COALESCE(i.quantidade, 0)',
+            'media' => 'i.quantidade',
+            default => '1',
+        };
 
         $consulta = DB::table('monitoramento_itens as i')
             ->join('monitoramentos as m', 'm.id', '=', 'i.monitoramento_id')
@@ -132,35 +140,63 @@ class RelatorioGerencialService
                 fn ($q) => $q->where('pl.safra_id', $safra->id))
             ->when(($filtros['tipo'] ?? 'praga') !== 'todos', fn ($q) => $q->where('i.tipo', $filtros['tipo'] ?? 'praga'));
 
+        // foreach ($meses as $mes) {
+        //     $consulta->selectRaw(
+        //         "SUM(CASE WHEN m.data_monitoramento BETWEEN ? AND ? THEN {$valor} ELSE 0 END) as {$mes['alias']}",
+        //         [$mes['inicio'], $mes['fim']]
+        //     );
+        // }
         foreach ($meses as $mes) {
-            $consulta->selectRaw(
-                "SUM(CASE WHEN m.data_monitoramento BETWEEN ? AND ? THEN {$valor} ELSE 0 END) as {$mes['alias']}",
-                [$mes['inicio'], $mes['fim']]
-            );
+            $expressao = $ehMedia
+                ? "ROUND(AVG(CASE WHEN m.data_monitoramento BETWEEN ? AND ? THEN {$valor} END), 1)"
+                : "SUM(CASE WHEN m.data_monitoramento BETWEEN ? AND ? THEN {$valor} ELSE 0 END)";
+            $consulta->selectRaw("{$expressao} as {$mes['alias']}", [$mes['inicio'], $mes['fim']]);
         }
-        $linhas = $consulta->selectRaw("SUM({$valor}) as total")
-            ->groupBy('i.tipo', 'i.nome')
+
+        //substituindo
+        //$linhas = $consulta->selectRaw("SUM({$valor}) as total")
+        $total = $ehMedia ? "ROUND(AVG({$valor}), 1)" : "SUM({$valor})";
+        $linhas = $consulta->selectRaw("{$total} as total")
+        ->groupBy('i.tipo', 'i.nome')
             ->orderByDesc('total')
             ->orderBy('i.nome')
             ->get();
 
         // Reorganiza cada linha em {tipo, nome, meses: {"2026-10": n}, total} e soma a linha de totais
+        //substituindo
+        // $totaisMes = array_fill_keys(array_column($meses, 'chave'), 0);
+        // $linhas = $linhas->map(function ($l) use ($meses, &$totaisMes) {
+        //     $valores = [];
+        //     foreach ($meses as $mes) {
+        //         $valores[$mes['chave']] = (int) $l->{$mes['alias']};
+        //         $totaisMes[$mes['chave']] += $valores[$mes['chave']];
+        //     }
+
+        //     return ['tipo' => $l->tipo, 'nome' => $l->nome, 'meses' => $valores, 'total' => (int) $l->total];
+        // });
+
+        $converter = fn ($v) => $ehMedia ? ($v === null ? null : (float) $v) : (int) $v;
+
         $totaisMes = array_fill_keys(array_column($meses, 'chave'), 0);
-        $linhas = $linhas->map(function ($l) use ($meses, &$totaisMes) {
+        $linhas = $linhas->map(function ($l) use ($meses, &$totaisMes, $converter, $ehMedia) {
             $valores = [];
             foreach ($meses as $mes) {
-                $valores[$mes['chave']] = (int) $l->{$mes['alias']};
-                $totaisMes[$mes['chave']] += $valores[$mes['chave']];
+                $valores[$mes['chave']] = $converter($l->{$mes['alias']});
+                if (! $ehMedia) {
+                    $totaisMes[$mes['chave']] += $valores[$mes['chave']];
+                }
             }
 
-            return ['tipo' => $l->tipo, 'nome' => $l->nome, 'meses' => $valores, 'total' => (int) $l->total];
+            return ['tipo' => $l->tipo, 'nome' => $l->nome, 'meses' => $valores, 'total' => $converter($l->total)];
         });
 
         return [
             'safra' => ['id' => $safra->id, 'nome' => $safra->nome],
             'colunas' => array_map(fn ($m) => ['chave' => $m['chave'], 'rotulo' => $m['rotulo']], $meses),
             'linhas' => $linhas,
-            'totais' => ['meses' => $totaisMes, 'total' => array_sum($totaisMes)],
+            //substituindo
+            //'totais' => ['meses' => $totaisMes, 'total' => array_sum($totaisMes)],
+            'totais' => $ehMedia ? null : ['meses' => $totaisMes, 'total' => array_sum($totaisMes)],
         ];
     }
 

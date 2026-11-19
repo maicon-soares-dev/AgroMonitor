@@ -1316,6 +1316,7 @@ img, canvas { max-width: 100%; }
               <select class="form-select" id="gerPivotMedida" onchange="carregarPivotGerencial()" style="width:auto">
                 <option value="ocorrencias">Nº de ocorrências</option>
                 <option value="quantidade">Quantidade contada</option>
+                <option value="media">Média por ocorrência</option> <!--dicionado-->
               </select>
             </div>
           </div>
@@ -6048,7 +6049,11 @@ async function carregarPivotGerencial() {
       div.innerHTML = `<p style="text-align:center;color:var(--gray-400);padding:20px">Nenhum registro em ${escHTML(d.dados.safra.nome)}</p>`;
       return;
     }
-    const celula = (v, negrito) => `<td style="text-align:right;${v ? '' : 'color:var(--gray-300);'}${negrito ? 'font-weight:700' : ''}">${v ? v.toLocaleString('pt-BR') : '·'}</td>`;
+
+    //adicionando
+    const casas = params.get('medida') === 'media' ? 1 : 0;
+    
+    const celula = (v, negrito) => `<td style="text-align:right;${v ? '' : 'color:var(--gray-300);'}${negrito ? 'font-weight:700' : ''}">${v ? v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas }) : '·'}</td>`;
     div.innerHTML = `
       <table style="font-size:13px">
         <thead><tr>
@@ -6062,11 +6067,11 @@ async function carregarPivotGerencial() {
             ${colunas.map(c => celula(l.meses[c.chave])).join('')}
             ${celula(l.total, true)}
           </tr>`).join('')}
-          <tr style="background:var(--gray-50)">
+          ${totais ? `<tr style="background:var(--gray-50)">
             <td style="position:sticky;left:0;background:var(--gray-50);font-weight:700">Total</td>
             ${colunas.map(c => celula(totais.meses[c.chave], true)).join('')}
             ${celula(totais.total, true)}
-          </tr>
+          </tr>` : ''}
         </tbody>
       </table>`;
   } catch (e) {
