@@ -63,9 +63,10 @@ class RelatorioService
         return [
             'totalAreas' => (int) $areas->total,
             'totalHectares' => (float) $areas->hectares,
-            'totalPlantios' => DB::table('plantios')->count(),
+            'totalPlantios' => DB::table('plantios')->count(), //totalPlantios nome do numero; DB responsavel por acessar, table('plantios') informa que a consulta será feita na tabela plantios do banco; count() conte quantas linhas tem; => associa uma chave ao valor em um array PHP
+            'totalClientes' => DB::table('clientes')->where('ativo', 1)->count(), //total de clientes ativos
             'totalOcorrencias' => DB::table('monitoramento_itens')->count(),
-            'criticosCriticos' => DB::table('monitoramentos')->where('nivel_controle', 'critico')->count(),
+            'criticosCriticos' => DB::table('monitoramentos')->where('nivel_controle', 'critico')->count(), //->where() é um filtro ele só conta os que tem 'nivel_controle' igual a 'critico'
             'porCliente' => $porCliente,
             'plantiosPorMes' => $plantiosPorMes,
             'topPragas' => $topPragas,
