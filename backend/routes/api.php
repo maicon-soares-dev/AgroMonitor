@@ -103,11 +103,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('monitoramentos/{monitoramento}', [MonitoramentoController::class, 'destroy'])
         ->middleware('perfil:gestor,agronomo');
 
-    // Aplicações e colheitas: só gestor e agrônomo (o técnico não usa essas telas)
+    // Aplicações: o técnico consulta (lista e detalhe); só gestor e agrônomo gravam
+    Route::apiResource('aplicacoes', AplicacaoController::class)
+        ->only(['index', 'show'])
+        ->parameters(['aplicacoes' => 'aplicacao']);
+
+    // Gravação de aplicações e colheitas: só gestor e agrônomo
     Route::middleware('perfil:gestor,agronomo')->group(function () {
-        Route::apiResource('aplicacoes', AplicacaoController::class)->parameters(['aplicacoes' => 'aplicacao']);
+        Route::apiResource('aplicacoes', AplicacaoController::class)
+            ->only(['store', 'update', 'destroy'])
+            ->parameters(['aplicacoes' => 'aplicacao']);
         Route::apiResource('colheitas', ColheitaController::class)->parameters(['colheitas' => 'colheita']);
-    });
+    });    
 
     Route::middleware('perfil:gestor')->group(function () {
         Route::apiResource('usuarios', UsuarioController::class)

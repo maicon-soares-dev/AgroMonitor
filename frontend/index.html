@@ -315,7 +315,7 @@ img, canvas { max-width: 100%; }
         <div class="nav-item" onclick="irPara('page-monitoramento', this)">📈 Monitoramento</div>
         <div class="nav-item" onclick="cancelarEdicaoMonitoramento(); irPara('page-registrarMonitoramento', this)">🧪 Registrar Monitoramento</div>
         <div class="nav-item" data-perfis="gestor,agronomo" onclick="cancelarEdicaoColheita(); irPara('page-colheita', this)">🚜 Colheita</div>
-        <div class="nav-item" data-perfis="gestor,agronomo" onclick="cancelarEdicaoAplicacao(); irPara('page-aplicacoes', this)">💧 Aplicações</div>
+        <div class="nav-item" onclick="cancelarEdicaoAplicacao(); irPara('page-aplicacoes', this)">💧 Aplicações</div>
       </div>
 
       <div class="nav-section">
@@ -1655,10 +1655,10 @@ img, canvas { max-width: 100%; }
             <h3 class="card-title">💧 Aplicações</h3>
           </div>
           <div class="card-body">
-            <div style="padding:10px 14px;background:var(--green-50);border-radius:var(--radius-sm);font-size:12px;color:var(--green-700);margin-bottom:16px">
+            <div data-perfis="gestor,agronomo" style="padding:10px 14px;background:var(--green-50);border-radius:var(--radius-sm);font-size:12px;color:var(--green-700);margin-bottom:16px">
               Só área, plantio, data e produto são obrigatórios. Preencha dose e tipo quando tiver a informação.
             </div>
-            <form id="formAplicacao" onsubmit="salvarAplicacao(event)" style="margin-bottom:20px" novalidate>
+            <form data-perfis="gestor,agronomo" id="formAplicacao" onsubmit="salvarAplicacao(event)" style="margin-bottom:20px" novalidate>
               <div style="display:grid;grid-template-columns:1fr 1.6fr 1fr 1.4fr;gap:10px;align-items:start">
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Área *</label>
@@ -5659,6 +5659,7 @@ async function carregarPlantiosAplicacao(plantioSelecionado = null) {
 async function carregarAplicacoes() {
   const body = document.getElementById('aplicacoesBody');
   const nomeTipo = { defensivo: 'Defensivo', adubo: 'Adubo / foliar', corretivo: 'Corretivo' };
+  const podeGravar = ['gestor', 'agronomo'].includes(usuarioLogado.perfil);
   try {
     const filtros = queryFiltros({ area_id: 'filtroAplicArea', safra_id: 'filtroAplicSafra', tipo_produto: 'filtroAplicTipo',
       data_inicio: 'filtroAplicInicio', data_fim: 'filtroAplicFim', busca: 'filtroAplicBusca' });
@@ -5679,8 +5680,8 @@ async function carregarAplicacoes() {
         <td>${a.dose != null ? Number(a.dose).toLocaleString('pt-BR') + ' ' + escHTML(a.unidade_dose || '') : '—'}</td>
         <td style="font-size:12px">${escHTML(a.observacoes || '—')}</td>
         <td style="text-align:right;white-space:nowrap">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="editarAplicacao(${a.id})">✏️</button>
-          <button type="button" class="btn btn-secondary btn-sm" style="color:#dc2626" onclick="excluirAplicacao(${a.id})">🗑️</button>
+          ${podeGravar ? `<button type="button" class="btn btn-secondary btn-sm" onclick="editarAplicacao(${a.id})">✏️</button>
+          <button type="button" class="btn btn-secondary btn-sm" style="color:#dc2626" onclick="excluirAplicacao(${a.id})">🗑️</button>` : ''}
         </td>
       </tr>`).join('');
   } catch (e) {
