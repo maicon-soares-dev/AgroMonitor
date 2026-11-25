@@ -25,7 +25,7 @@ class RelatorioGerencialRequest extends FormRequest
             'cliente_id' => ['nullable', 'integer', 'exists:clientes,id'],
             'area_id' => ['nullable', 'integer', 'exists:areas,id'],
             'tipo' => ['nullable', Rule::in(self::TIPOS)],
-            'medida' => ['nullable', Rule::in(['ocorrencias', 'quantidade'])],
+            'medida' => ['nullable', Rule::in(['ocorrencias', 'quantidade', 'media'])],
             'data_inicio' => ['nullable', 'date_format:Y-m-d'],
             'data_fim' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:data_inicio'],
         ];
