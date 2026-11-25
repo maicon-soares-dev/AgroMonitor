@@ -92,6 +92,7 @@ nav { flex: 1; padding: 12px 8px; overflow-y: auto; }
 /* Dashboard "bonito" */
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 @media (max-width: 1100px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } .grid-2-charts { grid-template-columns: 1fr !important; } }
+#dashStatCards { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 
 @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 .stat-card { background: white; border-radius: var(--radius); border: 1px solid var(--gray-200); padding: 18px 20px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 14px; position: relative; overflow: hidden; animation: fadeSlideUp 0.45s ease both; transition: transform 0.2s ease, box-shadow 0.2s ease; }
@@ -388,6 +389,13 @@ img, canvas { max-width: 100%; }
               <div class="stat-val" id="metricPlantios">0</div>
             </div>
           </div>
+          <div class="stat-card" style="--stat-color:#ea580c;--stat-bg:#fff7ed">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+              <div class="stat-label">Clientes Ativos</div>
+              <div class="stat-val" id="metricClientes">0</div>
+            </div>
+          </div> <!--adicionando campo de clientes ativos-->
           <div class="stat-card" style="--stat-color:#dc2626;--stat-bg:#fef2f2">
             <div class="stat-icon">⚠️</div>
             <div class="stat-info">
@@ -1314,6 +1322,7 @@ img, canvas { max-width: 100%; }
               <select class="form-select" id="gerPivotMedida" onchange="carregarPivotGerencial()" style="width:auto">
                 <option value="ocorrencias">Nº de ocorrências</option>
                 <option value="quantidade">Quantidade contada</option>
+                <option value="media">Média por ocorrência</option> <!--dicionado-->
               </select>
             </div>
           </div>
@@ -1822,7 +1831,13 @@ img, canvas { max-width: 100%; }
 // que o "php artisan serve" não escuta, e cada chamada perde ~0,2 s.
 
 // const API = 'http://127.0.0.1:8000/api'; trocado para poder hospedar o site
-const API = '/api';
+// const API = 'http://127.0.0.1:8000/api';
+
+// No PC usa o "php artisan serve"; na hospedagem, a API fica no mesmo domínio
+const API = ['localhost', '127.0.0.1'].includes(location.hostname)
+  ? 'http://127.0.0.1:8000/api'
+  : '/api';
+  
 
 const state = { areas: [], plantios: [], monitoramentos: [], culturas: [], pragas: [], pontos: [], clientes: [] };
 let map;
@@ -2075,7 +2090,8 @@ async function carregarDashboard() {
     const totalAlq = (dados.totalHectares / 2.42);
     animarNumero('metricAreas', dados.totalAreas, 0);
     animarNumero('metricHa', dados.totalHectares, 2);
-    animarNumero('metricPlantios', dados.totalPlantios, 0);
+    animarNumero('metricPlantios', dados.totalPlantios, 0); // animarNumero uma função que mostra o número 'subindo' de 0 até o valor, é uma "animação"; metricPlantios em qual quadrinho colocar (o id do HTML); dados.totalPlantios qual numero colocar (o nome que veio no JSON do Laravel); 0 quantas casas decimais (0= num inteiro)
+    animarNumero('metricClientes', dados.totalClientes, 0);
     animarNumero('metricCriticos', dados.criticosCriticos, 0);
     document.getElementById('metricAlq').textContent = `${totalAlq.toFixed(2)} alqueires`;
     document.getElementById('metricOcorrencias').textContent = `${dados.totalOcorrencias} ocorrência(s) registrada(s)`;
@@ -6050,7 +6066,11 @@ async function carregarPivotGerencial() {
       div.innerHTML = `<p style="text-align:center;color:var(--gray-400);padding:20px">Nenhum registro em ${escHTML(d.dados.safra.nome)}</p>`;
       return;
     }
-    const celula = (v, negrito) => `<td style="text-align:right;${v ? '' : 'color:var(--gray-300);'}${negrito ? 'font-weight:700' : ''}">${v ? v.toLocaleString('pt-BR') : '·'}</td>`;
+
+    //adicionando
+    const casas = params.get('medida') === 'media' ? 1 : 0;
+    
+    const celula = (v, negrito) => `<td style="text-align:right;${v ? '' : 'color:var(--gray-300);'}${negrito ? 'font-weight:700' : ''}">${v ? v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas }) : '·'}</td>`;
     div.innerHTML = `
       <table style="font-size:13px">
         <thead><tr>
@@ -6064,11 +6084,11 @@ async function carregarPivotGerencial() {
             ${colunas.map(c => celula(l.meses[c.chave])).join('')}
             ${celula(l.total, true)}
           </tr>`).join('')}
-          <tr style="background:var(--gray-50)">
+          ${totais ? `<tr style="background:var(--gray-50)">
             <td style="position:sticky;left:0;background:var(--gray-50);font-weight:700">Total</td>
             ${colunas.map(c => celula(totais.meses[c.chave], true)).join('')}
             ${celula(totais.total, true)}
-          </tr>
+          </tr>` : ''}
         </tbody>
       </table>`;
   } catch (e) {

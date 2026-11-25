@@ -42,12 +42,30 @@ class RelatorioService
             ->orderBy('mes')
             ->get();
 
+        /* filtrando as pragas registradas no periodo selecionado
+        SEM FILTRO
         $topPragas = DB::table('monitoramento_itens')
             ->select('nome as tipo_praga')
             ->selectRaw('COUNT(*) as qtd')
             ->whereNotNull('nome')
             ->where('nome', '<>', '')
             ->groupBy('nome')
+            ->orderByDesc('qtd')
+            ->limit(5)
+            ->get();
+        */
+        //COM FILTRO
+        $topPragas = DB::table('monitoramento_itens as i')
+            ->join('monitoramentos as m', 'm.id', '=', 'i.monitoramento_id')
+            ->select('i.nome as tipo_praga')
+            ->selectRaw('COUNT(*) as qtd')
+            ->whereNotNull('i.nome')
+            ->where('i.nome', '<>', '')
+            ->when($periodo !== 'todos', function (Builder $q) use ($periodo) {
+                $meses = in_array($periodo, ['3', '6', '12'], true) ? (int) $periodo : 6;
+                $q->where('m.data_monitoramento', '>=', now()->subMonthsNoOverflow($meses)->toDateString());
+            })
+            ->groupBy('i.nome')
             ->orderByDesc('qtd')
             ->limit(5)
             ->get();
@@ -63,9 +81,10 @@ class RelatorioService
         return [
             'totalAreas' => (int) $areas->total,
             'totalHectares' => (float) $areas->hectares,
-            'totalPlantios' => DB::table('plantios')->count(),
+            'totalPlantios' => DB::table('plantios')->count(), //totalPlantios nome do numero; DB responsavel por acessar, table('plantios') informa que a consulta será feita na tabela plantios do banco; count() conte quantas linhas tem; => associa uma chave ao valor em um array PHP
+            'totalClientes' => DB::table('clientes')->where('ativo', 1)->count(), //total de clientes ativos
             'totalOcorrencias' => DB::table('monitoramento_itens')->count(),
-            'criticosCriticos' => DB::table('monitoramentos')->where('nivel_controle', 'critico')->count(),
+            'criticosCriticos' => DB::table('monitoramentos')->where('nivel_controle', 'critico')->count(), //->where() é um filtro ele só conta os que tem 'nivel_controle' igual a 'critico'
             'porCliente' => $porCliente,
             'plantiosPorMes' => $plantiosPorMes,
             'topPragas' => $topPragas,
