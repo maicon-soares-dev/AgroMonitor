@@ -196,6 +196,12 @@ tr:hover td { background: var(--gray-50); }
 .topbar-usuario { display: flex; align-items: center; gap: 12px; }
 .topbar-usuario-nome { font-size: 13px; font-weight: 600; text-align: right; line-height: 1.2; }
 .topbar-usuario-perfil { font-size: 11px; color: var(--gray-500); font-weight: 500; }
+.topbar-usuario-perfil.perfil-gestor,
+.topbar-usuario-perfil.perfil-agronomo,
+.topbar-usuario-perfil.perfil-tecnico { width: fit-content; margin-left: auto; padding: 1px 8px; border-radius: 999px; font-weight: 600; }
+.topbar-usuario-perfil.perfil-gestor   { color: #6d28d9; background: #ede9fe; }
+.topbar-usuario-perfil.perfil-agronomo { color: #1d4ed8; background: #dbeafe; }
+.topbar-usuario-perfil.perfil-tecnico  { color: #b45309; background: #fef3c7; }
 
 /* Mensagens de validação ao lado de cada campo (vêm do "erros" da API) */
 .form-input.invalido, .form-select.invalido, .form-textarea.invalido { border-color: var(--red-600); }
@@ -309,7 +315,7 @@ img, canvas { max-width: 100%; }
         <div class="nav-item" onclick="irPara('page-monitoramento', this)">📈 Monitoramento</div>
         <div class="nav-item" onclick="cancelarEdicaoMonitoramento(); irPara('page-registrarMonitoramento', this)">🧪 Registrar Monitoramento</div>
         <div class="nav-item" data-perfis="gestor,agronomo" onclick="cancelarEdicaoColheita(); irPara('page-colheita', this)">🚜 Colheita</div>
-        <div class="nav-item" data-perfis="gestor,agronomo" onclick="cancelarEdicaoAplicacao(); irPara('page-aplicacoes', this)">💧 Aplicações</div>
+        <div class="nav-item" onclick="cancelarEdicaoAplicacao(); irPara('page-aplicacoes', this)">💧 Aplicações</div>
       </div>
 
       <div class="nav-section">
@@ -1649,10 +1655,10 @@ img, canvas { max-width: 100%; }
             <h3 class="card-title">💧 Aplicações</h3>
           </div>
           <div class="card-body">
-            <div style="padding:10px 14px;background:var(--green-50);border-radius:var(--radius-sm);font-size:12px;color:var(--green-700);margin-bottom:16px">
+            <div data-perfis="gestor,agronomo" style="padding:10px 14px;background:var(--green-50);border-radius:var(--radius-sm);font-size:12px;color:var(--green-700);margin-bottom:16px">
               Só área, plantio, data e produto são obrigatórios. Preencha dose e tipo quando tiver a informação.
             </div>
-            <form id="formAplicacao" onsubmit="salvarAplicacao(event)" style="margin-bottom:20px" novalidate>
+            <form data-perfis="gestor,agronomo" id="formAplicacao" onsubmit="salvarAplicacao(event)" style="margin-bottom:20px" novalidate>
               <div style="display:grid;grid-template-columns:1fr 1.6fr 1fr 1.4fr;gap:10px;align-items:start">
                 <div class="form-group" style="margin:0">
                   <label class="form-label">Área *</label>
@@ -1957,6 +1963,10 @@ function iniciarSistema(usuario) {
   usuarioLogado = usuario;
   document.getElementById('usuarioNome').textContent = usuario.nome;
   document.getElementById('usuarioPerfil').textContent = NOMES_PERFIL[usuario.perfil] || usuario.perfil;
+  const seloPerfil = document.getElementById('usuarioPerfil');
+  seloPerfil.classList.remove('perfil-gestor', 'perfil-agronomo', 'perfil-tecnico');
+  seloPerfil.classList.add('perfil-' + usuario.perfil);
+
   aplicarMenuPorPerfil(usuario.perfil);
   irPara('page-dashboard', document.querySelector('.nav-item[onclick*="page-dashboard"]'));
   carregarAreas();
@@ -5649,6 +5659,7 @@ async function carregarPlantiosAplicacao(plantioSelecionado = null) {
 async function carregarAplicacoes() {
   const body = document.getElementById('aplicacoesBody');
   const nomeTipo = { defensivo: 'Defensivo', adubo: 'Adubo / foliar', corretivo: 'Corretivo' };
+  const podeGravar = ['gestor', 'agronomo'].includes(usuarioLogado.perfil);
   try {
     const filtros = queryFiltros({ area_id: 'filtroAplicArea', safra_id: 'filtroAplicSafra', tipo_produto: 'filtroAplicTipo',
       data_inicio: 'filtroAplicInicio', data_fim: 'filtroAplicFim', busca: 'filtroAplicBusca' });
@@ -5669,8 +5680,8 @@ async function carregarAplicacoes() {
         <td>${a.dose != null ? Number(a.dose).toLocaleString('pt-BR') + ' ' + escHTML(a.unidade_dose || '') : '—'}</td>
         <td style="font-size:12px">${escHTML(a.observacoes || '—')}</td>
         <td style="text-align:right;white-space:nowrap">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="editarAplicacao(${a.id})">✏️</button>
-          <button type="button" class="btn btn-secondary btn-sm" style="color:#dc2626" onclick="excluirAplicacao(${a.id})">🗑️</button>
+          ${podeGravar ? `<button type="button" class="btn btn-secondary btn-sm" onclick="editarAplicacao(${a.id})">✏️</button>
+          <button type="button" class="btn btn-secondary btn-sm" style="color:#dc2626" onclick="excluirAplicacao(${a.id})">🗑️</button>` : ''}
         </td>
       </tr>`).join('');
   } catch (e) {

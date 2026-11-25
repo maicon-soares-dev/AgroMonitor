@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 /** Cadastro e edição de usuários (só gestor). Na edição, a senha é opcional. */
 class UsuarioRequest extends FormRequest
@@ -23,7 +24,7 @@ class UsuarioRequest extends FormRequest
             'nome' => ['required', 'string', 'max:150'],
             'login' => ['required', 'string', 'max:50', 'alpha_dash', Rule::unique('users', 'login')->ignore($usuario)],
             'email' => ['nullable', 'email', 'max:150'],
-            'senha' => [$editando ? 'nullable' : 'required', 'string', 'min:6', 'max:100'],
+            'senha' => [$editando ? 'nullable' : 'required', 'string', Password::min(8)->letters()->numbers(), 'max:100'],
             'perfil' => ['required', Rule::in(User::PERFIS)],
             'ativo' => ['sometimes', 'boolean'],
         ];
