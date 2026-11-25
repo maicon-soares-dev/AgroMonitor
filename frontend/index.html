@@ -1825,7 +1825,13 @@ img, canvas { max-width: 100%; }
 // que o "php artisan serve" não escuta, e cada chamada perde ~0,2 s.
 
 // const API = 'http://127.0.0.1:8000/api'; trocado para poder hospedar o site
-const API = 'http://127.0.0.1:8000/api';
+// const API = 'http://127.0.0.1:8000/api';
+
+// No PC usa o "php artisan serve"; na hospedagem, a API fica no mesmo domínio
+const API = ['localhost', '127.0.0.1'].includes(location.hostname)
+  ? 'http://127.0.0.1:8000/api'
+  : '/api';
+  
 
 const state = { areas: [], plantios: [], monitoramentos: [], culturas: [], pragas: [], pontos: [], clientes: [] };
 let map;
